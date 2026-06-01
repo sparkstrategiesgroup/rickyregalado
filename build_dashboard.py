@@ -6,6 +6,7 @@ T = r"""<!DOCTYPE html>
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Route Exchange — Prime Pipeline</title>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
 <style>
 :root{color-scheme:light;
   --bg:#eef1f7; --card:#ffffff; --ink:#0d1530; --ink2:#3a4561; --muted:#7b86a0; --line:#e6eaf2;
@@ -226,11 +227,41 @@ details.editor>summary::-webkit-details-marker{display:none;}
 .dchk input{width:14px;height:14px;cursor:pointer;}
 .draftedtag{display:inline-block;font-size:9.5px;font-weight:700;color:var(--win);background:#e3f6ec;border-radius:5px;padding:1px 6px;}
 .edexport textarea{width:100%;min-height:84px;border:1px solid var(--line);border-radius:9px;padding:9px;font-size:11px;font-family:var(--mono);background:#f8fafd;margin-top:8px;color:var(--ink2);}
+
+/* AUTH BAR */
+.authbar{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:14px 18px;margin-bottom:18px;box-shadow:var(--sh-sm);display:flex;align-items:center;gap:14px;flex-wrap:wrap;}
+.authbar .auth-status{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--ink2);}
+.authbar .auth-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.authbar .auth-dot.on{background:#3ee08f;box-shadow:0 0 8px rgba(62,224,143,.5);}
+.authbar .auth-dot.off{background:#ef4757;box-shadow:0 0 8px rgba(239,71,87,.3);}
+.authbar .auth-user{font-weight:600;color:var(--ink);}
+.authbar .auth-scopes{font-size:11px;color:var(--muted);}
+.auth-btn{display:inline-flex;align-items:center;gap:8px;padding:9px 16px;border-radius:10px;border:1px solid var(--line);background:#fff;font-size:13px;font-weight:600;color:var(--ink);cursor:pointer;transition:all .15s;}
+.auth-btn:hover{background:#f5f7fc;box-shadow:var(--sh-sm);}
+.auth-btn.google{background:#fff;border-color:#dadce0;}
+.auth-btn.google:hover{background:#f8f9fa;}
+.auth-btn.disconnect{font-size:11.5px;padding:6px 12px;color:var(--muted);margin-left:auto;}
+.auth-btn svg{flex-shrink:0;}
+.auth-setup{background:#fffbe6;border:1px solid #f0e6b0;border-radius:12px;padding:12px 16px;margin-bottom:14px;font-size:12.5px;color:#6b5900;}
+.auth-setup code{background:#f5f0d0;border-radius:4px;padding:1px 5px;font-size:11px;}
+.auth-setup a{color:#3552e6;font-weight:600;}
 </style>
 </head>
 <body>
 <div class="wrap">
   <div class="banner" id="banner"></div>
+
+  <!-- AUTH BAR -->
+  <div class="authbar" id="authbar">
+    <div class="auth-status">
+      <span class="auth-dot off" id="authDot"></span>
+      <span id="authLabel">Not connected</span>
+    </div>
+    <button class="auth-btn google" id="authBtn" onclick="gAuth.signIn()">
+      <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
+      Sign in with Google
+    </button>
+  </div>
 
   <div class="hero">
     <div class="eyebrow"><span class="dot"></span> Route Exchange · Prime Contractor Acquisition <span class="stamp" id="updated">initializing <span class="spin"></span></span></div>
@@ -298,9 +329,6 @@ details.editor>summary::-webkit-details-marker{display:none;}
 
 <script>
 const LEADS=__LEADS__;
-const GMAIL_SEARCH="mcp__06051a5d-dff3-4536-9c02-b850bca9ace3__search_threads";
-const CAL_EVENTS="mcp__b9e8ce76-5583-4e76-9686-4d5d7790991a__list_events";
-const GMAIL_DRAFT="mcp__06051a5d-dff3-4536-9c02-b850bca9ace3__create_draft";
 const CAL_IDS=["primary","getroute.com_8cpn29hr238lq73gi5611ssg6g@group.calendar.google.com"];
 const DEMO_CAL="getroute.com_8cpn29hr238lq73gi5611ssg6g@group.calendar.google.com";
 const US_DOMAINS=["getroute.com","rozaladocleaning.com","rozaladoservices.com","rozacontractors.com"];
@@ -321,6 +349,124 @@ const ICON={
  info:'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><line x1="12" y1="11" x2="12" y2="16"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>',
  sched:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="7" y1="14" x2="7.01" y2="14" stroke-width="3"/><line x1="12" y1="14" x2="12.01" y2="14" stroke-width="3"/><line x1="7" y1="18" x2="7.01" y2="18" stroke-width="3"/><line x1="12" y1="18" x2="12.01" y2="18" stroke-width="3"/><line x1="17" y1="14" x2="17.01" y2="14" stroke-width="3"/></svg>'};
 
+/* ══════════════════════════════════════════════════════════════
+   GOOGLE OAUTH 2.0 — SSO for Gmail + Calendar
+   ══════════════════════════════════════════════════════════════ */
+const GOOGLE_CLIENT_ID = localStorage.getItem("rx_google_client_id") || "";
+const GOOGLE_SCOPES = "https://www.googleapis.com/auth/gmail.readonly https://www.googleapis.com/auth/gmail.compose https://www.googleapis.com/auth/calendar.readonly";
+
+const gAuth = {
+  token: null,
+  user: null,
+  tokenClient: null,
+  expiresAt: 0,
+
+  init() {
+    if (typeof google === "undefined" || !google.accounts) {
+      setTimeout(() => gAuth.init(), 500);
+      return;
+    }
+    if (!GOOGLE_CLIENT_ID) {
+      this.renderSetup();
+      return;
+    }
+    this.tokenClient = google.accounts.oauth2.initTokenClient({
+      client_id: GOOGLE_CLIENT_ID,
+      scope: GOOGLE_SCOPES,
+      callback: (resp) => this.handleToken(resp),
+    });
+    this.renderUI();
+  },
+
+  signIn() {
+    if (!GOOGLE_CLIENT_ID) {
+      this.promptClientId();
+      return;
+    }
+    if (!this.tokenClient) {
+      this.init();
+      setTimeout(() => { if (this.tokenClient) this.tokenClient.requestAccessToken(); }, 600);
+      return;
+    }
+    this.tokenClient.requestAccessToken();
+  },
+
+  signOut() {
+    if (this.token) {
+      google.accounts.oauth2.revoke(this.token, () => {});
+    }
+    this.token = null;
+    this.user = null;
+    this.expiresAt = 0;
+    this.renderUI();
+  },
+
+  handleToken(resp) {
+    if (resp.error) { console.error("OAuth error:", resp); return; }
+    this.token = resp.access_token;
+    this.expiresAt = Date.now() + (resp.expires_in * 1000);
+    this.fetchUserInfo().then(() => {
+      this.renderUI();
+      loadAll();
+    });
+  },
+
+  async fetchUserInfo() {
+    try {
+      const r = await fetch("https://www.googleapis.com/oauth2/v3/userinfo", {
+        headers: { Authorization: "Bearer " + this.token }
+      });
+      if (r.ok) this.user = await r.json();
+    } catch (e) {}
+  },
+
+  isConnected() {
+    return this.token && Date.now() < this.expiresAt;
+  },
+
+  async api(url, opts = {}) {
+    if (!this.isConnected()) throw new Error("Not authenticated");
+    const headers = { Authorization: "Bearer " + this.token, ...(opts.headers || {}) };
+    const r = await fetch(url, { ...opts, headers });
+    if (r.status === 401) { this.token = null; this.renderUI(); throw new Error("Token expired"); }
+    return r.json();
+  },
+
+  promptClientId() {
+    const id = prompt(
+      "Enter your Google OAuth Client ID to connect Gmail & Calendar.\n\n" +
+      "Get one at: console.cloud.google.com → APIs & Services → Credentials → Create OAuth Client ID (Web application)\n\n" +
+      "Add this page's origin to Authorized JavaScript Origins."
+    );
+    if (id && id.includes(".apps.googleusercontent.com")) {
+      localStorage.setItem("rx_google_client_id", id);
+      location.reload();
+    }
+  },
+
+  renderSetup() {
+    const bar = document.getElementById("authbar");
+    bar.innerHTML = '<div class="auth-status"><span class="auth-dot off"></span><span>Gmail & Calendar not connected</span></div>' +
+      '<button class="auth-btn google" onclick="gAuth.promptClientId()"><svg width="18" height="18" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg> Connect Google Account</button>';
+  },
+
+  renderUI() {
+    const bar = document.getElementById("authbar");
+    if (this.isConnected() && this.user) {
+      bar.innerHTML = '<div class="auth-status"><span class="auth-dot on"></span><span><span class="auth-user">' + esc(this.user.name || this.user.email) + '</span></span></div>' +
+        '<span class="auth-scopes">Gmail (read + drafts) · Calendar (read)</span>' +
+        '<button class="auth-btn disconnect" onclick="gAuth.signOut()">Disconnect</button>';
+    } else if (GOOGLE_CLIENT_ID) {
+      bar.innerHTML = '<div class="auth-status"><span class="auth-dot off"></span><span>Not connected</span></div>' +
+        '<button class="auth-btn google" onclick="gAuth.signIn()"><svg width="18" height="18" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg> Sign in with Google</button>' +
+        '<button class="auth-btn disconnect" onclick="localStorage.removeItem(\'rx_google_client_id\');location.reload()">Change Client ID</button>';
+    }
+  }
+};
+
+/* ══════════════════════════════════════════════════════════════
+   CORE STATE & UTILS
+   ══════════════════════════════════════════════════════════════ */
 let STATE={}; try{STATE=JSON.parse(localStorage.getItem("rx_state")||"{}");}catch(e){STATE={};}
 function st(id){return STATE[id]||(STATE[id]={});}
 function toggle(id,k){const s=st(id);s[k]=!s[k];if(k==="closed"&&s[k])s.opp=true;localStorage.setItem("rx_state",JSON.stringify(STATE));compute();}
@@ -328,10 +474,6 @@ let APPTS=[], errs=[];
 LEADS.forEach(l=>{l.domain=(l.email.split("@")[1]||"").toLowerCase();l.fn=((l.contact||"").replace(/\"/g,"").trim().split(/\s+/)[0])||"there";});
 const byDomain={};LEADS.forEach(l=>{if(l.domain)byDomain[l.domain]=l;});
 
-function unwrap(r){if(r==null)return{};if(typeof r==="string"){try{return JSON.parse(r);}catch(e){return{raw:r};}}
-  if(r.content&&Array.isArray(r.content)){const t=r.content.map(c=>c&&c.text?c.text:"").join("");try{return JSON.parse(t);}catch(e){return{raw:t};}}
-  if(r.result!==undefined)return unwrap(r.result);return r;}
-async function callTool(n,a){try{const r=unwrap(await window.cowork.callMcpTool(n,a));if(r&&r.__error)errs.push(n.split("__")[2]||n);return r;}catch(e){errs.push((n.split("__")[2]||n));return{__error:String(e)};}}
 function chunk(a,n){const o=[];for(let i=0;i<a.length;i+=n)o.push(a.slice(i,i+n));return o;}
 function domainOf(x){if(!x)return"";const m=String(x).match(/[^@<\s]+@([^>\s]+)/);return m?m[1].toLowerCase():"";}
 function isUs(x){return US_DOMAINS.includes(domainOf(x));}
@@ -339,22 +481,60 @@ function bizBetween(a,b){let d=new Date(a),n=0;while(d<b){if(d.getDay()%6!==0)n+
 function addBiz(a,n){let d=new Date(a),c=0;while(c<n){d=new Date(d.getTime()+864e5);if(d.getDay()%6!==0)c++;}return d;}
 function esc(s){return String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[c]));}
 
+/* ══════════════════════════════════════════════════════════════
+   GMAIL — Direct Google API (with MCP fallback)
+   ══════════════════════════════════════════════════════════════ */
 async function loadGmail(){
-  for(const g of chunk(LEADS.filter(l=>l.domain),8)){
+  if (!gAuth.isConnected()) return;
+  for(const g of chunk(LEADS.filter(l=>l.domain),6)){
     const q="newer_than:120d ("+g.map(l=>"from:"+l.domain+" OR to:"+l.domain).join(" OR ")+")";
-    const res=await callTool(GMAIL_SEARCH,{query:q,pageSize:50});
-    for(const th of ((res&&res.threads)||[])){
-      const msgs=th.messages||[];let lead=null;
-      for(const m of msgs){const d1=domainOf(m.sender);if(byDomain[d1]){lead=byDomain[d1];break;}
-        for(const to of (m.toRecipients||[])){const d2=domainOf(to);if(byDomain[d2]){lead=byDomain[d2];break;}}if(lead)break;}
+    const url="https://gmail.googleapis.com/gmail/v1/users/me/threads?q="+encodeURIComponent(q)+"&maxResults=50";
+    let res;
+    try { res = await gAuth.api(url); } catch(e) { errs.push("Gmail"); return; }
+    const threads = res.threads || [];
+    for(const tRef of threads){
+      let th;
+      try { th = await gAuth.api("https://gmail.googleapis.com/gmail/v1/users/me/threads/"+tRef.id+"?format=metadata&metadataHeaders=From&metadataHeaders=To&metadataHeaders=Date"); } catch(e) { continue; }
+      const msgs = th.messages || [];
+      let lead = null;
+      for(const m of msgs){
+        const hdrs = m.payload && m.payload.headers || [];
+        const from = (hdrs.find(h=>h.name==="From")||{}).value||"";
+        const to = (hdrs.find(h=>h.name==="To")||{}).value||"";
+        const d1 = domainOf(from);
+        if(byDomain[d1]){lead=byDomain[d1];break;}
+        const d2 = domainOf(to);
+        if(byDomain[d2]){lead=byDomain[d2];break;}
+      }
       if(!lead)continue;
-      for(const m of msgs){const ts=Date.parse(m.date)||0;const fromUs=isUs(m.sender);const fromLead=domainOf(m.sender)===lead.domain;
-        if(fromUs&&(m.toRecipients||[]).some(t=>domainOf(t)===lead.domain)){lead.contacted=true;lead.sentCount++;}
+      for(const m of msgs){
+        const hdrs = m.payload && m.payload.headers || [];
+        const from = (hdrs.find(h=>h.name==="From")||{}).value||"";
+        const to = (hdrs.find(h=>h.name==="To")||{}).value||"";
+        const dateStr = (hdrs.find(h=>h.name==="Date")||{}).value||"";
+        const ts = Date.parse(dateStr)||Number(m.internalDate)||0;
+        const fromUs = isUs(from);
+        const fromLead = domainOf(from)===lead.domain;
+        if(fromUs && domainOf(to)===lead.domain){lead.contacted=true;lead.sentCount++;}
         if(fromLead){lead.replied=true;if(ts>lead.lastTs){lead.lastTs=ts;lead.lastSnippet=m.snippet||"";}}
-        if(fromUs&&ts>lead.lastTs)lead.lastTs=ts;}
+        if(fromUs&&ts>lead.lastTs)lead.lastTs=ts;
+      }
     }
   }
 }
+
+async function createGmailDraft(to, subject, body){
+  if(!gAuth.isConnected()) throw new Error("Not connected");
+  const raw = ["To: "+to,"Subject: "+subject,"Content-Type: text/plain; charset=UTF-8","",""].join("\r\n")+body;
+  const encoded = btoa(unescape(encodeURIComponent(raw))).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"");
+  const res = await gAuth.api("https://gmail.googleapis.com/gmail/v1/users/me/drafts",{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({message:{raw:encoded}})
+  });
+  return res;
+}
+
 function heur(s){s=(s||"").toLowerCase();
   if(/out of office|ooo|on vacation|away from|parental leave|holiday|currently out/.test(s))return"ooo";
   if(/not interested|no thanks|unsubscribe|remove me|please stop|not a fit|do not contact|already have/.test(s))return"negative";
@@ -362,22 +542,31 @@ function heur(s){s=(s||"").toLowerCase();
   return"neutral";}
 async function classify(){
   const inb=LEADS.filter(l=>l.replied&&l.lastSnippet);if(!inb.length)return;
-  try{if(window.cowork&&window.cowork.askClaude){
-    const data=inb.map(l=>({company:l.company,reply:l.lastSnippet.slice(0,300)}));
-    const out=await window.cowork.askClaude('Classify each reply sentiment as exactly one of: positive, negative, ooo, neutral. Return ONLY a JSON array of {"company","sentiment"} in order.',data);
-    let p=typeof out==="string"?JSON.parse(out.replace(/```json|```/g,"").trim()):out;
-    if(Array.isArray(p)){p.forEach((x,i)=>{if(inb[i])inb[i].sentiment=x.sentiment||"neutral";});return;}}
-  }catch(e){}inb.forEach(l=>l.sentiment=heur(l.lastSnippet));}
+  inb.forEach(l=>l.sentiment=heur(l.lastSnippet));
+}
+
+/* ══════════════════════════════════════════════════════════════
+   CALENDAR — Direct Google API
+   ══════════════════════════════════════════════════════════════ */
 async function loadCal(){
-  const now=Date.now();const s=new Date(now-30*864e5).toISOString(),e=new Date(now+90*864e5).toISOString();const seen={};
-  for(const cid of CAL_IDS){const res=await callTool(CAL_EVENTS,{calendarId:cid,startTime:s,endTime:e,pageSize:100,orderBy:"startTime"});
-    for(const ev of ((res&&res.events)||[])){let m=null;
+  if (!gAuth.isConnected()) return;
+  const now=Date.now();
+  const timeMin=new Date(now-30*864e5).toISOString();
+  const timeMax=new Date(now+90*864e5).toISOString();
+  const seen={};
+  for(const cid of CAL_IDS){
+    const url="https://www.googleapis.com/calendar/v3/calendars/"+encodeURIComponent(cid)+"/events?timeMin="+encodeURIComponent(timeMin)+"&timeMax="+encodeURIComponent(timeMax)+"&maxResults=100&orderBy=startTime&singleEvents=true";
+    let res;
+    try { res = await gAuth.api(url); } catch(e) { errs.push("Calendar"); continue; }
+    for(const ev of (res.items||[])){
+      let m=null;
       for(const a of (ev.attendees||[])){const d=domainOf(a.email);if(byDomain[d]){m=byDomain[d];break;}}
       if(!m){const sum=(ev.summary||"").toLowerCase();for(const l of LEADS){const b=l.company.toLowerCase().split(/[ ,]/)[0];if(b.length>4&&sum.includes(b)){m=l;break;}}}
       const ts=Date.parse(ev.start&&(ev.start.dateTime||ev.start.date))||0;
       if(m){m.meeting=true;if(ts>m.lastTs)m.lastTs=ts;}
-      if((m||cid===DEMO_CAL)&&ts){const key=ev.id||(ts+(ev.summary||""));if(!seen[key]){seen[key]=1;APPTS.push({start:ts,company:m?m.company:(ev.summary||"Demo"),url:ev.conferenceUrl||ev.htmlLink||""});}}
-    }}
+      if((m||cid===DEMO_CAL)&&ts){const key=ev.id||(ts+(ev.summary||""));if(!seen[key]){seen[key]=1;APPTS.push({start:ts,company:m?m.company:(ev.summary||"Demo"),url:ev.hangoutLink||ev.htmlLink||""});}}
+    }
+  }
 }
 function statusOf(l){const s=st(l.id);
   if(s.closed)return"closed";if(s.opp)return"opp";if(l.meeting)return"meeting";
@@ -668,6 +857,7 @@ function updateGenBar(){const ap=LEADS.filter(l=>st(l.id).approved&&!st(l.id).dr
   const b=document.getElementById("genDrafts");if(b){b.disabled=ap===0;b.textContent="⚡ Generate E1 drafts ("+ap+")";}
   const st2=document.getElementById("genStat");if(st2)st2.textContent=dn?dn+" drafted so far":"";}
 async function generateDrafts(){
+  if(!gAuth.isConnected()){alert("Sign in with Google first to create Gmail drafts.");return;}
   const todo=LEADS.filter(l=>st(l.id).approved&&!st(l.id).drafted&&l.email);
   if(!todo.length){alert("Tick the Draft? box on the leads you want first.");return;}
   if(!confirm("Create Gmail drafts (Email 1) for "+todo.length+" approved lead(s)? They'll sit in your Gmail Drafts for review — nothing sends.")) return;
@@ -675,8 +865,10 @@ async function generateDrafts(){
   let ok=0;const li=[];
   for(let i=0;i<todo.length;i++){const l=todo[i];stat.textContent="creating "+(i+1)+"/"+todo.length+"…";
     const subj=tok((TPL.e1||{}).subj,l),body=tok((TPL.e1||{}).body,l);
-    const r=await callTool(GMAIL_DRAFT,{to:[l.email],subject:subj,body:body});
-    if(r&&(r.id||r.draftId||!r.__error)){st(l.id).drafted=true;ok++;li.push("• "+l.company+" ("+l.fn+"): "+tok((TPL.li||{}).body,l));}
+    try{
+      const r=await createGmailDraft(l.email,subj,body);
+      if(r&&(r.id||r.message)){st(l.id).drafted=true;ok++;li.push("• "+l.company+" ("+l.fn+"): "+tok((TPL.li||{}).body,l));}
+    }catch(e){stat.textContent="Error on "+l.company+": "+e.message;continue;}
   }
   localStorage.setItem("rx_state",JSON.stringify(STATE));
   const ex=document.getElementById("edExport");if(ex&&li.length){ex.value="LinkedIn DMs to send by hand (parallel to E1):\n\n"+li.join("\n\n");}
@@ -685,9 +877,18 @@ async function generateDrafts(){
 }
 
 function reset(){errs=[];APPTS=[];LEADS.forEach(l=>{l.contacted=false;l.sentCount=0;l.replied=false;l.sentiment="none";l.meeting=false;l.lastTs=0;l.lastSnippet="";});}
-async function loadAll(){reset();try{await loadGmail();}catch(e){errs.push("Gmail");}try{await classify();}catch(e){}try{await loadCal();}catch(e){errs.push("Calendar");}compute();}
-setIcons();buildEditor();document.getElementById("genDrafts").onclick=generateDrafts;reset();compute();loadAll();
-setInterval(loadAll,90000);
+async function loadAll(){
+  reset();
+  if(gAuth.isConnected()){
+    try{await loadGmail();}catch(e){errs.push("Gmail");}
+    try{await classify();}catch(e){}
+    try{await loadCal();}catch(e){errs.push("Calendar");}
+  }
+  compute();
+}
+setIcons();buildEditor();document.getElementById("genDrafts").onclick=generateDrafts;reset();compute();
+gAuth.init();
+setInterval(()=>{if(gAuth.isConnected())loadAll();},90000);
 </script>
 </body></html>
 """
