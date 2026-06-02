@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Route Exchange — Prime Pipeline</title>
+<title>Route Exchange - Prime Pipeline</title>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <style>
 :root{color-scheme:light;
@@ -382,7 +382,7 @@ details.editor>summary::-webkit-details-marker{display:none;}
 
   <div class="widget" data-widget="donext">
   <div class="drag-handle" draggable="true"><div class="grip"><div class="grip-row"><i></i><i></i><i></i></div><div class="grip-row"><i></i><i></i><i></i></div></div><span class="wlabel">Do Next</span><div class="grip"><div class="grip-row"><i></i><i></i><i></i></div><div class="grip-row"><i></i><i></i><i></i></div></div></div>
-  <div class="sec"><span class="ico" id="icDo"></span><h2>Do Next</h2><span class="hint">your shortlist — tap a card to filter the leads below</span></div>
+  <div class="sec"><span class="ico" id="icDo"></span><h2>Do Next</h2><span class="hint">your shortlist - tap a card to filter the leads below</span></div>
   <div class="actions" id="actions"></div>
   </div>
 
@@ -411,14 +411,14 @@ details.editor>summary::-webkit-details-marker{display:none;}
 
   <div class="widget" data-widget="editor">
   <div class="drag-handle" draggable="true"><div class="grip"><div class="grip-row"><i></i><i></i><i></i></div><div class="grip-row"><i></i><i></i><i></i></div></div><span class="wlabel">Email Templates</span><div class="grip"><div class="grip-row"><i></i><i></i><i></i></div><div class="grip-row"><i></i><i></i><i></i></div></div></div>
-  <details class="editor" id="editorCard"><summary><span class="ico" id="icEdit" style="background:#efe9ff;color:var(--violet)"></span> Email Copy — edit &amp; preview <span style="font-weight:500;color:var(--muted);font-size:11.5px">· master template for all leads</span></summary>
-    <div class="edhint">Tokens <code>{first_name}</code> and <code>{company}</code> fill per lead in the preview. Edits save automatically (this device). This is the <b>template</b> for every lead — for one-off per-lead changes use the markdown/CSV file. Hit <b>Copy edits</b> and paste back to me to push them into drafts.</div>
+  <details class="editor" id="editorCard"><summary><span class="ico" id="icEdit" style="background:#efe9ff;color:var(--violet)"></span> Email Copy - edit &amp; preview <span style="font-weight:500;color:var(--muted);font-size:11.5px">· master template for all leads</span></summary>
+    <div class="edhint">Tokens <code>{first_name}</code> and <code>{company}</code> fill per lead in the preview. Edits save automatically (this device). This is the <b>template</b> for every lead - for one-off per-lead changes use the markdown/CSV file. Hit <b>Copy edits</b> and paste back to me to push them into drafts.</div>
     <div class="edwrap">
       <div id="edFields"></div>
       <div class="edside">
         <div class="edtools"><span style="font-size:11.5px;color:var(--muted)">Preview as</span><select id="edLead"></select><button id="edReset">Reset</button><button class="primary" id="edCopy">Copy edits</button></div>
         <div class="edprev" id="edPrev"></div>
-        <div class="edexport"><textarea id="edExport" readonly placeholder="Your edited copy as JSON — paste back to me to apply it."></textarea></div>
+        <div class="edexport"><textarea id="edExport" readonly placeholder="Your edited copy as JSON - paste back to me to apply it."></textarea></div>
       </div>
     </div>
   </details>
@@ -433,7 +433,7 @@ details.editor>summary::-webkit-details-marker{display:none;}
 
   <div class="widget" data-widget="legend">
   <div class="drag-handle" draggable="true"><div class="grip"><div class="grip-row"><i></i><i></i><i></i></div><div class="grip-row"><i></i><i></i><i></i></div></div><span class="wlabel">Legend</span><div class="grip"><div class="grip-row"><i></i><i></i><i></i></div><div class="grip-row"><i></i><i></i><i></i></div></div></div>
-  <details class="legend"><summary><span class="ico" id="icLeg" style="background:#eef1f6;color:var(--muted)"></span> Legend — how to read this</summary><div class="legrid" id="legend"></div></details>
+  <details class="legend"><summary><span class="ico" id="icLeg" style="background:#eef1f6;color:var(--muted)"></span> Legend - how to read this</summary><div class="legrid" id="legend"></div></details>
   </div>
 
 </div>
@@ -507,7 +507,7 @@ const ICON={
  sched:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="7" y1="14" x2="7.01" y2="14" stroke-width="3"/><line x1="12" y1="14" x2="12.01" y2="14" stroke-width="3"/><line x1="7" y1="18" x2="7.01" y2="18" stroke-width="3"/><line x1="12" y1="18" x2="12.01" y2="18" stroke-width="3"/><line x1="17" y1="14" x2="17.01" y2="14" stroke-width="3"/></svg>'};
 
 /* ══════════════════════════════════════════════════════════════
-   GOOGLE OAUTH 2.0 — SSO for Gmail + Calendar
+   GOOGLE OAUTH 2.0 - SSO for Gmail + Calendar
    ══════════════════════════════════════════════════════════════ */
 const GOOGLE_CLIENT_ID = localStorage.getItem("rx_google_client_id") || "";
 const GOOGLE_SCOPES = "https://www.googleapis.com/auth/gmail.readonly https://www.googleapis.com/auth/gmail.compose https://www.googleapis.com/auth/calendar.readonly";
@@ -646,7 +646,7 @@ function addBiz(a,n){let d=new Date(a),c=0;while(c<n){d=new Date(d.getTime()+864
 function esc(s){return String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[c]));}
 
 /* ══════════════════════════════════════════════════════════════
-   GMAIL — Direct Google API (with MCP fallback)
+   GMAIL - Direct Google API (with MCP fallback)
    ══════════════════════════════════════════════════════════════ */
 async function loadGmail(){
   if (!gAuth.isConnected()) return;
@@ -710,7 +710,7 @@ async function classify(){
 }
 
 /* ══════════════════════════════════════════════════════════════
-   CALENDAR — Direct Google API
+   CALENDAR - Direct Google API
    ══════════════════════════════════════════════════════════════ */
 async function loadCal(){
   if (!gAuth.isConnected()) return;
@@ -750,7 +750,7 @@ const SCHED_DEF=[
    pills:[{t:"E1",c:"se"},{t:"LI msg",c:"sl"},{t:"LI post",c:"spost"}],
    b1:[{cls:"sb sd-amber",t:"Send E1 emails"},{cls:"sb sl sd-violet",t:"LinkedIn message"},{cls:"sm sd-green",t:"Actively engage"}],
    b2:[{cls:"sb sd-violet",t:"LinkedIn post"},{cls:"sm sd-green",t:"Reply to likes & comments"}],
-   tasks11:["Send E1 emails to pipeline","LinkedIn messages — subcontracting outreach","Actively engage with connections"],
+   tasks11:["Send E1 emails to pipeline","LinkedIn messages - subcontracting outreach","Actively engage with connections"],
    tasks12:["Post LinkedIn content (subcontracting)","Engage with post likes & comments"]},
   {dow:2,name:"Tuesday",
    pills:[],
@@ -762,7 +762,7 @@ const SCHED_DEF=[
    pills:[{t:"E3",c:"se"},{t:"LI msg",c:"sl"}],
    b1:[{cls:"sb sd-amber",t:"Send E3 emails"},{cls:"sb sd-violet",t:"LinkedIn message"},{cls:"sm sd-green",t:"Actively engage"}],
    b2:[{cls:"sm sd-green",t:"Reply to likes & comments"}],
-   tasks11:["Send E3 emails to pipeline","LinkedIn messages — subcontracting outreach","Actively engage with connections"],
+   tasks11:["Send E3 emails to pipeline","LinkedIn messages - subcontracting outreach","Actively engage with connections"],
    tasks12:["Reply to post likes & comments"]},
   {dow:4,name:"Thursday",
    pills:[],
@@ -774,7 +774,7 @@ const SCHED_DEF=[
    pills:[{t:"E5",c:"se"},{t:"LI msg",c:"sl"}],
    b1:[{cls:"sb sd-amber",t:"Send E5 emails"},{cls:"sb sd-violet",t:"LinkedIn message"},{cls:"sm sd-green",t:"Actively engage"}],
    b2:[{cls:"sm sd-green",t:"Reply to likes & comments"}],
-   tasks11:["Send E5 emails to pipeline","LinkedIn messages — subcontracting outreach","Actively engage with connections"],
+   tasks11:["Send E5 emails to pipeline","LinkedIn messages - subcontracting outreach","Actively engage with connections"],
    tasks12:["Reply to post likes & comments"]}
 ];
 
@@ -784,15 +784,15 @@ function renderSchedule(){
   // Find Monday of this week
   const mon=new Date(now);mon.setDate(now.getDate()-(todayDow===0?6:todayDow-1));
   const dayName=DAY_FULL[todayDow]||(todayDow===0||todayDow===6?"Weekend":"");
-  const el=document.getElementById("schedToday");if(el)el.textContent=dayName||"Mon–Fri";
+  const el=document.getElementById("schedToday");if(el)el.textContent=dayName||"Mon-Fri";
   let grid="";
   SCHED_DEF.forEach((day,i)=>{
     const date=new Date(mon);date.setDate(mon.getDate()+i);
     const isToday=date.toDateString()===now.toDateString();
     const dateStr=date.toLocaleDateString(undefined,{month:"short",day:"numeric"});
     grid+='<div class="sday'+(isToday?" today-col":"")+'"><div class="sday-hd"><div class="sday-hd-row"><span class="sday-name">'+day.name+'</span>'+(isToday?'<span class="sday-tbadge">Today</span>':'')+'</div><div class="sday-date">'+dateStr+'</div><div class="spills">'+day.pills.map(p=>'<span class="spill '+p.c+'">'+p.t+'</span>').join('')+'</div></div>';
-    grid+='<div class="sblock"><div class="stlbl">11:00 – 12:00</div>'+day.b1.map(a=>'<div class="sact '+a.cls+'"><span class="sdot '+a.cls.split(" ")[1]+'"></span>'+esc(a.t)+'</div>').join('')+'</div>';
-    grid+='<div class="sblock"><div class="stlbl">12:00 – 1:00</div>'+day.b2.map(a=>'<div class="sact '+a.cls+'"><span class="sdot '+a.cls.split(" ")[1]+'"></span>'+esc(a.t)+'</div>').join('')+'</div>';
+    grid+='<div class="sblock"><div class="stlbl">11:00 - 12:00</div>'+day.b1.map(a=>'<div class="sact '+a.cls+'"><span class="sdot '+a.cls.split(" ")[1]+'"></span>'+esc(a.t)+'</div>').join('')+'</div>';
+    grid+='<div class="sblock"><div class="stlbl">12:00 - 1:00</div>'+day.b2.map(a=>'<div class="sact '+a.cls+'"><span class="sdot '+a.cls.split(" ")[1]+'"></span>'+esc(a.t)+'</div>').join('')+'</div>';
     grid+='</div>';
   });
   const sg=document.getElementById("schedGrid");if(sg)sg.innerHTML=grid;
@@ -832,7 +832,7 @@ function compute(){
 let lastD={};
 function render(d){lastD=d;
   const bn=document.getElementById("banner");
-  if(errs.length){bn.style.display="";bn.innerHTML="⚠ Couldn't reach "+[...new Set(errs)].join(", ")+" — showing what loaded. Try Reload or re-check the connection.";}else bn.style.display="none";
+  if(errs.length){bn.style.display="";bn.innerHTML="⚠ Couldn't reach "+[...new Set(errs)].join(", ")+" - showing what loaded. Try Reload or re-check the connection.";}else bn.style.display="none";
   // hero
   const pct=Math.min(100,Math.round(d.reached/GOAL*100));
   document.getElementById("hReached").innerHTML=d.reached.toLocaleString()+' <small>/ 1,650</small>';
@@ -870,12 +870,12 @@ function renderActions(d){
   const chips=arr=>arr.slice(0,4).map(l=>'<span>'+esc(l.company)+'</span>').join("")+(arr.length>4?'<span>+'+(arr.length-4)+' more</span>':"");
   const cards=[
     {n:book.length,t:"Book a demo",s:"Positive replies waiting on times",a:book,f:"positive",c:"var(--win)",bg:"#e3f6ec",ic:ICON.cal},
-    {n:fup.length,t:"Send follow-up",s:"Emailed, no reply — next touch due",a:fup,f:"contacted",c:"var(--accent)",bg:"#e7ecfb",ic:ICON.mail},
+    {n:fup.length,t:"Send follow-up",s:"Emailed, no reply - next touch due",a:fup,f:"contacted",c:"var(--accent)",bg:"#e7ecfb",ic:ICON.mail},
     {n:li.length,t:"LinkedIn touch",s:"Send a 1:1 DM by hand",a:li,f:"contacted",c:"var(--violet)",bg:"#efe9ff",ic:ICON.link},
-    {n:start.length,t:"Start outreach",s:"Fresh leads — aim 8/day",a:start,f:"new",c:"var(--warn)",bg:"#fdf0db",ic:ICON.target},
+    {n:start.length,t:"Start outreach",s:"Fresh leads - aim 8/day",a:start,f:"new",c:"var(--warn)",bg:"#fdf0db",ic:ICON.target},
   ].filter(c=>c.n>0);
   if(!cards.length||(d.emailed===0&&d.liSent===0&&book.length===0&&fup.length===0&&li.length===0)){
-    C.innerHTML='<div class="act kick"><div class="top"><div class="badge" style="background:rgba(255,255,255,.14);color:#fff">'+ICON.bolt+'</div><div class="num">10</div></div><div class="ttl">Kick off the campaign</div><div class="sub">Your 10 Email-1 drafts are in Gmail, ready to review &amp; send. Sending them starts the clock — replies, meetings and follow-ups light up here automatically.</div><div class="go">Open Gmail drafts →</div></div>'
+    C.innerHTML='<div class="act kick"><div class="top"><div class="badge" style="background:rgba(255,255,255,.14);color:#fff">'+ICON.bolt+'</div><div class="num">10</div></div><div class="ttl">Kick off the campaign</div><div class="sub">Your 10 Email-1 drafts are in Gmail, ready to review &amp; send. Sending them starts the clock - replies, meetings and follow-ups light up here automatically.</div><div class="go">Open Gmail drafts →</div></div>'
     + (start.length?'<div class="act" data-f="new" style="margin-top:0"><span class="bar" style="background:var(--warn)"></span><div class="top"><div class="badge" style="background:#fdf0db;color:var(--warn)">'+ICON.target+'</div><div class="num">'+start.length+'</div></div><div class="ttl">Leads ready to email</div><div class="sub">Loaded &amp; qualified, not yet contacted.</div><div class="who">'+chips(start)+'</div><div class="go">View leads →</div></div>':"");
     C.querySelectorAll(".act[data-f]").forEach(el=>el.onclick=()=>focusLeads(el.dataset.f));
     return;
@@ -946,11 +946,11 @@ Ricky Regalado · Founder, Route (Exchange)
 Owner, Rozalado Services (BSC) · ISSA board, BSC segment
 getroute.com`;
 const TOUCHES=[
- {k:"e1",lbl:"E1 — offer / request demo",pin:"Day 0",subj:true},
- {k:"li",lbl:"LinkedIn DM — parallel to E1",pin:"Day 0",subj:false},
- {k:"e2",lbl:"E2 — podcast / story invite",pin:"Day 3",subj:true},
- {k:"e3",lbl:"E3 — schedule demo",pin:"Day 7",subj:true},
- {k:"e5",lbl:"E5 — takeaway close",pin:"Day 13",subj:true}];
+ {k:"e1",lbl:"E1 - offer / request demo",pin:"Day 0",subj:true},
+ {k:"li",lbl:"LinkedIn DM - parallel to E1",pin:"Day 0",subj:false},
+ {k:"e2",lbl:"E2 - podcast / story invite",pin:"Day 3",subj:true},
+ {k:"e3",lbl:"E3 - schedule demo",pin:"Day 7",subj:true},
+ {k:"e5",lbl:"E5 - takeaway close",pin:"Day 13",subj:true}];
 const DEFAULT_TPL={
  e1:{subj:"fellow BSC - talk shop?",body:`Hi {first_name},
 
@@ -998,8 +998,9 @@ But if there's even a 15-minute version of this conversation worth having - your
 Either way, I'm rooting for {company}. We're all stronger together.
 
 ${SIG_T}`}};
+const TPL_VERSION=2;
 let TPL; try{TPL=JSON.parse(localStorage.getItem("rx_templates"));}catch(e){TPL=null;}
-if(!TPL||!TPL.e1)TPL=JSON.parse(JSON.stringify(DEFAULT_TPL));
+if(!TPL||!TPL.e1||(+localStorage.getItem("rx_tpl_v")||0)<TPL_VERSION){TPL=JSON.parse(JSON.stringify(DEFAULT_TPL));localStorage.setItem("rx_tpl_v",TPL_VERSION);}
 function saveTpl(){localStorage.setItem("rx_templates",JSON.stringify(TPL));document.getElementById("edExport").value=JSON.stringify(TPL,null,1);}
 function tok(str,l){return (str||"").replace(/\{first_name\}/g,l?l.fn:"{first_name}").replace(/\{company\}/g,l?l.company:"{company}");}
 function edPreview(){const id=+document.getElementById("edLead").value;const l=LEADS.find(x=>x.id===id)||LEADS[0];
@@ -1029,7 +1030,7 @@ async function generateDrafts(){
   if(!gAuth.isConnected()){alert("Sign in with Google first to create Gmail drafts.");return;}
   const todo=LEADS.filter(l=>st(l.id).approved&&!st(l.id).drafted&&l.email);
   if(!todo.length){alert("Tick the Draft? box on the leads you want first.");return;}
-  if(!confirm("Create Gmail drafts (Email 1) for "+todo.length+" approved lead(s)? They'll sit in your Gmail Drafts for review — nothing sends.")) return;
+  if(!confirm("Create Gmail drafts (Email 1) for "+todo.length+" approved lead(s)? They'll sit in your Gmail Drafts for review - nothing sends.")) return;
   const b=document.getElementById("genDrafts"),stat=document.getElementById("genStat");b.disabled=true;
   let ok=0;const li=[];
   for(let i=0;i<todo.length;i++){const l=todo[i];stat.textContent="creating "+(i+1)+"/"+todo.length+"…";
@@ -1041,7 +1042,7 @@ async function generateDrafts(){
   }
   localStorage.setItem("rx_state",JSON.stringify(STATE));
   const ex=document.getElementById("edExport");if(ex&&li.length){ex.value="LinkedIn DMs to send by hand (parallel to E1):\n\n"+li.join("\n\n");}
-  stat.textContent=ok+" draft(s) created ✓ — check Gmail. LinkedIn DMs are in the editor's copy box.";
+  stat.textContent=ok+" draft(s) created ✓ - check Gmail. LinkedIn DMs are in the editor's copy box.";
   compute();
 }
 
