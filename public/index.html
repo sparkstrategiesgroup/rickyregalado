@@ -326,6 +326,29 @@ details.editor>summary::-webkit-details-marker{display:none;}
 .leads-toggle.collapsed svg{transform:rotate(-90deg);}
 .leads-body{transition:max-height .3s ease,opacity .2s;overflow:hidden;}
 .leads-body.collapsed{max-height:0 !important;opacity:0;padding:0;margin:0;}
+
+/* TODAY'S ACTIVITY FEED */
+.activity-feed{margin-top:14px;padding-top:12px;border-top:1px solid var(--line);}
+.activity-hd{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:8px;display:flex;align-items:center;gap:6px;}
+.activity-hd .live-dot{width:6px;height:6px;border-radius:50%;background:#3ee08f;animation:pulse 1.8s infinite;}
+.activity-counters{display:flex;gap:10px;margin-bottom:10px;flex-wrap:wrap;}
+.act-counter{display:flex;align-items:center;gap:6px;background:#f5f7fc;border:1px solid var(--line);border-radius:8px;padding:6px 10px;font-size:11.5px;font-weight:600;color:var(--ink2);}
+.act-counter .act-num{font-family:var(--mono);font-size:16px;font-weight:800;color:var(--brand);}
+.act-counter.done .act-num{color:var(--win);}
+.act-counter .act-icon{width:18px;height:18px;border-radius:5px;display:flex;align-items:center;justify-content:center;}
+.act-counter .act-icon.email-ic{background:#e7ecfb;color:var(--brand);}
+.act-counter .act-icon.li-ic{background:#efe9ff;color:var(--violet);}
+.act-counter .act-icon.reply-ic{background:#e3f6ec;color:var(--win);}
+.activity-list{list-style:none;margin:0;padding:0;max-height:140px;overflow-y:auto;}
+.activity-list li{display:flex;align-items:center;gap:8px;padding:4px 0;font-size:11.5px;color:var(--ink2);border-bottom:1px solid #f0f2f7;}
+.activity-list li:last-child{border-bottom:none;}
+.activity-list .al-icon{width:16px;height:16px;border-radius:4px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:9px;}
+.activity-list .al-email{background:#e7ecfb;color:var(--brand);}
+.activity-list .al-li{background:#efe9ff;color:var(--violet);}
+.activity-list .al-reply{background:#e3f6ec;color:var(--win);}
+.activity-list .al-co{font-weight:600;color:var(--ink);}
+.activity-list .al-time{margin-left:auto;font-size:10px;color:var(--muted);font-family:var(--mono);}
+.activity-empty{font-size:11.5px;color:var(--muted);padding:6px 0;}
 </style>
 </head>
 <body>
@@ -408,6 +431,7 @@ details.editor>summary::-webkit-details-marker{display:none;}
         <div class="dchk-bar-bg"><div class="dchk-bar" id="dchkBar"></div></div>
         <div class="dchk-grid" id="dchkGrid"></div>
         <div class="dchk-acts" id="dchkActs"></div>
+        <div class="activity-feed" id="activityFeed"></div>
       </div>
     </div>
     <div class="today-panel" id="todayMsg">
@@ -690,8 +714,9 @@ async function loadGmail(){
         const ts = Date.parse(dateStr)||Number(m.internalDate)||0;
         const fromUs = isUs(from);
         const fromLead = domainOf(from)===lead.domain;
-        if(fromUs && domainOf(to)===lead.domain){lead.contacted=true;lead.sentCount++;}
-        if(fromLead){lead.replied=true;if(ts>lead.lastTs){lead.lastTs=ts;lead.lastSnippet=m.snippet||"";}}
+        const todayStart=new Date();todayStart.setHours(0,0,0,0);
+        if(fromUs && domainOf(to)===lead.domain){lead.contacted=true;lead.sentCount++;if(ts>=todayStart.getTime())lead.emailedToday=true;}
+        if(fromLead){lead.replied=true;if(ts>=todayStart.getTime())lead.repliedToday=true;if(ts>lead.lastTs){lead.lastTs=ts;lead.lastSnippet=m.snippet||"";}}
         if(fromUs&&ts>lead.lastTs)lead.lastTs=ts;
       }
     }
@@ -868,7 +893,7 @@ function render(d){lastD=d;
   renderSchedule();
 
 
-  renderCalendar();renderLegend();renderTable();updateGenBar();if(window._renderMsgTabs)window._renderMsgTabs();
+  renderCalendar();renderLegend();renderTable();updateGenBar();if(window._renderMsgTabs)window._renderMsgTabs();if(window._renderActivity)window._renderActivity();
   document.getElementById("updated").innerHTML="updated "+new Date().toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"});
 }
 function renderActions(d){
@@ -1057,7 +1082,7 @@ async function generateDrafts(){
   compute();
 }
 
-function reset(){errs=[];APPTS=[];LEADS.forEach(l=>{l.contacted=false;l.sentCount=0;l.replied=false;l.sentiment="none";l.meeting=false;l.lastTs=0;l.lastSnippet="";});}
+function reset(){errs=[];APPTS=[];LEADS.forEach(l=>{l.contacted=false;l.sentCount=0;l.replied=false;l.sentiment="none";l.meeting=false;l.lastTs=0;l.lastSnippet="";l.emailedToday=false;l.repliedToday=false;});}
 async function loadAll(){
   reset();
   if(gAuth.isConnected()){
@@ -1138,6 +1163,72 @@ setInterval(()=>{if(gAuth.isConnected())loadAll();},90000);
   if(btn)btn.onclick=function(){document.getElementById("genDrafts").click();};
   setTimeout(renderMsgTabs,100);
 })();
+
+/* ── TODAY'S ACTIVITY FEED ── */
+function renderActivityFeed(){
+  const feed=document.getElementById("activityFeed");if(!feed)return;
+  const emailedToday=LEADS.filter(l=>l.emailedToday);
+  const repliedToday=LEADS.filter(l=>l.repliedToday);
+  const todayKey=new Date().toLocaleDateString();
+  const LI_KEY="rx_li_today_"+todayKey;
+  let liSentToday={};try{liSentToday=JSON.parse(localStorage.getItem(LI_KEY)||"{}");}catch(e){}
+  const liCount=Object.keys(liSentToday).filter(k=>liSentToday[k]).length;
+
+  const mailIcon='<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 6L2 7"/></svg>';
+  const liIcon='<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>';
+  const replyIcon='<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="9 17 4 12 9 7"/><path d="M20 18v-2a4 4 0 0 0-4-4H4"/></svg>';
+  const checkIcon='<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>';
+
+  let h='<div class="activity-hd"><span class="live-dot"></span> Today\'s Activity</div>';
+  h+='<div class="activity-counters">';
+  h+='<div class="act-counter'+(emailedToday.length>0?" done":"")+'"><span class="act-icon email-ic">'+mailIcon+'</span><span class="act-num">'+emailedToday.length+'</span> emails sent</div>';
+  h+='<div class="act-counter'+(liCount>0?" done":"")+'"><span class="act-icon li-ic">'+liIcon+'</span><span class="act-num">'+liCount+'</span> LinkedIn sent</div>';
+  h+='<div class="act-counter'+(repliedToday.length>0?" done":"")+'"><span class="act-icon reply-ic">'+replyIcon+'</span><span class="act-num">'+repliedToday.length+'</span> replies</div>';
+  h+='</div>';
+
+  const items=[];
+  emailedToday.forEach(l=>items.push({type:"email",co:l.company,contact:l.fn,ts:l.lastTs}));
+  repliedToday.forEach(l=>items.push({type:"reply",co:l.company,contact:l.fn,ts:l.lastTs}));
+  LEADS.forEach(l=>{if(liSentToday[l.id])items.push({type:"li",co:l.company,contact:l.fn,ts:Date.now()});});
+  items.sort((a,b)=>(b.ts||0)-(a.ts||0));
+
+  if(items.length){
+    h+='<ul class="activity-list">';
+    items.forEach(it=>{
+      const cls=it.type==="email"?"al-email":it.type==="li"?"al-li":"al-reply";
+      const ic=it.type==="email"?checkIcon:it.type==="li"?checkIcon:replyIcon;
+      const label=it.type==="email"?"Emailed":it.type==="li"?"LinkedIn sent":"Replied";
+      const time=it.ts?new Date(it.ts).toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"}):"";
+      h+='<li><span class="al-icon '+cls+'">'+ic+'</span><span class="al-co">'+esc(it.co)+'</span> <span>'+label+'</span><span class="al-time">'+time+'</span></li>';
+    });
+    h+='</ul>';
+  } else {
+    h+='<div class="activity-empty">No outreach activity yet today. Send emails or mark LinkedIn messages to see them here.</div>';
+  }
+
+  // LinkedIn quick-mark section
+  const liLeads=LEADS.filter(l=>l.emailedToday&&!liSentToday[l.id]&&!st(l.id).linkedin);
+  if(liLeads.length){
+    h+='<div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--line)">';
+    h+='<div style="font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:6px">Mark LinkedIn sent</div>';
+    liLeads.slice(0,10).forEach(l=>{
+      h+='<label class="dchk-row" style="padding:3px 0"><input type="checkbox" class="li-mark" data-id="'+l.id+'"> '+esc(l.company)+' ('+esc(l.fn)+')</label>';
+    });
+    h+='</div>';
+  }
+
+  feed.innerHTML=h;
+
+  feed.querySelectorAll(".li-mark").forEach(cb=>{cb.onchange=function(){
+    const id=+this.dataset.id;
+    liSentToday[id]=this.checked;
+    localStorage.setItem(LI_KEY,JSON.stringify(liSentToday));
+    if(this.checked){st(id).linkedin=true;localStorage.setItem("rx_state",JSON.stringify(STATE));}
+    renderActivityFeed();
+  };});
+}
+window._renderActivity=renderActivityFeed;
+renderActivityFeed();
 
 /* ── DRAG & DROP WIDGETS ── */
 (function(){
