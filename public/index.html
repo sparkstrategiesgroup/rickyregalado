@@ -459,18 +459,6 @@ details.editor>summary::-webkit-details-marker{display:none;}
   </details>
   </div>
 
-  <div class="widget" data-widget="calendar">
-  <div class="drag-handle" draggable="true"><div class="grip"><div class="grip-row"><i></i><i></i><i></i></div><div class="grip-row"><i></i><i></i><i></i></div></div><span class="wlabel">Calendar</span><div class="grip"><div class="grip-row"><i></i><i></i><i></i></div><div class="grip-row"><i></i><i></i><i></i></div></div></div>
-  <div class="card"><div class="sec" style="margin-top:0"><span class="ico" id="icCal"></span><h2>Booked Demos</h2><span class="hint">live from your Calendar</span></div>
-    <div class="calwrap"><div><div class="calmonth" id="calMonth"></div><div id="calGrid"></div></div>
-      <div><ul class="agenda" id="agenda"><li class="empty">Loading&hellip;</li></ul></div></div></div>
-  </div>
-
-  <div class="widget" data-widget="legend">
-  <div class="drag-handle" draggable="true"><div class="grip"><div class="grip-row"><i></i><i></i><i></i></div><div class="grip-row"><i></i><i></i><i></i></div></div><span class="wlabel">Legend</span><div class="grip"><div class="grip-row"><i></i><i></i><i></i></div><div class="grip-row"><i></i><i></i><i></i></div></div></div>
-  <details class="legend"><summary><span class="ico" id="icLeg" style="background:#eef1f6;color:var(--muted)"></span> Legend - how to read this</summary><div class="legrid" id="legend"></div></details>
-  </div>
-
 </div>
 
 <script>
@@ -893,7 +881,7 @@ function render(d){lastD=d;
   renderSchedule();
 
 
-  renderCalendar();renderLegend();renderTable();updateGenBar();if(window._renderMsgTabs)window._renderMsgTabs();if(window._renderActivity)window._renderActivity();
+  renderTable();updateGenBar();if(window._renderMsgTabs)window._renderMsgTabs();if(window._renderActivity)window._renderActivity();
   document.getElementById("updated").innerHTML="updated "+new Date().toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"});
 }
 function renderActions(d){
@@ -920,28 +908,6 @@ function renderActions(d){
     '<div class="top"><div class="badge" style="background:'+c.bg+';color:'+c.c+'">'+c.ic+'</div><div class="num" style="color:'+c.c+'">'+c.n+'</div></div>'+
     '<div class="ttl">'+c.t+'</div><div class="sub">'+c.s+'</div><div class="who">'+chips(c.a)+'</div><div class="go">View →</div></div>').join("");
   C.querySelectorAll(".act[data-f]").forEach(el=>el.onclick=()=>focusLeads(el.dataset.f));
-}
-function renderCalendar(){
-  const now=new Date();const fut=APPTS.filter(a=>a.start>=Date.now()-36e5).sort((x,y)=>x.start-y.start);
-  const ag=document.getElementById("agenda");
-  if(!fut.length)ag.innerHTML='<li class="empty">No demos booked yet. Positive replies → the daily task drafts a booking reply with 3 open slots; confirmed demos appear here.</li>';
-  else ag.innerHTML=fut.slice(0,7).map(a=>{const d=new Date(a.start);return '<li><div class="ic">'+ICON.cal+'</div><div><b>'+d.toLocaleDateString(undefined,{weekday:"short",month:"short",day:"numeric"})+', '+d.toLocaleTimeString([],{hour:"numeric",minute:"2-digit"})+'</b><br>'+esc(a.company)+(a.url?' · <a href="'+esc(a.url)+'" target="_blank" rel="noopener">join</a>':'')+'</div></li>';}).join("");
-  const y=now.getFullYear(),mo=now.getMonth();
-  document.getElementById("calMonth").textContent=now.toLocaleDateString(undefined,{month:"long",year:"numeric"});
-  const days={};APPTS.forEach(a=>{const d=new Date(a.start);if(d.getFullYear()===y&&d.getMonth()===mo)days[d.getDate()]=1;});
-  const first=new Date(y,mo,1).getDay(),dim=new Date(y,mo+1,0).getDate(),td=now.getDate();
-  let h='<table class="calgrid"><thead><tr><th>S</th><th>M</th><th>T</th><th>W</th><th>T</th><th>F</th><th>S</th></tr></thead><tbody><tr>';
-  for(let i=0;i<first;i++)h+='<td class="muted"></td>';
-  for(let dy=1;dy<=dim;dy++){const dow=(first+dy-1)%7;if(dy>1&&dow===0)h+='</tr><tr>';h+='<td class="'+(days[dy]?"has":(dy===td?"today":""))+'">'+dy+'</td>';}
-  document.getElementById("calGrid").innerHTML=h+'</tr></tbody></table>';
-}
-function renderLegend(){
-  const order=["closed","opp","meeting","positive","replied","linkedin","contacted","ooo","negative","notfit","new"];
-  let h=order.map(s=>'<div class="li"><span class="sw" style="background:'+SC[s]+'"></span><span><b>'+SL[s]+'</b></span></div>').join("");
-  h+='<div class="li"><span class="sq" style="background:#3552e6"></span><span><b>Sequence pills</b>: E1/E2/E3 = emails sent · Li = LinkedIn DM logged. Filled = done.</span></div>';
-  h+='<div class="li"><span class="sq" style="background:#ffd166"></span><span><b>Yellow line</b> on the reached bar = where 8/day pace says you should be today.</span></div>';
-  h+='<div class="li"><span class="sw" style="background:#0f9d58"></span><span><b>Reached</b> = any touch (email or LinkedIn) · <b>Closed</b> = signed Prime contractor.</span></div>';
-  document.getElementById("legend").innerHTML=h;
 }
 let sortK="rank",sortDir=1;
 const RANK={closed:0,opp:1,meeting:2,positive:3,replied:4,ooo:5,linkedin:6,contacted:7,negative:8,notfit:9,new:10};
@@ -1088,7 +1054,6 @@ async function loadAll(){
   if(gAuth.isConnected()){
     try{await loadGmail();}catch(e){errs.push("Gmail");}
     try{await classify();}catch(e){}
-    try{await loadCal();}catch(e){errs.push("Calendar");}
   }
   compute();
 }
