@@ -102,8 +102,7 @@ a{color:var(--accent);text-decoration:none;}
 .dchk-prog{font-size:11.5px;color:var(--muted);}
 .dchk-bar-bg{height:3px;background:#e6eaf2;border-radius:4px;margin-bottom:14px;}
 .dchk-bar{height:3px;background:var(--brand);border-radius:4px;width:0%;transition:width .3s;}
-.dchk-grid{display:grid;grid-template-columns:1fr 1fr;gap:2px 28px;}
-@media(max-width:680px){.dchk-grid{grid-template-columns:1fr;}}
+.dchk-grid{display:flex;flex-direction:column;gap:4px;}
 .dchk-sec{font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.05em;text-transform:uppercase;margin-bottom:8px;}
 .dchk-row{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--ink);padding:5px 0;cursor:pointer;}
 .dchk-row input[type=checkbox]{accent-color:var(--brand);width:14px;height:14px;flex-shrink:0;cursor:pointer;}
@@ -111,6 +110,27 @@ a{color:var(--accent);text-decoration:none;}
 .dchk-acts{margin-top:12px;padding-top:11px;border-top:1px solid var(--line);display:flex;gap:7px;flex-wrap:wrap;}
 .dchk-acts button.qa{font-size:11.5px;padding:6px 11px;border-radius:9px;border:1px solid var(--line);background:#fff;color:var(--ink2);cursor:pointer;font-weight:600;}
 .dchk-acts button.qa:hover{background:#f5f7fc;}
+
+/* GAME CLOCK */
+.gclock{background:linear-gradient(135deg,#0d1530 0%,#1a2548 100%);border-radius:14px;padding:16px 20px;margin-bottom:14px;color:#fff;display:flex;align-items:center;justify-content:space-between;gap:16px;box-shadow:0 4px 16px rgba(13,21,48,.2);position:relative;overflow:hidden;}
+.gclock.pregame{background:linear-gradient(135deg,#1a2548 0%,#2a3868 100%);}
+.gclock.halftime{background:linear-gradient(135deg,#0d1530 0%,#1b3a0d 80%);}
+.gclock.gameon{background:linear-gradient(135deg,#0f2e08 0%,#1b6b0a 100%);animation:pulse-glow 2s ease-in-out infinite;}
+.gclock.urgent{background:linear-gradient(135deg,#6b0a0a 0%,#a82020 100%);animation:pulse-glow 1s ease-in-out infinite;}
+.gclock.postgame{background:linear-gradient(135deg,#0d1530 0%,#1a2548 100%);}
+@keyframes pulse-glow{0%,100%{box-shadow:0 4px 16px rgba(13,21,48,.2)}50%{box-shadow:0 4px 24px rgba(15,157,88,.35)}}
+.gclock.urgent .gc-phase{animation:none;}
+@keyframes pulse-glow-red{0%,100%{box-shadow:0 4px 16px rgba(13,21,48,.2)}50%{box-shadow:0 4px 24px rgba(239,71,87,.35)}}
+.gclock.urgent{animation:pulse-glow-red 1s ease-in-out infinite;}
+.gc-left{flex:1;min-width:0;}
+.gc-phase{font-size:10px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;opacity:.7;margin-bottom:2px;}
+.gc-msg{font-size:15px;font-weight:700;line-height:1.3;}
+.gc-sub{font-size:11px;opacity:.6;margin-top:3px;}
+.gc-right{text-align:right;flex-shrink:0;}
+.gc-time{font-family:var(--mono);font-size:28px;font-weight:800;letter-spacing:-1px;line-height:1;}
+.gc-countdown{font-size:11px;opacity:.7;margin-top:4px;}
+.gc-pts{display:inline-flex;align-items:center;gap:5px;background:rgba(255,255,255,.15);border-radius:8px;padding:4px 10px;margin-top:6px;font-size:12px;font-weight:700;}
+.gc-pts .gc-pts-num{font-family:var(--mono);font-size:16px;}
 
 /* CARDS / GRID */
 .grid2{display:grid;grid-template-columns:1.25fr 1fr;gap:16px;margin-bottom:18px;}
@@ -459,6 +479,10 @@ details.editor>summary::-webkit-details-marker{display:none;}
   <div class="drag-handle" draggable="true"><div class="grip"><div class="grip-row"><i></i><i></i><i></i></div><div class="grip-row"><i></i><i></i><i></i></div></div><span class="wlabel">Schedule</span><div class="grip"><div class="grip-row"><i></i><i></i><i></i></div><div class="grip-row"><i></i><i></i><i></i></div></div></div>
   <div class="sec"><span class="ico" id="icSched"></span><h2>This week's schedule</h2><span class="hint">11:00 am - 1:00 pm · <b id="schedToday">---</b></span></div>
   <div class="sched-grid" id="schedGrid"></div>
+  <div class="gclock" id="gameClock">
+    <div class="gc-left"><div class="gc-phase" id="gcPhase"></div><div class="gc-msg" id="gcMsg"></div><div class="gc-sub" id="gcSub"></div></div>
+    <div class="gc-right"><div class="gc-time" id="gcTime"></div><div class="gc-countdown" id="gcCountdown"></div><div class="gc-pts" id="gcPts"></div></div>
+  </div>
   <div class="today-split">
     <div class="today-panel" id="todayChk">
       <div class="today-panel-hd"><span class="today-panel-ttl"><span class="ico" id="icChk"></span> Today's Checklist</span><span class="today-panel-date" id="chkDate"></span><span class="today-panel-sub" id="dchkProg">0 of 5 done</span></div>
@@ -821,33 +845,23 @@ const SCHED_DEF=[
   {dow:1,name:"Monday",
    pills:[{t:"E1",c:"se"},{t:"LI msg",c:"sl"},{t:"LI post",c:"spost"}],
    b1:["Send emails","LinkedIn DM messages","Actively engage with connections"],
-   b2:["Post social media content","Comment and engage"],
-   tasks11:["Send E1 emails to pipeline","LinkedIn messages - subcontracting outreach","Actively engage with connections"],
-   tasks12:["Post LinkedIn content (subcontracting)","Engage with post likes & comments"]},
+   b2:["Post social media content","Comment and engage"]},
   {dow:2,name:"Tuesday",
    pills:[{t:"Follow-up",c:"se"},{t:"LI msg",c:"sl"}],
    b1:["Send emails","LinkedIn DM messages","Actively engage with connections"],
-   b2:["Comment and engage"],
-   tasks11:["Send follow-up emails","LinkedIn messages - subcontracting outreach","Actively engage with connections"],
-   tasks12:["Reply to post likes & comments","Continue engagement"]},
+   b2:["Comment and engage"]},
   {dow:3,name:"Wednesday",
    pills:[{t:"E3",c:"se"},{t:"LI msg",c:"sl"},{t:"LI post",c:"spost"}],
    b1:["Send emails","LinkedIn DM messages","Actively engage with connections"],
-   b2:["Post social media content","Comment and engage"],
-   tasks11:["Send E3 emails to pipeline","LinkedIn messages - subcontracting outreach","Actively engage with connections"],
-   tasks12:["Post LinkedIn content (subcontracting)","Engage with post likes & comments"]},
+   b2:["Post social media content","Comment and engage"]},
   {dow:4,name:"Thursday",
    pills:[{t:"Follow-up",c:"se"},{t:"LI msg",c:"sl"}],
    b1:["Send emails","LinkedIn DM messages","Actively engage with connections"],
-   b2:["Comment and engage"],
-   tasks11:["Send follow-up emails","LinkedIn messages - subcontracting outreach","Actively engage with connections"],
-   tasks12:["Reply to post likes & comments","Continue engagement"]},
+   b2:["Comment and engage"]},
   {dow:5,name:"Friday",
    pills:[{t:"E5",c:"se"},{t:"LI msg",c:"sl"},{t:"LI post",c:"spost"}],
    b1:["Send emails","LinkedIn DM messages","Actively engage with connections"],
-   b2:["Post social media content","Comment and engage"],
-   tasks11:["Send E5 emails to pipeline","LinkedIn messages - subcontracting outreach","Actively engage with connections"],
-   tasks12:["Post LinkedIn content (subcontracting)","Engage with post likes & comments"]}
+   b2:["Post social media content","Comment and engage"]}
 ];
 
 function renderSchedule(){
@@ -878,19 +892,168 @@ function renderSchedule(){
   }
   const KEY="rx_dchk_"+now.toLocaleDateString();
   let saved={};try{saved=JSON.parse(localStorage.getItem(KEY)||"{}");}catch(e){}
-  const allTasks=[...todayDef.tasks11,...todayDef.tasks12];
+  const allTasks=[...todayDef.b1,...todayDef.b2];
   const TOTAL=allTasks.length;
   function countDone(){return allTasks.filter((_,i)=>saved["t"+i]).length;}
   function updBar(){const d=countDone();const bar=document.getElementById("dchkBar");const prog=document.getElementById("dchkProg");if(bar)bar.style.width=Math.round(d/TOTAL*100)+"%";if(prog)prog.textContent=d+" of "+TOTAL+" done";}
   function buildSec(tasks,label,offset){let h='<div class="dchk-sec">'+esc(label)+'</div>';tasks.forEach((t,i)=>{const ki="t"+(i+offset);h+='<label class="dchk-row'+(saved[ki]?" done":"")+'"><input type="checkbox"'+(saved[ki]?' checked="checked"':'')+' data-ki="'+ki+'"> '+esc(t)+'</label>';});return h;}
   const grid2=document.getElementById("dchkGrid");
-  if(grid2)grid2.innerHTML='<div>'+buildSec(todayDef.tasks11,"11:00 - 12:00 OUTREACH",0)+'</div><div>'+buildSec(todayDef.tasks12,"12:00 - 1:00 ENGAGE",todayDef.tasks11.length)+'</div>';
+  if(grid2)grid2.innerHTML=buildSec(todayDef.b1,"11:00 - 12:00",0)+buildSec(todayDef.b2,"12:00 - 1:00",todayDef.b1.length);
   updBar();
   document.querySelectorAll("#dchkGrid .dchk-row input[type=checkbox]").forEach(cb=>{cb.addEventListener("change",()=>{saved[cb.dataset.ki]=cb.checked;cb.closest(".dchk-row").classList.toggle("done",cb.checked);localStorage.setItem(KEY,JSON.stringify(saved));updBar();});});
   const acts=document.getElementById("dchkActs");
   if(acts){acts.innerHTML='<button class="qa" onclick="focusLeads(\'new\')">View new leads →</button><button class="qa" onclick="focusLeads(\'positive\')">Book positive replies →</button><button class="qa" onclick="document.getElementById(\'editorCard\').open=true;document.getElementById(\'editorCard\').scrollIntoView({behavior:\'smooth\'})">Review email copy →</button>';}
 }
 /* ── END SCHEDULE ── */
+
+/* ── GAME CLOCK ── */
+const GC_QUOTES=[
+"You didn't come this far to stop now.",
+"The pain of discipline weighs ounces. The pain of regret weighs tons.",
+"One day or day one. You decide.",
+"You can quit. Or you can keep going. Both hurt.",
+"The comeback is always stronger than the setback.",
+"Nobody is coming to save you. Be your own hero.",
+"Your future is watching what you do today.",
+"The only way out is through.",
+"Comfort is expensive. Growth is priceless.",
+"You are stronger than the excuse you're about to make.",
+"Every master was once a beginner who refused to quit.",
+"When you're tired, learn to rest—not surrender.",
+"The mountain isn't in your way. It is your way.",
+"Keep showing up. Consistency beats intensity.",
+"You don't have to be fearless. Just don't let fear drive.",
+"The harder the battle, the sweeter the victory.",
+"Success is built on days when you didn't feel like it.",
+"Small steps still move you forward.",
+"You have survived 100% of your hardest days.",
+"The version of you that wins is built by the choices you make today.",
+"Nobody remembers the excuses. Everyone remembers the result.",
+"Your dreams deserve your effort.",
+"What feels impossible today becomes your warm-up tomorrow.",
+"You were not built to stay small.",
+"Courage is action in the presence of fear.",
+"Keep going. The person you want to become is waiting.",
+"The obstacle is not the enemy. Quitting is.",
+"Doubt kills more dreams than failure ever will.",
+"Pressure creates diamonds.",
+"Your potential is too valuable to waste on hesitation.",
+"Every champion was once overlooked.",
+"The grind is temporary. Pride lasts.",
+"You don't rise to your goals. You fall to your habits.",
+"Stop negotiating with your excuses.",
+"Be stubborn about your goals and flexible about your path.",
+"The next chapter will thank you for not giving up.",
+"If it matters, make time. If not, make excuses.",
+"You are capable of far more than your current circumstances suggest.",
+"Action creates confidence.",
+"No one can outwork a person who refuses to quit.",
+"Progress is earned, not awarded.",
+"Your breakthrough may be one more attempt away.",
+"The strongest people keep moving when nobody is watching.",
+"Fear says 'what if you fail?' Faith says 'what if you fly?'",
+"You owe it to yourself to see what happens if you don't quit.",
+"The road gets easier when you get stronger.",
+"Keep building. Keep believing. Keep moving.",
+"Your story isn't over yet.",
+"The difference between ordinary and extraordinary is one more effort.",
+"You were given this life because you are strong enough to live it."
+];
+function gcQuote(){var idx=Math.floor(Date.now()/30000)%GC_QUOTES.length;return GC_QUOTES[idx];}
+
+function updateGameClock(){
+  const now=new Date();
+  const h=now.getHours(),m=now.getMinutes();
+  const dow=now.getDay();
+  const el=document.getElementById("gameClock");
+  if(!el)return;
+  const phaseEl=document.getElementById("gcPhase");
+  const msgEl=document.getElementById("gcMsg");
+  const subEl=document.getElementById("gcSub");
+  const timeEl=document.getElementById("gcTime");
+  const cdEl=document.getElementById("gcCountdown");
+  const ptsEl=document.getElementById("gcPts");
+
+  const timeStr=now.toLocaleTimeString([],{hour:"numeric",minute:"2-digit"});
+  timeEl.textContent=timeStr;
+
+  const KEY="rx_dchk_"+now.toLocaleDateString();
+  let saved={};try{saved=JSON.parse(localStorage.getItem(KEY)||"{}");}catch(e){}
+  const todayDef=SCHED_DEF.find(d=>d.dow===dow);
+  const total=todayDef?(todayDef.b1.length+todayDef.b2.length):0;
+  let done=0;
+  if(todayDef){for(let i=0;i<total;i++){if(saved["t"+i])done++;}}
+  const pts=done*10;
+
+  ptsEl.innerHTML='<span class="gc-pts-num">'+pts+'</span> pts';
+
+  function minsUntil(targetH,targetM){return(targetH-h)*60+(targetM-m);}
+  function fmtMins(mins){var hh=Math.floor(mins/60),mm=mins%60;return hh>0?(hh+"h "+mm+"m"):(mm+"m");}
+
+  var q=gcQuote();
+
+  if(dow===0||dow===6){
+    el.className="gclock postgame";
+    phaseEl.textContent="WEEKEND";
+    msgEl.textContent="Rest up. Monday we go again.";
+    subEl.textContent=q;
+    cdEl.textContent="Back at it Monday";
+  } else if(h<10){
+    el.className="gclock pregame";
+    phaseEl.textContent="PRE-GAME";
+    msgEl.textContent="Morning prep. Review your pipeline.";
+    subEl.textContent=q;
+    cdEl.textContent=fmtMins(minsUntil(11,0))+" until tip-off";
+  } else if(h===10){
+    el.className="gclock pregame";
+    phaseEl.textContent="WARM-UP";
+    msgEl.textContent="Have you sent your LinkedIn messages?";
+    subEl.textContent=q;
+    cdEl.textContent=fmtMins(minsUntil(11,0))+" until game time";
+  } else if(h===11){
+    var left=minsUntil(12,0);
+    el.className=done<2?"gclock urgent":"gclock gameon";
+    phaseEl.textContent="1ST HALF";
+    if(done===0){
+      msgEl.textContent="Clock is running! Send those emails NOW.";
+    } else if(done<todayDef.b1.length){
+      msgEl.textContent="Keep pushing - "+done+" down, "+(total-done)+" to go.";
+    } else {
+      msgEl.textContent="First half domination! Emails and DMs handled.";
+    }
+    subEl.textContent=q;
+    cdEl.textContent=left+"m left in the 1st half";
+  } else if(h===12){
+    var left=minsUntil(13,0);
+    el.className=done<todayDef.b1.length?"gclock urgent":"gclock gameon";
+    phaseEl.textContent="2ND HALF";
+    if(done<todayDef.b1.length){
+      msgEl.textContent="Behind on 1st half tasks - dig deep!";
+    } else if(done<total){
+      msgEl.textContent="Social media + engagement time. Finish strong!";
+    } else {
+      msgEl.textContent="PERFECT GAME! Every task crushed.";
+    }
+    subEl.textContent=q;
+    cdEl.textContent=left+"m left in the 2nd half";
+  } else {
+    el.className="gclock postgame";
+    phaseEl.textContent="FINAL SCORE";
+    if(done===total&&total>0){
+      msgEl.textContent="PERFECT GAME! "+done+"/"+total+" tasks completed.";
+    } else if(done>0){
+      msgEl.textContent="Game over. "+done+" of "+total+" completed.";
+    } else if(total>0){
+      msgEl.textContent="Game over. No tasks checked off today.";
+    } else {
+      msgEl.textContent="No game scheduled today.";
+    }
+    subEl.textContent=q;
+    cdEl.textContent="Next game tomorrow at 11:00";
+  }
+}
+setInterval(updateGameClock,15000);
+/* ── END GAME CLOCK ── */
 
 function compute(){
   const reached=LEADS.filter(l=>{const s=st(l.id);return l.contacted||l.replied||l.meeting||s.linkedin||s.opp||s.closed;}).length;
@@ -927,7 +1090,7 @@ function render(d){lastD=d;
 
   renderPipeline(d);
   renderSchedule();
-
+  updateGameClock();
 
   renderTable();updateGenBar();if(window._renderMsgTabs)window._renderMsgTabs();if(window._renderActivity)window._renderActivity();
   document.getElementById("updated").innerHTML="updated "+new Date().toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"});
