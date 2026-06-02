@@ -946,9 +946,8 @@ function renderPipeline(d){
     {key:"closed",lbl:"Closed",sub:"Signed Primes",bg:"#e3f6ec",color:"var(--win)",leads:LEADS.filter(l=>st(l.id).closed)}
   ];
   const socialTiles=[
-    {key:"li-need",lbl:"Need DM",sub:"No LinkedIn Yet",bg:"#efe9ff",color:"var(--violet)",leads:LEADS.filter(l=>ok(l)&&l.contacted&&!st(l.id).linkedin)},
-    {key:"li-sent",lbl:"DM Sent",sub:"LinkedIn Done",bg:"#e7ecfb",color:"var(--accent)",leads:LEADS.filter(l=>st(l.id).linkedin&&!st(l.id).removed)},
-    {key:"li-replied",lbl:"Replied",sub:"Got Response",bg:"#e3f6ec",color:"var(--win)",leads:LEADS.filter(l=>ok(l)&&l.replied)}
+    {key:"li-need",lbl:"Need DM",sub:"Contacted · No DM Sent",bg:"#fff4e6",color:"#e67700",leads:LEADS.filter(l=>ok(l)&&l.contacted&&!st(l.id).linkedin)},
+    {key:"li-sent",lbl:"DM Sent",sub:"LinkedIn Done",bg:"#d4f4e2",color:"#0f9d58",leads:LEADS.filter(l=>st(l.id).linkedin&&!st(l.id).removed)}
   ];
   function renderRow(rowId,expandId,tiles){
     const row=document.getElementById(rowId);if(!row)return;
