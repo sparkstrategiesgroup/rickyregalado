@@ -947,12 +947,16 @@ function renderPipeline(d){
   function renderRow(rowId,expandId,tiles){
     const row=document.getElementById(rowId);if(!row)return;
     const expand=document.getElementById(expandId);
+    var BATCH=10;
     row.innerHTML=tiles.map(t=>{
       const isActive=_pipeActive===t.key;
+      const emailable=t.leads.filter(l=>l.email).length;
+      const batchNum=Math.min(BATCH,emailable);
+      const queueTxt=emailable>BATCH?' · '+emailable+' in queue':'';
       return '<div class="pipe-tile'+(isActive?" active":"")+'" data-key="'+t.key+'" style="background:'+t.bg+'">'+
-        '<div class="pt-num" style="color:'+t.color+'">'+t.leads.length+'</div>'+
+        '<div class="pt-num" style="color:'+t.color+'">'+batchNum+'</div>'+
         '<div class="pt-lbl" style="color:'+t.color+'">'+t.lbl+'</div>'+
-        '<div class="pt-sub" style="color:'+t.color+'">'+t.sub+'</div></div>';
+        '<div class="pt-sub" style="color:'+t.color+'">'+t.sub+queueTxt+'</div></div>';
     }).join("");
     row.querySelectorAll(".pipe-tile").forEach(el=>{
       el.onclick=function(){
@@ -967,7 +971,6 @@ function renderPipeline(d){
         var tplKey=tile.key==="e1"?"e1":tile.key==="e2"?"e2":tile.key==="e3"?"e3":"e1";
         var allLeads=tile.leads.filter(function(l){return l.email;});
         var skipped=new Set();
-        var BATCH=10;
         function getBatch(){return allLeads.filter(function(l){return !skipped.has(l.id);}).slice(0,BATCH);}
         function renderBatch(){
           var batch=getBatch();
