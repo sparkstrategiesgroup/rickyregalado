@@ -1169,7 +1169,7 @@ I'd love to grab some time and walk you through the platform - and honestly, to 
 If you're open, just reply and I'll send a couple of times that work.
 
 ${SIG_T}`},
- li:{subj:"",body:`Hi {first_name} - fellow BSC owner and ISSA board member here (I run Rozalado). Just sent you a quick note by email too. We're on a mission to improve the prime/sub model and debunk a few myths about it - built Exchange to do it. Would love to connect and talk shop. Stronger together - Ricky`},
+ li:{subj:"",body:`Hi {first_name} - I am a fellow BSC owner (Rozalado Services) and ISSA board member. Just sent you a quick note by email too. We're on a mission to improve subcontracting, which is why we built the Exchange. I would love to connect and talk shop!`},
  e2:{subj:"come share your story on Cleaning & Cocktails",body:`Hi {first_name},
 
 Different note - no platform talk this time.
@@ -1202,7 +1202,7 @@ But if there's even a 15-minute version of this conversation worth having - your
 Either way, I'm rooting for {company}. We're all stronger together.
 
 ${SIG_T}`}};
-const TPL_VERSION=2;
+const TPL_VERSION=3;
 let TPL; try{TPL=JSON.parse(localStorage.getItem("rx_templates"));}catch(e){TPL=null;}
 if(!TPL||!TPL.e1||(+localStorage.getItem("rx_tpl_v")||0)<TPL_VERSION){TPL=JSON.parse(JSON.stringify(DEFAULT_TPL));localStorage.setItem("rx_tpl_v",TPL_VERSION);}
 function saveTpl(){localStorage.setItem("rx_templates",JSON.stringify(TPL));document.getElementById("edExport").value=JSON.stringify(TPL,null,1);}
