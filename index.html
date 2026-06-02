@@ -573,7 +573,7 @@ const ICON={
    GOOGLE OAUTH 2.0 - SSO for Gmail + Calendar
    ══════════════════════════════════════════════════════════════ */
 const GOOGLE_CLIENT_ID = localStorage.getItem("rx_google_client_id") || "";
-const GOOGLE_SCOPES = "https://www.googleapis.com/auth/gmail.readonly https://www.googleapis.com/auth/gmail.compose https://www.googleapis.com/auth/calendar.readonly";
+const GOOGLE_SCOPES = "https://www.googleapis.com/auth/gmail.readonly https://www.googleapis.com/auth/gmail.compose https://www.googleapis.com/auth/gmail.send https://www.googleapis.com/auth/calendar.readonly";
 
 const gAuth = {
   token: null,
@@ -674,7 +674,7 @@ const gAuth = {
     const bar = document.getElementById("authbar");
     if (this.isConnected() && this.user) {
       bar.innerHTML = '<div class="auth-status"><span class="auth-dot on"></span><span><span class="auth-user">' + esc(this.user.name || this.user.email) + '</span></span></div>' +
-        '<span class="auth-scopes">Gmail (read + drafts) · Calendar (read)</span>' +
+        '<span class="auth-scopes">Gmail (read + send) · Calendar (read)</span>' +
         '<button class="auth-btn disconnect" onclick="gAuth.signOut()">Disconnect</button>';
     } else if (GOOGLE_CLIENT_ID) {
       bar.innerHTML = '<div class="auth-status"><span class="auth-dot off"></span><span>Not connected</span></div>' +
@@ -760,6 +760,18 @@ async function createGmailDraft(to, subject, body){
     method:"POST",
     headers:{"Content-Type":"application/json"},
     body:JSON.stringify({message:{raw:encoded}})
+  });
+  return res;
+}
+
+async function sendGmailEmail(to, subject, body){
+  if(!gAuth.isConnected()) throw new Error("Not connected");
+  const raw = ["To: "+to,"Subject: "+subject,"Content-Type: text/plain; charset=UTF-8","",""].join("\r\n")+body;
+  const encoded = btoa(unescape(encodeURIComponent(raw))).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"");
+  const res = await gAuth.api("https://gmail.googleapis.com/gmail/v1/users/me/messages/send",{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({raw:encoded})
   });
   return res;
 }
@@ -977,7 +989,7 @@ function renderPipeline(d){
           var remaining=allLeads.filter(function(l){return !skipped.has(l.id);}).length;
           var h='<div class="pipe-expand-hd"><span class="pe-title">'+tile.lbl+' — '+tile.sub+'</span><span class="pe-cnt">'+remaining+' of '+allLeads.length+' remaining</span></div>';
           if(batch.length){
-            h+='<div class="pe-action-bar"><label class="pe-sel-all"><input type="checkbox" id="peSelectAll" checked> Select all ('+batch.length+')</label><span class="pe-sel-count" id="peSelCount">'+batch.length+' selected</span><button class="pe-send-btn" id="peSendBtn">Create '+batch.length+' Gmail Draft'+(batch.length>1?"s":"")+'</button><span class="pe-send-status" id="peSendStatus"></span></div>';
+            h+='<div class="pe-action-bar"><label class="pe-sel-all"><input type="checkbox" id="peSelectAll" checked> Select all ('+batch.length+')</label><span class="pe-sel-count" id="peSelCount">'+batch.length+' selected</span><button class="pe-send-btn" id="peSendBtn">Send '+batch.length+' Email'+(batch.length>1?"s":"")+'</button><span class="pe-send-status" id="peSendStatus"></span></div>';
             h+='<div class="pe-table-wrap"><table class="pe-table"><thead><tr><th style="width:32px"></th><th>Company</th><th>Contact</th><th>Owner</th><th>Status</th><th style="width:32px"></th></tr></thead><tbody>';
             batch.forEach(function(l){
               var s=st(l.id),status=statusOf(l);
@@ -1009,7 +1021,7 @@ function renderPipeline(d){
             var chks=expand.querySelectorAll(".pe-chk");
             var n=expand.querySelectorAll(".pe-chk:checked").length;
             if(countEl)countEl.textContent=n+" selected";
-            if(sendBtn){sendBtn.disabled=n===0;sendBtn.textContent=n>0?"Create "+n+" Gmail Draft"+(n>1?"s":""):"Create Gmail Drafts";}
+            if(sendBtn){sendBtn.disabled=n===0;sendBtn.textContent=n>0?"Send "+n+" Email"+(n>1?"s":""):"Send Emails";}
             if(selAll)selAll.checked=n===chks.length&&chks.length>0;
           }
           if(selAll)selAll.onchange=function(){expand.querySelectorAll(".pe-chk").forEach(function(c){c.checked=selAll.checked;});updateCount();};
@@ -1023,18 +1035,18 @@ function renderPipeline(d){
             var tpl=typeof TPL!=="undefined"?TPL:{};
             var tmpl=tpl[tplKey]||{};
             if(!tmpl.subj&&!tmpl.body){alert("No template found for "+tplKey+". Edit templates first.");return;}
-            if(!confirm("Create Gmail drafts ("+tile.lbl+") for "+leads.length+" lead(s)? They will appear in your Gmail Drafts for review."))return;
+            if(!confirm("Send "+tile.lbl+" emails to "+leads.length+" lead(s)? This will send immediately from your Gmail account."))return;
             sendBtn.disabled=true;var ok=0;
             for(var i=0;i<leads.length;i++){
-              var l=leads[i];if(statusEl)statusEl.textContent="Creating "+(i+1)+"/"+leads.length+"...";
+              var l=leads[i];if(statusEl)statusEl.textContent="Sending "+(i+1)+"/"+leads.length+"...";
               try{
                 var subj=tok(tmpl.subj,l),body=tok(tmpl.body,l);
-                var r=await createGmailDraft(l.email,subj,body);
-                if(r&&(r.id||r.message)){ok++;st(l.id).drafted=true;skipped.add(l.id);}
+                var r=await sendGmailEmail(l.email,subj,body);
+                if(r&&(r.id||r.labelIds)){ok++;l.contacted=true;l.sentCount=(l.sentCount||0)+1;l.emailedToday=true;st(l.id).drafted=true;skipped.add(l.id);}
               }catch(e){if(statusEl)statusEl.textContent="Error: "+l.company+" - "+e.message;}
             }
             localStorage.setItem("rx_state",JSON.stringify(STATE));
-            if(statusEl)statusEl.textContent=ok+" draft"+(ok>1?"s":"")+" created ✓ — opening LinkedIn DMs...";
+            if(statusEl)statusEl.textContent=ok+" email"+(ok>1?"s":"")+" sent ✓ — opening LinkedIn DMs...";
             setTimeout(function(){
               compute();
               _pipeActive=null;
