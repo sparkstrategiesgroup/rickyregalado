@@ -713,8 +713,9 @@ async function loadGmail(){
         const fromUs = isUs(from);
         const fromLead = domainOf(from)===lead.domain;
         const todayStart=new Date();todayStart.setHours(0,0,0,0);
-        if(fromUs && domainOf(to)===lead.domain){lead.contacted=true;lead.sentCount++;if(ts>=todayStart.getTime())lead.emailedToday=true;}
-        if(fromLead){lead.replied=true;if(ts>=todayStart.getTime())lead.repliedToday=true;if(ts>lead.lastTs){lead.lastTs=ts;lead.lastSnippet=m.snippet||"";}}
+        const yesterdayStart=new Date(todayStart);yesterdayStart.setDate(yesterdayStart.getDate()-1);
+        if(fromUs && domainOf(to)===lead.domain){lead.contacted=true;lead.sentCount++;if(ts>=todayStart.getTime())lead.emailedToday=true;if(ts>=yesterdayStart.getTime()&&ts<todayStart.getTime())lead.emailedYesterday=true;}
+        if(fromLead){lead.replied=true;if(ts>=todayStart.getTime())lead.repliedToday=true;if(ts>=yesterdayStart.getTime()&&ts<todayStart.getTime())lead.repliedYesterday=true;if(ts>lead.lastTs){lead.lastTs=ts;lead.lastSnippet=m.snippet||"";}}
         if(fromUs&&ts>lead.lastTs)lead.lastTs=ts;
       }
     }
@@ -1194,6 +1195,32 @@ function renderActivityFeed(){
       h+='<label class="dchk-row" style="padding:3px 0"><input type="checkbox" class="li-mark" data-id="'+l.id+'"> '+esc(l.company)+' ('+esc(l.fn)+')</label>';
     });
     h+='</div>';
+  }
+
+  const yEmailed=LEADS.filter(l=>l.emailedYesterday);
+  const yReplied=LEADS.filter(l=>l.repliedYesterday);
+  const yestKey=new Date(new Date().setDate(new Date().getDate()-1)).toLocaleDateString();
+  const Y_LI_KEY="rx_li_today_"+yestKey;
+  let yLiSent={};try{yLiSent=JSON.parse(localStorage.getItem(Y_LI_KEY)||"{}");}catch(e){}
+  const yLiIds=Object.keys(yLiSent).filter(k=>yLiSent[k]);
+  const yLiLeads=yLiIds.map(id=>LEADS.find(l=>l.id===+id)).filter(Boolean);
+  const yTotal=yEmailed.length+yReplied.length+yLiLeads.length;
+  if(yTotal>0){
+    const yd=new Date();yd.setDate(yd.getDate()-1);
+    const yLabel=yd.toLocaleDateString(undefined,{weekday:"short",month:"short",day:"numeric"});
+    h+='<div class="yesterday-section">';
+    h+='<div class="activity-hd" style="margin-top:14px;padding-top:12px;border-top:1px solid var(--line);">Yesterday · '+yLabel+' <span style="font-weight:400;color:var(--muted)">('+yTotal+' touches)</span></div>';
+    const yItems=[];
+    yEmailed.forEach(l=>yItems.push({type:"email",co:l.company,contact:l.contact||l.fn||""}));
+    yReplied.forEach(l=>yItems.push({type:"reply",co:l.company,contact:l.contact||l.fn||""}));
+    yLiLeads.forEach(l=>yItems.push({type:"li",co:l.company,contact:l.contact||l.fn||""}));
+    h+='<ul class="activity-list">';
+    yItems.forEach(it=>{
+      const cls=it.type==="email"?"al-email":it.type==="li"?"al-li":"al-reply";
+      const label=it.type==="email"?"Emailed":it.type==="li"?"LinkedIn sent":"Replied";
+      h+='<li><span class="al-icon '+cls+'">'+checkIcon+'</span><span class="al-co">'+esc(it.co)+'</span> <span style="color:var(--muted)">'+esc(it.contact)+'</span><span class="al-time">'+label+'</span></li>';
+    });
+    h+='</ul></div>';
   }
 
   feed.innerHTML=h;
