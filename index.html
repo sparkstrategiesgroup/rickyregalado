@@ -1071,7 +1071,7 @@ function renderPipeline(d){
                 try{
                   var subj=tok(tmpl.subj,l),body=tok(tmpl.body,l);
                   var r=await sendGmailEmail(l.email,subj,body);
-                  if(r&&(r.id||r.labelIds)){ok++;l.contacted=true;l.sentCount=(l.sentCount||0)+1;l.emailedToday=true;st(l.id).sentCount=l.sentCount;st(l.id).contacted=true;skipped.add(l.id);}
+                  if(r&&(r.id||r.labelIds)){ok++;l.contacted=true;l.sentCount=(l.sentCount||0)+1;l.emailedToday=true;l.lastTs=Date.now();st(l.id).sentCount=l.sentCount;st(l.id).contacted=true;st(l.id).lastTs=l.lastTs;skipped.add(l.id);}
                 }catch(e){if(statusEl)statusEl.textContent="Error: "+l.company+" - "+e.message;}
               }
               localStorage.setItem("rx_state",JSON.stringify(STATE));
@@ -1272,6 +1272,7 @@ async function loadAll(){
     var s=st(l.id);
     if(s.sentCount&&(!l.contacted||l.sentCount<s.sentCount)){l.contacted=true;l.sentCount=Math.max(l.sentCount||0,s.sentCount);}
     if(s.contacted&&!l.contacted){l.contacted=true;}
+    if(s.lastTs&&(!l.lastTs||l.lastTs<s.lastTs)){l.lastTs=s.lastTs;}
   });
   compute();
 }
