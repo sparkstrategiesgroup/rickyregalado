@@ -175,19 +175,38 @@ details.legend summary::-webkit-details-marker{display:none;}
 .toolbar{display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap;}
 .toolbar input{flex:1;min-width:170px;padding:9px 12px;border:1px solid var(--line);border-radius:10px;font-size:13px;background:#f8fafd;}
 .toolbar select{padding:9px 11px;border:1px solid var(--line);border-radius:10px;font-size:13px;background:#fff;}
-table.leads{width:100%;border-collapse:collapse;}
-table.leads th,table.leads td{text-align:left;padding:9px 9px;font-size:12.5px;border-bottom:1px solid var(--line);vertical-align:top;}
-table.leads th{color:var(--muted);font-weight:600;font-size:10.5px;text-transform:uppercase;letter-spacing:.4px;cursor:pointer;white-space:nowrap;}
-table.leads tbody tr:hover{background:#f8fafd;}
+.toolbar .tgl-removed{font-size:11.5px;color:var(--muted);cursor:pointer;display:flex;align-items:center;gap:5px;padding:7px 10px;border:1px solid var(--line);border-radius:10px;background:#fff;user-select:none;}
+.toolbar .tgl-removed:hover{background:#f8fafd;}
+.toolbar .tgl-removed.active{background:#fdecec;border-color:#f5b5ad;color:var(--hot);}
+.toolbar .tgl-removed .cnt{font-weight:700;}
+.table-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:0 -4px;padding:0 4px;}
+table.leads{width:100%;border-collapse:collapse;min-width:960px;}
+table.leads th,table.leads td{text-align:left;padding:10px 8px;font-size:12.5px;border-bottom:1px solid var(--line);vertical-align:middle;}
+table.leads th{color:var(--muted);font-weight:600;font-size:10.5px;text-transform:uppercase;letter-spacing:.4px;cursor:pointer;white-space:nowrap;position:sticky;top:0;background:var(--card);z-index:1;}
+table.leads tbody tr{transition:background .1s;}
+table.leads tbody tr:hover{background:#f5f7fc;}
+table.leads tbody tr.removed-row{opacity:.45;background:#fafafa;}
+table.leads tbody tr.removed-row:hover{opacity:.7;}
 td .co{font-weight:650;} td .em{color:var(--muted);font-size:11px;}
 .pillb{display:inline-block;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:600;white-space:nowrap;}
 .tiergrow{background:#e7ecfb;color:var(--brand);} .tierhv{background:#e3f6ec;color:var(--win);} .tieratr{background:#fdecec;color:var(--hot);} .tierstd{background:#eef1f6;color:var(--muted);}
 .seq{display:flex;gap:4px;}
-.sp{font-size:9.5px;font-weight:800;width:23px;text-align:center;padding:3px 0;border-radius:6px;border:1px solid var(--line);color:#aeb6c8;background:#fff;}
+.sp{font-size:9.5px;font-weight:800;width:24px;text-align:center;padding:3px 0;border-radius:6px;border:1px solid var(--line);color:#aeb6c8;background:#fff;transition:all .15s;}
 .sp.done{color:#fff;border-color:transparent;} .sp.e.done{background:var(--brand);} .sp.l.done{background:var(--violet);}
-.acts{display:flex;gap:4px;margin-top:6px;}
-.acts button{font-size:10px;padding:3px 7px;border-radius:7px;border:1px solid var(--line);background:#fff;color:var(--ink2);cursor:pointer;font-weight:600;}
-.acts button.on{color:#fff;border-color:transparent;} .acts button.li.on{background:var(--violet);} .acts button.opp.on{background:var(--warn);} .acts button.won.on{background:var(--win);} .acts button.no.on{background:var(--muted);}
+.acts{display:flex;gap:5px;}
+.acts button{font-size:10.5px;padding:5px 9px;border-radius:8px;border:1px solid var(--line);background:#fff;color:var(--ink2);cursor:pointer;font-weight:600;transition:all .12s;line-height:1;}
+.acts button:hover{background:#f0f3fb;border-color:#c8d0e4;transform:translateY(-1px);box-shadow:0 2px 4px rgba(0,0,0,.06);}
+.acts button:active{transform:translateY(0);box-shadow:none;}
+.acts button.on{color:#fff;border-color:transparent;box-shadow:0 2px 6px rgba(0,0,0,.12);}
+.acts button.li.on{background:var(--violet);} .acts button.opp.on{background:var(--warn);} .acts button.won.on{background:var(--win);} .acts button.no.on{background:var(--muted);}
+.acts button.li:hover:not(.on){color:var(--violet);border-color:var(--violet);}
+.acts button.opp:hover:not(.on){color:var(--warn);border-color:var(--warn);}
+.acts button.won:hover:not(.on){color:var(--win);border-color:var(--win);}
+.acts button.no:hover:not(.on){color:var(--hot);border-color:var(--hot);}
+.btn-remove{width:26px;height:26px;border-radius:7px;border:1px solid transparent;background:transparent;color:var(--muted);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .12s;flex-shrink:0;padding:0;}
+.btn-remove:hover{background:#fdecec;color:var(--hot);border-color:#f5b5ad;}
+.btn-remove.is-removed{background:#fdecec;color:var(--hot);border-color:#f5b5ad;}
+.btn-remove svg{pointer-events:none;}
 .spin{display:inline-block;width:12px;height:12px;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:sp .8s linear infinite;vertical-align:-2px;}
 @keyframes sp{to{transform:rotate(360deg);}}
 details.editor{background:var(--card);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--sh-sm);margin-bottom:18px;padding:0 18px;}
@@ -318,9 +337,12 @@ details.editor>summary::-webkit-details-marker{display:none;}
 
   <div class="card" id="leadsCard"><div class="sec" style="margin-top:0"><span class="ico" id="icLead"></span><h2>Leads <span id="leadCount" style="color:var(--muted);font-weight:600"></span></h2><span class="hint">sequence pills = E1/LinkedIn/E2/E3 · buttons log LinkedIn / Opp / Won / Not-fit</span></div>
     <div class="genbar"><span class="gb-txt">Approve leads with the checkbox, then <b>generate E1 drafts</b> from the current editor copy (review in Gmail before sending).</span><button id="genDrafts">⚡ Generate E1 drafts</button><span class="gstat" id="genStat"></span></div>
-    <div class="toolbar"><input id="search" placeholder="Search company, contact, city…">
-      <select id="statusFilter"><option value="">All statuses</option><option value="closed">Closed (Prime)</option><option value="opp">Opportunity</option><option value="meeting">Meeting booked</option><option value="positive">Positive reply</option><option value="replied">Any reply</option><option value="linkedin">LinkedIn sent</option><option value="contacted">Emailed, awaiting</option><option value="new">Not contacted</option></select></div>
-    <table class="leads"><thead><tr><th data-k="company">Company</th><th data-k="contact">Contact</th><th data-k="loc">Location</th><th data-k="icpTier">Tier</th><th>Sequence</th><th data-k="statusLabel">Status</th><th data-k="lastTs">Last</th><th>Draft?</th><th>Log</th></tr></thead><tbody id="rows"></tbody></table>
+    <div class="toolbar"><input id="search" placeholder="Search company, contact, city...">
+      <select id="statusFilter"><option value="">All statuses</option><option value="closed">Closed (Prime)</option><option value="opp">Opportunity</option><option value="meeting">Meeting booked</option><option value="positive">Positive reply</option><option value="replied">Any reply</option><option value="linkedin">LinkedIn sent</option><option value="contacted">Emailed, awaiting</option><option value="new">Not contacted</option></select>
+      <label class="tgl-removed" id="tglRemoved"><input type="checkbox" id="showRemoved" style="display:none"><span>Show removed</span> <span class="cnt" id="removedCnt">0</span></label></div>
+    <div class="table-scroll">
+    <table class="leads"><thead><tr><th style="width:28px"></th><th data-k="company">Company</th><th data-k="contact">Contact</th><th data-k="loc">Location</th><th data-k="icpTier">Tier</th><th>Sequence</th><th data-k="statusLabel">Status</th><th data-k="lastTs">Last</th><th>Draft?</th><th>Log</th></tr></thead><tbody id="rows"></tbody></table>
+    </div>
   </div>
 </div>
 
@@ -467,6 +489,7 @@ const gAuth = {
 let STATE={}; try{STATE=JSON.parse(localStorage.getItem("rx_state")||"{}");}catch(e){STATE={};}
 function st(id){return STATE[id]||(STATE[id]={});}
 function toggle(id,k){const s=st(id);s[k]=!s[k];if(k==="closed"&&s[k])s.opp=true;localStorage.setItem("rx_state",JSON.stringify(STATE));compute();}
+function toggleRemove(id){const s=st(id);s.removed=!s.removed;localStorage.setItem("rx_state",JSON.stringify(STATE));compute();}
 let APPTS=[], errs=[];
 LEADS.forEach(l=>{l.domain=(l.email.split("@")[1]||"").toLowerCase();l.fn=((l.contact||"").replace(/\"/g,"").trim().split(/\s+/)[0])||"there";});
 const byDomain={};LEADS.forEach(l=>{if(l.domain)byDomain[l.domain]=l;});
@@ -702,8 +725,8 @@ function render(d){lastD=d;
   document.getElementById("updated").innerHTML="updated "+new Date().toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"});
 }
 function renderActions(d){
-  const P=l=>!st(l.id).notfit;
-  const book=LEADS.filter(l=>l.sentiment==="positive"&&!l.meeting&&!st(l.id).closed);
+  const P=l=>!st(l.id).notfit&&!st(l.id).removed;
+  const book=LEADS.filter(l=>l.sentiment==="positive"&&!l.meeting&&!st(l.id).closed&&!st(l.id).removed);
   const fup=LEADS.filter(l=>l.contacted&&!l.replied&&!l.meeting&&P(l)&&l.sentCount<3);
   const li=LEADS.filter(l=>l.contacted&&!l.replied&&!st(l.id).linkedin&&P(l));
   const start=LEADS.filter(l=>!l.contacted&&!st(l.id).linkedin&&P(l));
@@ -752,20 +775,30 @@ let sortK="rank",sortDir=1;
 const RANK={closed:0,opp:1,meeting:2,positive:3,replied:4,ooo:5,linkedin:6,contacted:7,negative:8,notfit:9,new:10};
 function renderTable(){
   const q=(document.getElementById("search").value||"").toLowerCase(),sf=document.getElementById("statusFilter").value;
-  let rows=LEADS.map(l=>{const s=statusOf(l);return{l,s,statusLabel:SL[s],rank:RANK[s],company:l.company,contact:l.contact,loc:(l.city?l.city+", ":"")+l.state,icpTier:l.icpTier,lastTs:l.lastTs||0,email:l.email};});
+  const showRm=document.getElementById("showRemoved").checked;
+  const removedCount=LEADS.filter(l=>st(l.id).removed).length;
+  document.getElementById("removedCnt").textContent=removedCount;
+  const tgl=document.getElementById("tglRemoved");
+  tgl.classList.toggle("active",showRm&&removedCount>0);
+  let rows=LEADS.map(l=>{const s=statusOf(l);return{l,s,statusLabel:SL[s],rank:RANK[s],company:l.company,contact:l.contact,loc:(l.city?l.city+", ":"")+l.state,icpTier:l.icpTier,lastTs:l.lastTs||0,email:l.email,removed:!!st(l.id).removed};});
+  if(!showRm)rows=rows.filter(r=>!r.removed);
   if(q)rows=rows.filter(r=>(r.company+" "+r.contact+" "+r.loc+" "+r.email).toLowerCase().includes(q));
   if(sf)rows=rows.filter(r=>{const s=st(r.l.id);return sf==="closed"?s.closed:sf==="opp"?s.opp:sf==="meeting"?r.l.meeting:sf==="positive"?r.l.sentiment==="positive":sf==="replied"?r.l.replied:sf==="linkedin"?s.linkedin:sf==="contacted"?(r.l.contacted&&!r.l.replied):sf==="new"?!(r.l.contacted||s.linkedin):true;});
   rows.sort((a,b)=>{let x=a[sortK],y=b[sortK];if(typeof x==="string"){x=x.toLowerCase();y=(y||"").toLowerCase();}return(x>y?1:x<y?-1:0)*sortDir;});
   document.getElementById("leadCount").textContent="· "+rows.length+" shown / "+LEADS.length;
   const tc={Growth:"tiergrow","High Value":"tierhv","At-Risk":"tieratr",Standard:"tierstd"};
+  const xSvg='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
+  const undoSvg='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>';
   document.getElementById("rows").innerHTML=rows.map(r=>{const col=SC[r.s],s=st(r.l.id),L=r.l;
     const pills='<div class="seq"><span class="sp e'+(L.sentCount>=1?" done":"")+'" title="Email 1">E1</span><span class="sp l'+(s.linkedin?" done":"")+'" title="LinkedIn">Li</span><span class="sp e'+(L.sentCount>=2?" done":"")+'" title="Email 2">E2</span><span class="sp e'+(L.sentCount>=3?" done":"")+'" title="Email 3">E3</span></div>';
-    return '<tr><td><div class="co">'+esc(r.company)+'</div><div class="em">'+(L.website||"")+'</div></td><td>'+esc(r.contact)+'<div class="em">'+esc(r.email)+'</div></td><td>'+esc(r.loc)+'</td><td><span class="pillb '+(tc[r.icpTier]||"tierstd")+'">'+esc(r.icpTier||"—")+'</span></td><td>'+pills+'</td><td><span class="pillb" style="background:'+col+'1a;color:'+col+'">'+r.statusLabel+'</span></td><td style="font-family:var(--mono);color:var(--muted)">'+(r.lastTs?new Date(r.lastTs).toLocaleDateString(undefined,{month:"short",day:"numeric"}):"—")+'</td>'+'<td><label class="dchk"><input type="checkbox" class="appchk" data-id="'+L.id+'"'+(s.approved?" checked":"")+'>'+(s.drafted?'<span class="draftedtag">drafted</span>':'<span>draft?</span>')+'</label></td>'+'<td><div class="acts"><button class="li'+(s.linkedin?" on":"")+'" data-id="'+L.id+'" data-k="linkedin">Li</button><button class="opp'+(s.opp?" on":"")+'" data-id="'+L.id+'" data-k="opp">Opp</button><button class="won'+(s.closed?" on":"")+'" data-id="'+L.id+'" data-k="closed">Won</button><button class="no'+(s.notfit?" on":"")+'" data-id="'+L.id+'" data-k="notfit">No</button></div></td></tr>';}).join("")||'<tr><td colspan="9" class="empty">No leads match.</td></tr>';
+    return '<tr class="'+(r.removed?"removed-row":"")+'"><td><button class="btn-remove'+(r.removed?" is-removed":"")+'" data-rid="'+L.id+'" title="'+(r.removed?"Restore":"Remove from list")+'">'+(r.removed?undoSvg:xSvg)+'</button></td><td><div class="co">'+esc(r.company)+'</div><div class="em">'+(L.website||"")+'</div></td><td>'+esc(r.contact)+'<div class="em">'+esc(r.email)+'</div></td><td>'+esc(r.loc)+'</td><td><span class="pillb '+(tc[r.icpTier]||"tierstd")+'">'+esc(r.icpTier||"—")+'</span></td><td>'+pills+'</td><td><span class="pillb" style="background:'+col+'1a;color:'+col+'">'+r.statusLabel+'</span></td><td style="font-family:var(--mono);color:var(--muted)">'+(r.lastTs?new Date(r.lastTs).toLocaleDateString(undefined,{month:"short",day:"numeric"}):"---")+'</td>'+'<td><label class="dchk"><input type="checkbox" class="appchk" data-id="'+L.id+'"'+(s.approved?" checked":"")+'>'+(s.drafted?'<span class="draftedtag">drafted</span>':'<span>draft?</span>')+'</label></td>'+'<td><div class="acts"><button class="li'+(s.linkedin?" on":"")+'" data-id="'+L.id+'" data-k="linkedin">Li</button><button class="opp'+(s.opp?" on":"")+'" data-id="'+L.id+'" data-k="opp">Opp</button><button class="won'+(s.closed?" on":"")+'" data-id="'+L.id+'" data-k="closed">Won</button><button class="no'+(s.notfit?" on":"")+'" data-id="'+L.id+'" data-k="notfit">No</button></div></td></tr>';}).join("")||'<tr><td colspan="10" class="empty">No leads match.</td></tr>';
+  document.querySelectorAll(".btn-remove").forEach(b=>b.onclick=()=>toggleRemove(+b.dataset.rid));
   document.querySelectorAll(".acts button").forEach(b=>b.onclick=()=>toggle(+b.dataset.id,b.dataset.k));
   document.querySelectorAll(".appchk").forEach(c=>c.onchange=()=>{st(+c.dataset.id).approved=c.checked;localStorage.setItem("rx_state",JSON.stringify(STATE));renderActions(lastD||{});updateGenBar();});
 }
 document.querySelectorAll("th[data-k]").forEach(th=>th.onclick=()=>{const k=th.dataset.k==="statusLabel"?"rank":th.dataset.k;if(sortK===k)sortDir*=-1;else{sortK=k;sortDir=1;}renderTable();});
 ["search","statusFilter"].forEach(id=>{const el=document.getElementById(id);el.addEventListener("input",()=>{renderTable();try{localStorage.setItem("rxv_"+id,el.value);}catch(e){}});try{const v=localStorage.getItem("rxv_"+id);if(v!=null)el.value=v;}catch(e){}});
+document.getElementById("showRemoved").addEventListener("change",renderTable);
 
 const SIG_T=`Stronger together,
 Ricky
@@ -780,38 +813,38 @@ const TOUCHES=[
  {k:"e3",lbl:"E3 — schedule demo",pin:"Day 7",subj:true},
  {k:"e5",lbl:"E5 — takeaway close",pin:"Day 13",subj:true}];
 const DEFAULT_TPL={
- e1:{subj:"fellow BSC — talk shop?",body:`Hi {first_name},
+ e1:{subj:"fellow BSC - talk shop?",body:`Hi {first_name},
 
-I'm a fellow BSC owner (Rozalado Services) who has navigated the subcontracting model to scale from $1M to $35M across multiple markets — 20–30% YoY growth.
+I'm a fellow BSC owner (Rozalado Services) who has navigated the subcontracting model to scale from $1M to $35M across multiple markets - 20-30% YoY growth.
 
 For over 10 years I've pressure-tested the subcontracting model and proven its worth to scale. Humbly, that success and tenure led me to a seat on the ISSA board, representing the BSC segment.
 
-That role is grounded in giving the BSC community resources, guidance and tools — and it's exactly why I built Exchange: a tech-enabled growth platform for primes and subcontractors to win and grow together at ~20%.
+That role is grounded in giving the BSC community resources, guidance and tools - and it's exactly why I built Exchange: a tech-enabled growth platform for primes and subcontractors to win and grow together at ~20%.
 
-I'd love to grab some time and walk you through the platform — and honestly, to get your perspective on subcontracting and talk shop.
+I'd love to grab some time and walk you through the platform - and honestly, to get your perspective on subcontracting and talk shop.
 
 If you're open, just reply and I'll send a couple of times that work.
 
 ${SIG_T}`},
- li:{subj:"",body:`Hi {first_name} — fellow BSC owner and ISSA board member here (I run Rozalado). Just sent you a quick note by email too. We're on a mission to improve the prime/sub model and debunk a few myths about it — built Exchange to do it. Would love to connect and talk shop. Stronger together — Ricky`},
+ li:{subj:"",body:`Hi {first_name} - fellow BSC owner and ISSA board member here (I run Rozalado). Just sent you a quick note by email too. We're on a mission to improve the prime/sub model and debunk a few myths about it - built Exchange to do it. Would love to connect and talk shop. Stronger together - Ricky`},
  e2:{subj:"come share your story on Cleaning & Cocktails",body:`Hi {first_name},
 
-Different note — no platform talk this time.
+Different note - no platform talk this time.
 
-I host Cleaning & Cocktails, where operators trade the real stories of building a cleaning company — the wins, the scars, all of it. I'd love to have you on to share {company}'s story: how you've grown, what you've learned running the work, and your honest take on the prime/sub model.
+I host Cleaning & Cocktails, where operators trade the real stories of building a cleaning company - the wins, the scars, all of it. I'd love to have you on to share {company}'s story: how you've grown, what you've learned running the work, and your honest take on the prime/sub model.
 
-No script, no pitch — just two BSC operators talking shop. Your story would mean a lot to the operators coming up behind you.
+No script, no pitch - just two BSC operators talking shop. Your story would mean a lot to the operators coming up behind you.
 
 Grab a time that works and we'll record: [your podcast booking link]
 
 ${SIG_T}`},
  e3:{subj:"20 minutes on Exchange?",body:`Hi {first_name},
 
-Following up — I'd still love to walk you through Exchange and get your read on it as a fellow prime.
+Following up - I'd still love to walk you through Exchange and get your read on it as a fellow prime.
 
 Quick why-it's-worth-20-minutes: it's a tech-enabled growth platform that helps primes and subs win and grow together (~20% YoY), with vetting and compliance (COIs, W-9s, backgrounds) handled up front so the sub side stops being a liability.
 
-Let's put 20 minutes on the calendar — grab whatever works: [your scheduling link]
+Let's put 20 minutes on the calendar - grab whatever works: [your scheduling link]
 Or reply with a day and I'll send a couple of times.
 
 ${SIG_T}`},
@@ -819,9 +852,9 @@ ${SIG_T}`},
 
 I don't want to keep landing in your inbox, so I'll make this the last one.
 
-If subcontracting-as-a-growth-engine isn't a priority right now, no worries at all — just say the word and I'll close the loop.
+If subcontracting-as-a-growth-engine isn't a priority right now, no worries at all - just say the word and I'll close the loop.
 
-But if there's even a 15-minute version of this conversation worth having — your perspective for mine, peer to peer — I'll make the time this week. Just reply and it's yours.
+But if there's even a 15-minute version of this conversation worth having - your perspective for mine, peer to peer - I'll make the time this week. Just reply and it's yours.
 
 Either way, I'm rooting for {company}. We're all stronger together.
 
