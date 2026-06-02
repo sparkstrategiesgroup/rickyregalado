@@ -91,10 +91,10 @@ a{color:var(--accent);text-decoration:none;}
 .sblock{padding:10px 13px;flex:1;}
 .sblock:not(:last-child){border-bottom:1px solid var(--line);}
 .stlbl{font-size:9.5px;font-weight:700;color:var(--muted);letter-spacing:.05em;text-transform:uppercase;margin-bottom:8px;}
-.sact{display:flex;align-items:flex-start;gap:8px;font-size:12px;color:var(--ink2);margin-bottom:6px;line-height:1.4;}
+.sact{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--ink2);margin-bottom:6px;line-height:1.4;cursor:pointer;}
 .sact:last-child{margin-bottom:0;}
-.sact .scheck{width:14px;height:14px;border-radius:3px;border:1.5px solid var(--line);flex-shrink:0;margin-top:1px;display:flex;align-items:center;justify-content:center;font-size:8px;color:transparent;}
-.sact:hover .scheck{border-color:var(--accent);}
+.sact input[type=checkbox]{width:14px;height:14px;border-radius:3px;flex-shrink:0;cursor:pointer;accent-color:var(--brand);}
+.sact.done{color:var(--muted);text-decoration:line-through;}
 /* today checklist */
 .dchkcard{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:16px 18px;margin-bottom:18px;box-shadow:var(--sh-sm);}
 .dchk-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
@@ -876,12 +876,32 @@ function renderSchedule(){
     const date=new Date(mon);date.setDate(mon.getDate()+i);
     const isToday=date.toDateString()===now.toDateString();
     const dateStr=date.toLocaleDateString(undefined,{month:"short",day:"numeric"});
+    const dayKey="rx_dchk_"+date.toLocaleDateString();
+    let daySaved={};try{daySaved=JSON.parse(localStorage.getItem(dayKey)||"{}");}catch(e){}
+    function chkItem(t,idx){var checked=daySaved["t"+idx];return '<label class="sact'+(checked?' done':'')+'"><input type="checkbox" data-daykey="'+dayKey+'" data-ki="t'+idx+'"'+(checked?' checked':'')+'>'+esc(t)+'</label>';}
     grid+='<div class="sday'+(isToday?" today-col":"")+'"><div class="sday-hd"><div class="sday-hd-row"><span class="sday-name">'+day.name+'</span>'+(isToday?'<span class="sday-tbadge">Today</span>':'')+'</div><div class="sday-date">'+dateStr+'</div><div class="spills">'+day.pills.map(p=>'<span class="spill '+p.c+'">'+p.t+'</span>').join('')+'</div></div>';
-    grid+='<div class="sblock"><div class="stlbl">11:00 - 12:00</div>'+day.b1.map(t=>'<div class="sact"><span class="scheck"></span>'+esc(t)+'</div>').join('')+'</div>';
-    grid+='<div class="sblock"><div class="stlbl">12:00 - 1:00</div>'+day.b2.map(t=>'<div class="sact"><span class="scheck"></span>'+esc(t)+'</div>').join('')+'</div>';
+    grid+='<div class="sblock"><div class="stlbl">11:00 - 12:00</div>'+day.b1.map((t,j)=>chkItem(t,j)).join('')+'</div>';
+    grid+='<div class="sblock"><div class="stlbl">12:00 - 1:00</div>'+day.b2.map((t,j)=>chkItem(t,j+day.b1.length)).join('')+'</div>';
     grid+='</div>';
   });
-  const sg=document.getElementById("schedGrid");if(sg)sg.innerHTML=grid;
+  const sg=document.getElementById("schedGrid");if(sg){
+    sg.innerHTML=grid;
+    sg.querySelectorAll(".sact input[type=checkbox]").forEach(cb=>{
+      cb.addEventListener("change",function(){
+        var dk=this.dataset.daykey,ki=this.dataset.ki;
+        var s={};try{s=JSON.parse(localStorage.getItem(dk)||"{}");}catch(e){}
+        s[ki]=this.checked;localStorage.setItem(dk,JSON.stringify(s));
+        this.closest(".sact").classList.toggle("done",this.checked);
+        // Sync today's checklist if same day
+        var todayKey="rx_dchk_"+now.toLocaleDateString();
+        if(dk===todayKey){
+          var match=document.querySelector('#dchkGrid input[data-ki="'+ki+'"]');
+          if(match&&match.checked!==this.checked){match.checked=this.checked;match.dispatchEvent(new Event("change"));}
+          updateGameClock();
+        }
+      });
+    });
+  }
   // Build today checklist
   const todayDef=SCHED_DEF.find(d=>d.dow===todayDow);
   const chkCard=document.getElementById("todayChk");
@@ -900,7 +920,12 @@ function renderSchedule(){
   const grid2=document.getElementById("dchkGrid");
   if(grid2)grid2.innerHTML=buildSec(todayDef.b1,"11:00 - 12:00",0)+buildSec(todayDef.b2,"12:00 - 1:00",todayDef.b1.length);
   updBar();
-  document.querySelectorAll("#dchkGrid .dchk-row input[type=checkbox]").forEach(cb=>{cb.addEventListener("change",()=>{saved[cb.dataset.ki]=cb.checked;cb.closest(".dchk-row").classList.toggle("done",cb.checked);localStorage.setItem(KEY,JSON.stringify(saved));updBar();});});
+  document.querySelectorAll("#dchkGrid .dchk-row input[type=checkbox]").forEach(cb=>{cb.addEventListener("change",()=>{
+    saved[cb.dataset.ki]=cb.checked;cb.closest(".dchk-row").classList.toggle("done",cb.checked);localStorage.setItem(KEY,JSON.stringify(saved));updBar();
+    var schedCb=document.querySelector('#schedGrid input[data-daykey="'+KEY+'"][data-ki="'+cb.dataset.ki+'"]');
+    if(schedCb&&schedCb.checked!==cb.checked){schedCb.checked=cb.checked;schedCb.closest(".sact").classList.toggle("done",cb.checked);}
+    updateGameClock();
+  });});
   const acts=document.getElementById("dchkActs");
   if(acts){acts.innerHTML='<button class="qa" onclick="focusLeads(\'new\')">View new leads →</button><button class="qa" onclick="focusLeads(\'positive\')">Book positive replies →</button><button class="qa" onclick="document.getElementById(\'editorCard\').open=true;document.getElementById(\'editorCard\').scrollIntoView({behavior:\'smooth\'})">Review email copy →</button>';}
 }
