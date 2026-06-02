@@ -313,6 +313,18 @@ details.editor>summary::-webkit-details-marker{display:none;}
 .pipe-lbl{font-size:11px;font-weight:600;margin-top:4px;text-transform:uppercase;letter-spacing:.5px;opacity:.8;}
 .pipe-chevron{font-size:20px;color:var(--muted);flex-shrink:0;margin:0 2px;}
 @media(max-width:600px){.pipeline-track{flex-direction:column;gap:6px;}.pipe-chevron{transform:rotate(90deg);}}
+#emailQueue{padding:0 16px 16px;}
+.eq-batch{margin-bottom:14px;}
+.eq-batch-hd{display:flex;align-items:center;gap:8px;margin-bottom:6px;cursor:pointer;}
+.eq-badge{font-size:10px;font-weight:800;padding:3px 10px;border-radius:6px;text-transform:uppercase;letter-spacing:.5px;}
+.eq-batch-hd .eq-cnt{font-size:11px;color:var(--muted);font-weight:600;}
+.eq-list{list-style:none;margin:0;padding:0;}
+.eq-list li{display:flex;align-items:center;gap:8px;padding:5px 8px;font-size:12px;border-radius:6px;transition:background .1s;}
+.eq-list li:hover{background:var(--card-hover,#f5f7fc);}
+.eq-list .eq-co{font-weight:600;color:var(--ink);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.eq-list .eq-contact{color:var(--muted);font-size:11px;flex-shrink:0;max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.eq-list .eq-email{font-size:10px;color:var(--brand);font-family:var(--mono);flex-shrink:0;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.eq-num{width:18px;height:18px;border-radius:50%;font-size:9px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
 .today-panel-body{padding:8px 18px 18px;}
 .msg-tabs{display:flex;gap:6px;padding:0 18px;margin-bottom:2px;}
 .msg-tab{font-size:11.5px;font-weight:600;padding:6px 14px;border-radius:8px 8px 0 0;border:1px solid var(--line);border-bottom:none;background:#f5f7fc;color:var(--muted);cursor:pointer;transition:all .12s;}
@@ -428,6 +440,7 @@ details.editor>summary::-webkit-details-marker{display:none;}
   <div class="drag-handle" draggable="true"><div class="grip"><div class="grip-row"><i></i><i></i><i></i></div><div class="grip-row"><i></i><i></i><i></i></div></div><span class="wlabel">Pipeline</span><div class="grip"><div class="grip-row"><i></i><i></i><i></i></div><div class="grip-row"><i></i><i></i><i></i></div></div></div>
   <div class="sec"><span class="ico" id="icPipe"></span><h2>Email Stage Progression</h2><span class="hint">leads advancing through outreach stages</span></div>
   <div class="pipeline-track" id="pipelineTrack"></div>
+  <div id="emailQueue"></div>
   </div>
 
   <div class="widget" data-widget="schedule">
@@ -917,6 +930,35 @@ function renderPipeline(d){
     '<div class="pipe-num" style="color:'+s.color+'">'+s.n+'</div>'+
     '<div class="pipe-lbl" style="color:'+s.color+'">'+s.lbl+'</div></div>').join("");
   track.querySelectorAll(".pipe-stage").forEach(el=>el.onclick=()=>focusLeads(el.dataset.f));
+  renderEmailQueue();
+}
+function renderEmailQueue(){
+  const el=document.getElementById("emailQueue");if(!el)return;
+  const ok=l=>!st(l.id).notfit&&!st(l.id).removed&&!st(l.id).closed&&!l.meeting;
+  const batches=[
+    {key:"e1",label:"E1 — First Outreach",bg:"#e7ecfb",color:"var(--accent)",leads:LEADS.filter(l=>ok(l)&&!l.contacted)},
+    {key:"e3",label:"E3 — Follow-up Demo Ask",bg:"#efe9ff",color:"var(--violet)",leads:LEADS.filter(l=>ok(l)&&l.contacted&&(l.sentCount||0)===1&&!l.replied)},
+    {key:"e5",label:"E5 — Final Close",bg:"#fdf0db",color:"var(--warn)",leads:LEADS.filter(l=>ok(l)&&l.contacted&&(l.sentCount||0)===2&&!l.replied)}
+  ];
+  let h='';
+  batches.forEach(b=>{
+    if(!b.leads.length)return;
+    const show=b.leads.slice(0,10);
+    h+='<div class="eq-batch">';
+    h+='<div class="eq-batch-hd"><span class="eq-badge" style="background:'+b.bg+';color:'+b.color+'">'+b.label+'</span><span class="eq-cnt">'+b.leads.length+' ready</span></div>';
+    h+='<ol class="eq-list">';
+    show.forEach((l,i)=>{
+      h+='<li><span class="eq-num" style="background:'+b.bg+';color:'+b.color+'">'+(i+1)+'</span>';
+      h+='<span class="eq-co">'+esc(l.company)+'</span>';
+      h+='<span class="eq-contact">'+esc(l.contact)+'</span>';
+      h+='<span class="eq-email">'+esc(l.email||"no email")+'</span></li>';
+    });
+    h+='</ol>';
+    if(b.leads.length>10)h+='<div style="font-size:11px;color:var(--muted);padding:4px 8px;">+'+(b.leads.length-10)+' more</div>';
+    h+='</div>';
+  });
+  if(!h)h='<div style="font-size:12px;color:var(--muted);padding:8px;">All leads have been contacted through the full email sequence.</div>';
+  el.innerHTML=h;
 }
 let sortK="rank",sortDir=1;
 const RANK={closed:0,opp:1,meeting:2,positive:3,replied:4,ooo:5,linkedin:6,contacted:7,negative:8,notfit:9,new:10};
