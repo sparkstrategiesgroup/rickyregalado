@@ -271,6 +271,53 @@ details.editor>summary::-webkit-details-marker{display:none;}
 .auth-setup{background:#fffbe6;border:1px solid #f0e6b0;border-radius:12px;padding:12px 16px;margin-bottom:14px;font-size:12.5px;color:#6b5900;}
 .auth-setup code{background:#f5f0d0;border-radius:4px;padding:1px 5px;font-size:11px;}
 .auth-setup a{color:#3552e6;font-weight:600;}
+/* DRAG & DROP */
+.widget{position:relative;transition:transform .2s,opacity .2s;}
+.widget .drag-handle{display:flex;align-items:center;justify-content:center;gap:6px;padding:5px 0;cursor:grab;opacity:0;transition:opacity .15s;user-select:none;}
+.widget:hover .drag-handle{opacity:1;}
+.drag-handle:active{cursor:grabbing;}
+.drag-handle .grip{display:flex;gap:2px;}
+.drag-handle .grip i{width:4px;height:4px;border-radius:50%;background:#c2c7cd;}
+.drag-handle .grip-row{display:flex;gap:2px;}
+.drag-handle .wlabel{font-size:9.5px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:#c2c7cd;}
+.widget.dragging{opacity:.4;transform:scale(.98);}
+.widget.drag-over{box-shadow:0 -3px 0 0 var(--brand);}
+.widget.drag-over-below{box-shadow:0 3px 0 0 var(--brand);}
+
+/* COUNTDOWN TIMER */
+.countdown-row{display:flex;gap:14px;margin:18px 0 6px;flex-wrap:wrap;}
+.cd-box{text-align:center;min-width:72px;}
+.cd-val{font-family:var(--mono);font-size:38px;font-weight:800;letter-spacing:-1px;color:#fff;line-height:1;}
+.cd-lbl{font-size:9.5px;letter-spacing:1.5px;text-transform:uppercase;color:#9fb0e6;margin-top:4px;}
+.cd-sep{font-family:var(--mono);font-size:32px;font-weight:700;color:rgba(255,255,255,.25);align-self:flex-start;padding-top:2px;}
+.hero-progress-row{display:flex;align-items:center;gap:14px;margin-top:14px;flex-wrap:wrap;}
+.hero-progress-wrap{flex:1;min-width:200px;}
+.hero-progress-label{font-size:13px;font-weight:700;color:#eaf0ff;}
+.hero-progress-label small{font-weight:500;color:#9fb0e6;}
+.hero-pace{font-size:11.5px;color:#aebbe6;margin-top:5px;}
+.hero-pace b{color:#ffd166;}
+
+/* TODAY SPLIT LAYOUT */
+.today-split{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:18px;}
+@media(max-width:880px){.today-split{grid-template-columns:1fr;}}
+.today-panel{background:var(--card);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--sh-sm);overflow:hidden;}
+.today-panel-hd{display:flex;align-items:center;justify-content:space-between;padding:14px 18px 0;margin-bottom:4px;}
+.today-panel-ttl{font-size:13.5px;font-weight:700;color:var(--ink);display:flex;align-items:center;gap:8px;}
+.today-panel-ttl .ico{width:22px;height:22px;border-radius:6px;display:flex;align-items:center;justify-content:center;background:#e7ecfb;color:var(--brand);}
+.today-panel-sub{font-size:11px;color:var(--muted);}
+.today-panel-body{padding:8px 18px 18px;}
+.msg-tabs{display:flex;gap:6px;padding:0 18px;margin-bottom:2px;}
+.msg-tab{font-size:11.5px;font-weight:600;padding:6px 14px;border-radius:8px 8px 0 0;border:1px solid var(--line);border-bottom:none;background:#f5f7fc;color:var(--muted);cursor:pointer;transition:all .12s;}
+.msg-tab.active{background:var(--card);color:var(--brand);border-bottom:1px solid var(--card);margin-bottom:-1px;position:relative;z-index:1;}
+.msg-preview{border-top:1px solid var(--line);padding:14px 18px;}
+.msg-preview .msg-subj{font-size:12.5px;font-weight:700;color:var(--ink);margin-bottom:6px;}
+.msg-preview .msg-body{font-size:12px;color:var(--ink2);white-space:pre-wrap;line-height:1.55;max-height:220px;overflow-y:auto;}
+.msg-preview .msg-token{background:#efe9ff;color:var(--violet);font-weight:600;padding:0 4px;border-radius:3px;font-size:11px;}
+.msg-actions{display:flex;gap:8px;padding:12px 18px;border-top:1px solid var(--line);}
+.msg-actions button{padding:8px 14px;border-radius:9px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid var(--line);background:#fff;color:var(--ink2);transition:all .12s;}
+.msg-actions button:hover{background:#f5f7fc;}
+.msg-actions button.primary{background:var(--brand);color:#fff;border-color:transparent;}
+.msg-actions button.primary:hover{background:#2a44c8;}
 </style>
 </head>
 <body>
@@ -289,6 +336,8 @@ details.editor>summary::-webkit-details-marker{display:none;}
     </button>
   </div>
 
+  <div class="widget" data-widget="leads">
+  <div class="drag-handle" draggable="true"><div class="grip"><div class="grip-row"><i></i><i></i><i></i></div><div class="grip-row"><i></i><i></i><i></i></div></div><span class="wlabel">Leads</span><div class="grip"><div class="grip-row"><i></i><i></i><i></i></div><div class="grip-row"><i></i><i></i><i></i></div></div></div>
   <div class="card" id="leadsCard"><div class="sec" style="margin-top:0"><span class="ico" id="icLead"></span><h2>Leads <span id="leadCount" style="color:var(--muted);font-weight:600"></span></h2><span class="hint">pipeline tracker - set status, add notes, remove leads you don't need</span></div>
     <div class="genbar"><span class="gb-txt">Approve leads with the checkbox, then <b>generate E1 drafts</b> from the current editor copy (review in Gmail before sending).</span><button id="genDrafts">⚡ Generate E1 drafts</button><span class="gstat" id="genStat"></span></div>
     <div class="toolbar"><input id="search" placeholder="Search company, contact, city...">
@@ -298,36 +347,70 @@ details.editor>summary::-webkit-details-marker{display:none;}
     <table class="leads"><thead><tr><th style="width:28px"></th><th data-k="company">Company</th><th data-k="contact">Contact</th><th data-k="owner">Owner</th><th data-k="statusLabel">Status</th><th>Notes</th><th data-k="lastTs">Last</th><th>Draft?</th></tr></thead><tbody id="rows"></tbody></table>
     </div>
   </div>
+  </div>
 
+  <div class="widget" data-widget="hero">
+  <div class="drag-handle" draggable="true"><div class="grip"><div class="grip-row"><i></i><i></i><i></i></div><div class="grip-row"><i></i><i></i><i></i></div></div><span class="wlabel">Mission</span><div class="grip"><div class="grip-row"><i></i><i></i><i></i></div><div class="grip-row"><i></i><i></i><i></i></div></div></div>
   <div class="hero">
     <div class="eyebrow"><span class="dot"></span> Route Exchange · Prime Contractor Acquisition <span class="stamp" id="updated">initializing <span class="spin"></span></span></div>
     <div class="mission">Sign <span class="hl">100 Prime Contractors</span></div>
-    <div class="missionsub"><b>6%</b> blended close on <b>1,650</b> reached BSC operators · ICP: COO &amp; VP Ops, Enterprise 500+ / $20M+ · 8/day finishes ~Mar 2027, ~15/day closes inside 2026</div>
-    <div class="herostats">
+    <div class="countdown-row" id="countdown">
+      <div class="cd-box"><div class="cd-val" id="cdDays">---</div><div class="cd-lbl">Days</div></div>
+      <span class="cd-sep">:</span>
+      <div class="cd-box"><div class="cd-val" id="cdHrs">--</div><div class="cd-lbl">Hrs</div></div>
+      <span class="cd-sep">:</span>
+      <div class="cd-box"><div class="cd-val" id="cdMin">--</div><div class="cd-lbl">Min</div></div>
+      <span class="cd-sep">:</span>
+      <div class="cd-box"><div class="cd-val" id="cdSec">--</div><div class="cd-lbl">Sec</div></div>
+    </div>
+    <div class="hero-progress-row">
+      <div class="hero-progress-wrap">
+        <div class="hero-progress-label" id="hClosedLabel">0 of 100 primes signed</div>
+        <div class="progress" style="margin-top:8px"><i id="hClosedFill" style="width:0%"></i></div>
+        <div class="hero-pace" id="hPaceNote">staged &amp; ready</div>
+      </div>
+    </div>
+    <div class="herostats" style="margin-top:14px;">
       <div class="hs"><div class="lab">Prospects reached</div><div class="val" id="hReached">0 <small>/ 1,650</small></div>
-        <div class="progress"><i id="hFill" style="width:0%"></i><span class="pace" id="hPace"></span></div>
-        <div class="pacenote" id="hPaceNote">staged &amp; ready</div></div>
+        <div class="progress"><i id="hFill" style="width:0%"></i><span class="pace" id="hPace"></span></div></div>
       <div class="hs"><div class="lab">Closed</div><div class="val" id="hClosed">0 <small>/ 100</small></div></div>
-      <div class="hs"><div class="lab">Proj. finish</div><div class="val" id="hProj" style="font-size:16px">—</div></div>
-      <div class="hs"><div class="lab">Reached→closed</div><div class="val" id="hConv">—</div></div>
+      <div class="hs"><div class="lab">Proj. finish</div><div class="val" id="hProj" style="font-size:16px">---</div></div>
+      <div class="hs"><div class="lab">Reached-closed</div><div class="val" id="hConv">---</div></div>
     </div>
   </div>
+  </div>
 
+  <div class="widget" data-widget="donext">
+  <div class="drag-handle" draggable="true"><div class="grip"><div class="grip-row"><i></i><i></i><i></i></div><div class="grip-row"><i></i><i></i><i></i></div></div><span class="wlabel">Do Next</span><div class="grip"><div class="grip-row"><i></i><i></i><i></i></div><div class="grip-row"><i></i><i></i><i></i></div></div></div>
   <div class="sec"><span class="ico" id="icDo"></span><h2>Do Next</h2><span class="hint">your shortlist — tap a card to filter the leads below</span></div>
   <div class="actions" id="actions"></div>
-
-  <!-- ── DAILY SCHEDULE ── -->
-  <div class="sec"><span class="ico" id="icSched"></span><h2>This week's schedule</h2><span class="hint">11:00 am – 1:00 pm · <b id="schedToday">—</b></span></div>
-  <div class="sched-grid" id="schedGrid"></div>
-  <div class="dchkcard" id="todayChk">
-    <div class="dchk-hd"><span class="dchk-ttl" id="dchkTitle">Today's checklist</span><span class="dchk-prog" id="dchkProg">0 of 5 done</span></div>
-    <div class="dchk-bar-bg"><div class="dchk-bar" id="dchkBar"></div></div>
-    <div class="dchk-grid" id="dchkGrid"></div>
-    <div class="dchk-acts" id="dchkActs"></div>
   </div>
-  <!-- ── END DAILY SCHEDULE ── -->
+
+  <div class="widget" data-widget="schedule">
+  <div class="drag-handle" draggable="true"><div class="grip"><div class="grip-row"><i></i><i></i><i></i></div><div class="grip-row"><i></i><i></i><i></i></div></div><span class="wlabel">Schedule</span><div class="grip"><div class="grip-row"><i></i><i></i><i></i></div><div class="grip-row"><i></i><i></i><i></i></div></div></div>
+  <div class="sec"><span class="ico" id="icSched"></span><h2>This week's schedule</h2><span class="hint">11:00 am - 1:00 pm · <b id="schedToday">---</b></span></div>
+  <div class="sched-grid" id="schedGrid"></div>
+  <div class="today-split">
+    <div class="today-panel" id="todayChk">
+      <div class="today-panel-hd"><span class="today-panel-ttl"><span class="ico" id="icChk"></span> Today's Checklist</span><span class="today-panel-sub" id="dchkProg">0 of 5 done</span></div>
+      <div class="today-panel-body">
+        <div class="dchk-bar-bg"><div class="dchk-bar" id="dchkBar"></div></div>
+        <div class="dchk-grid" id="dchkGrid"></div>
+        <div class="dchk-acts" id="dchkActs"></div>
+      </div>
+    </div>
+    <div class="today-panel" id="todayMsg">
+      <div class="today-panel-hd"><span class="today-panel-ttl"><span class="ico" id="icMsg" style="background:#efe9ff;color:var(--violet)"></span> Today's Message</span></div>
+      <div class="msg-tabs" id="msgTabs"></div>
+      <div class="msg-preview" id="msgPreview"></div>
+      <div class="msg-actions"><button class="primary" id="msgGenDrafts">Generate drafts</button><button id="msgOpenEditor" onclick="document.getElementById('editorCard').open=true;document.getElementById('editorCard').scrollIntoView({behavior:'smooth'})">Edit templates</button></div>
+    </div>
+  </div>
+  </div>
 
 
+  <div class="widget" data-widget="editor">
+  <div class="drag-handle" draggable="true"><div class="grip"><div class="grip-row"><i></i><i></i><i></i></div><div class="grip-row"><i></i><i></i><i></i></div></div><span class="wlabel">Email Templates</span><div class="grip"><div class="grip-row"><i></i><i></i><i></i></div><div class="grip-row"><i></i><i></i><i></i></div></div></div>
   <details class="editor" id="editorCard"><summary><span class="ico" id="icEdit" style="background:#efe9ff;color:var(--violet)"></span> Email Copy — edit &amp; preview <span style="font-weight:500;color:var(--muted);font-size:11.5px">· master template for all leads</span></summary>
     <div class="edhint">Tokens <code>{first_name}</code> and <code>{company}</code> fill per lead in the preview. Edits save automatically (this device). This is the <b>template</b> for every lead — for one-off per-lead changes use the markdown/CSV file. Hit <b>Copy edits</b> and paste back to me to push them into drafts.</div>
     <div class="edwrap">
@@ -339,12 +422,19 @@ details.editor>summary::-webkit-details-marker{display:none;}
       </div>
     </div>
   </details>
+  </div>
 
+  <div class="widget" data-widget="calendar">
+  <div class="drag-handle" draggable="true"><div class="grip"><div class="grip-row"><i></i><i></i><i></i></div><div class="grip-row"><i></i><i></i><i></i></div></div><span class="wlabel">Calendar</span><div class="grip"><div class="grip-row"><i></i><i></i><i></i></div><div class="grip-row"><i></i><i></i><i></i></div></div></div>
   <div class="card"><div class="sec" style="margin-top:0"><span class="ico" id="icCal"></span><h2>Booked Demos</h2><span class="hint">live from your Calendar</span></div>
     <div class="calwrap"><div><div class="calmonth" id="calMonth"></div><div id="calGrid"></div></div>
       <div><ul class="agenda" id="agenda"><li class="empty">Loading&hellip;</li></ul></div></div></div>
+  </div>
 
+  <div class="widget" data-widget="legend">
+  <div class="drag-handle" draggable="true"><div class="grip"><div class="grip-row"><i></i><i></i><i></i></div><div class="grip-row"><i></i><i></i><i></i></div></div><span class="wlabel">Legend</span><div class="grip"><div class="grip-row"><i></i><i></i><i></i></div><div class="grip-row"><i></i><i></i><i></i></div></div></div>
   <details class="legend"><summary><span class="ico" id="icLeg" style="background:#eef1f6;color:var(--muted)"></span> Legend — how to read this</summary><div class="legrid" id="legend"></div></details>
+  </div>
 
 </div>
 
@@ -648,7 +738,7 @@ function statusOf(l){const s=st(l.id);
   if(l.replied&&l.sentiment==="ooo")return"ooo";if(l.replied)return"replied";
   if(s.notfit)return"notfit";if(s.linkedin)return"linkedin";if(l.contacted)return"contacted";return"new";}
 
-function setIcons(){const m={icDo:ICON.do,icFun:ICON.funnel,icCh:ICON.bolt,icFlow:ICON.flow,icCal:ICON.cal,icLead:ICON.list,icLeg:ICON.info,icSched:ICON.sched};
+function setIcons(){const m={icDo:ICON.do,icFun:ICON.funnel,icCh:ICON.bolt,icFlow:ICON.flow,icCal:ICON.cal,icLead:ICON.list,icLeg:ICON.info,icSched:ICON.sched,icChk:ICON.do,icMsg:ICON.mail};
   for(const k in m){const e=document.getElementById(k);if(e)e.innerHTML=m[k];}}
 
 function focusLeads(f){const sel=document.getElementById("statusFilter");sel.value=f;renderTable();document.getElementById("leadsCard").scrollIntoView({behavior:"smooth",block:"start"});}
@@ -709,9 +799,11 @@ function renderSchedule(){
   // Build today checklist
   const todayDef=SCHED_DEF.find(d=>d.dow===todayDow);
   const chkCard=document.getElementById("todayChk");
-  if(!todayDef){if(chkCard)chkCard.innerHTML='<div class="dchk-hd"><span class="dchk-ttl">No outreach today</span></div><p style="font-size:13px;color:var(--muted);margin:0">Outreach runs Monday – Friday, 11 am – 1 pm.</p>';return;}
-  const seqTag=todayDef.pills.find(p=>p.t.startsWith("E"))||null;
-  const ttlEl=document.getElementById("dchkTitle");if(ttlEl)ttlEl.textContent="Today's checklist — "+todayDef.name+(seqTag?" · "+seqTag.t:"");
+  if(!todayDef){
+    const body=chkCard?chkCard.querySelector(".today-panel-body"):null;
+    if(body)body.innerHTML='<p style="font-size:13px;color:var(--muted);margin:0">Outreach runs Monday - Friday, 11 am - 1 pm.</p>';
+    return;
+  }
   const KEY="rx_dchk_"+now.toLocaleDateString();
   let saved={};try{saved=JSON.parse(localStorage.getItem(KEY)||"{}");}catch(e){}
   const allTasks=[...todayDef.tasks11,...todayDef.tasks12];
@@ -720,7 +812,7 @@ function renderSchedule(){
   function updBar(){const d=countDone();const bar=document.getElementById("dchkBar");const prog=document.getElementById("dchkProg");if(bar)bar.style.width=Math.round(d/TOTAL*100)+"%";if(prog)prog.textContent=d+" of "+TOTAL+" done";}
   function buildSec(tasks,label,offset){let h='<div class="dchk-sec">'+esc(label)+'</div>';tasks.forEach((t,i)=>{const ki="t"+(i+offset);h+='<label class="dchk-row'+(saved[ki]?" done":"")+'"><input type="checkbox"'+(saved[ki]?' checked="checked"':'')+' data-ki="'+ki+'"> '+esc(t)+'</label>';});return h;}
   const grid2=document.getElementById("dchkGrid");
-  if(grid2)grid2.innerHTML='<div>'+buildSec(todayDef.tasks11,"11:00 – 12:00",0)+'</div><div>'+buildSec(todayDef.tasks12,"12:00 – 1:00",todayDef.tasks11.length)+'</div>';
+  if(grid2)grid2.innerHTML='<div>'+buildSec(todayDef.tasks11,"11:00 - 12:00 OUTREACH",0)+'</div><div>'+buildSec(todayDef.tasks12,"12:00 - 1:00 ENGAGE",todayDef.tasks11.length)+'</div>';
   updBar();
   document.querySelectorAll("#dchkGrid .dchk-row input[type=checkbox]").forEach(cb=>{cb.addEventListener("change",()=>{saved[cb.dataset.ki]=cb.checked;cb.closest(".dchk-row").classList.toggle("done",cb.checked);localStorage.setItem(KEY,JSON.stringify(saved));updBar();});});
   const acts=document.getElementById("dchkActs");
@@ -747,12 +839,17 @@ function render(d){lastD=d;
   document.getElementById("hFill").style.width=Math.max(pct,0.6)+"%";
   document.getElementById("hClosed").innerHTML=d.closed+' <small>/ 100</small>';
   document.getElementById("hConv").textContent=(d.reached?(d.closed/d.reached*100).toFixed(1):"0")+"%";
+  const closedPct=Math.min(100,Math.round(d.closed/CLOSE_GOAL*100));
+  const hcf=document.getElementById("hClosedFill");if(hcf)hcf.style.width=Math.max(closedPct,0.6)+"%";
+  const hcl=document.getElementById("hClosedLabel");if(hcl)hcl.innerHTML=d.closed+' of '+CLOSE_GOAL+' primes signed';
   const now=new Date();let expected=0,note="",proj="~Mar 2027";
-  if(now<START){note="Kicks off Jun 1 — staged & ready";}
+  if(now<START){note="Kicks off Jun 1 - staged & ready";}
   else{const eb=bizBetween(START,now);expected=eb*DAILY;const rate=eb>0?d.reached/eb:0;
     if(rate>0)proj=addBiz(now,Math.ceil(Math.max(0,GOAL-d.reached)/rate)).toLocaleDateString(undefined,{month:"short",year:"2-digit"});
     const delta=d.reached-expected;note=(delta>=0?"On pace +":"Behind ")+Math.abs(delta)+" vs 8/day";}
-  document.getElementById("hPaceNote").textContent=note;
+  const weeksLeft=Math.max(1,Math.ceil((new Date("2026-10-31")-now)/6048e5));
+  const perWk=Math.max(0,Math.ceil((CLOSE_GOAL-d.closed)/weeksLeft));
+  const pn=document.getElementById("hPaceNote");if(pn)pn.innerHTML=note+' · <b>'+perWk+'/wk needed to hit goal</b>';
   document.getElementById("hPace").style.left=Math.min(100,expected/GOAL*100)+"%";
   document.getElementById("hProj").textContent=proj;
 
@@ -760,7 +857,7 @@ function render(d){lastD=d;
   renderSchedule();
 
 
-  renderCalendar();renderLegend();renderTable();updateGenBar();
+  renderCalendar();renderLegend();renderTable();updateGenBar();if(window._renderMsgTabs)window._renderMsgTabs();
   document.getElementById("updated").innerHTML="updated "+new Date().toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"});
 }
 function renderActions(d){
@@ -961,5 +1058,134 @@ async function loadAll(){
 setIcons();buildEditor();document.getElementById("genDrafts").onclick=generateDrafts;reset();compute();
 gAuth.init();
 setInterval(()=>{if(gAuth.isConnected())loadAll();},90000);
+
+/* ── COUNTDOWN TIMER ── */
+(function(){
+  const DEADLINE=new Date("2026-10-31T23:59:59");
+  function pad(n){return String(n).padStart(2,"0");}
+  function tick(){
+    const now=new Date(),diff=Math.max(0,DEADLINE-now);
+    const d=Math.floor(diff/864e5),h=Math.floor(diff%864e5/36e5),m=Math.floor(diff%36e5/6e4),s=Math.floor(diff%6e4/1e3);
+    const eD=document.getElementById("cdDays"),eH=document.getElementById("cdHrs"),eM=document.getElementById("cdMin"),eS=document.getElementById("cdSec");
+    if(eD)eD.textContent=d;if(eH)eH.textContent=pad(h);if(eM)eM.textContent=pad(m);if(eS)eS.textContent=pad(s);
+  }
+  tick();setInterval(tick,1000);
+})();
+
+/* ── TODAY'S MESSAGE PANEL ── */
+(function(){
+  const MSG_MAP={e1:"Email 1",li:"LinkedIn DM",e3:"LinkedIn Post"};
+  const MSG_KEYS=["e1","li","e3"];
+  let activeTab="e1";
+  function renderMsgTabs(){
+    const tabs=document.getElementById("msgTabs");if(!tabs)return;
+    const todayDow=new Date().getDay();
+    const dayDef=SCHED_DEF?SCHED_DEF.find(d=>d.dow===todayDow):null;
+    const pills=dayDef?dayDef.pills:[];
+    const hasEmail=pills.some(p=>p.t.startsWith("E"));
+    const hasLI=pills.some(p=>p.t==="LI msg");
+    const hasPost=pills.some(p=>p.t==="LI post");
+    const available=[];
+    if(hasEmail)available.push("e1");
+    if(hasLI)available.push("li");
+    if(hasPost)available.push("e3");
+    if(!available.length)available.push("e1","li","e3");
+    if(!available.includes(activeTab))activeTab=available[0];
+    tabs.innerHTML=available.map(k=>'<span class="msg-tab'+(k===activeTab?" active":"")+'" data-tab="'+k+'">'+MSG_MAP[k]+'</span>').join("");
+    tabs.querySelectorAll(".msg-tab").forEach(t=>t.onclick=()=>{activeTab=t.dataset.tab;renderMsgTabs();renderMsgPreview();});
+    renderMsgPreview();
+  }
+  function renderMsgPreview(){
+    const prev=document.getElementById("msgPreview");if(!prev)return;
+    const tpl=typeof TPL!=="undefined"?TPL:{};
+    const data=tpl[activeTab]||{};
+    const subj=data.subj||"";
+    const body=(data.body||"").replace(/\{first_name\}/g,'<span class="msg-token">{first_name}</span>').replace(/\{company\}/g,'<span class="msg-token">{company}</span>');
+    let h="";
+    if(subj)h+='<div class="msg-subj">Subject: '+esc(subj).replace(/\{first_name\}/g,'<span class="msg-token">{first_name}</span>').replace(/\{company\}/g,'<span class="msg-token">{company}</span>')+'</div>';
+    h+='<div class="msg-body">'+body.replace(/\n/g,"<br>")+'</div>';
+    prev.innerHTML=h;
+  }
+  window._renderMsgTabs=renderMsgTabs;
+  const btn=document.getElementById("msgGenDrafts");
+  if(btn)btn.onclick=function(){document.getElementById("genDrafts").click();};
+  setTimeout(renderMsgTabs,100);
+})();
+
+/* ── DRAG & DROP WIDGETS ── */
+(function(){
+  const WRAP=document.querySelector('.wrap');
+  const KEY='rx_widget_order';
+  let dragWidget=null;
+
+  function getWidgets(){return Array.from(WRAP.querySelectorAll(':scope > .widget'));}
+
+  function saveOrder(){
+    const order=getWidgets().map(w=>w.dataset.widget);
+    localStorage.setItem(KEY,JSON.stringify(order));
+  }
+
+  function restoreOrder(){
+    try{
+      const order=JSON.parse(localStorage.getItem(KEY));
+      if(!order||!order.length)return;
+      const widgets={};
+      getWidgets().forEach(w=>{widgets[w.dataset.widget]=w;});
+      const frag=document.createDocumentFragment();
+      order.forEach(name=>{if(widgets[name]){frag.appendChild(widgets[name]);delete widgets[name];}});
+      Object.values(widgets).forEach(w=>frag.appendChild(w));
+      const nonWidgets=Array.from(WRAP.children).filter(c=>!c.classList.contains('widget'));
+      const first=nonWidgets.length?nonWidgets[nonWidgets.length-1].nextSibling:WRAP.firstChild;
+      WRAP.appendChild(frag);
+    }catch(e){}
+  }
+
+  WRAP.addEventListener('dragstart',function(e){
+    const handle=e.target.closest('.drag-handle');
+    if(!handle)return;
+    dragWidget=handle.closest('.widget');
+    if(!dragWidget){e.preventDefault();return;}
+    dragWidget.classList.add('dragging');
+    e.dataTransfer.effectAllowed='move';
+    e.dataTransfer.setData('text/plain',dragWidget.dataset.widget);
+  });
+
+  WRAP.addEventListener('dragover',function(e){
+    if(!dragWidget)return;
+    e.preventDefault();
+    e.dataTransfer.dropEffect='move';
+    const widgets=getWidgets();
+    widgets.forEach(w=>w.classList.remove('drag-over','drag-over-below'));
+    const target=e.target.closest('.widget');
+    if(!target||target===dragWidget)return;
+    const rect=target.getBoundingClientRect();
+    const midY=rect.top+rect.height/2;
+    if(e.clientY<midY){target.classList.add('drag-over');}
+    else{target.classList.add('drag-over-below');}
+  });
+
+  WRAP.addEventListener('drop',function(e){
+    if(!dragWidget)return;
+    e.preventDefault();
+    const widgets=getWidgets();
+    widgets.forEach(w=>w.classList.remove('drag-over','drag-over-below'));
+    const target=e.target.closest('.widget');
+    if(!target||target===dragWidget){dragWidget.classList.remove('dragging');dragWidget=null;return;}
+    const rect=target.getBoundingClientRect();
+    const midY=rect.top+rect.height/2;
+    if(e.clientY<midY){WRAP.insertBefore(dragWidget,target);}
+    else{WRAP.insertBefore(dragWidget,target.nextSibling);}
+    dragWidget.classList.remove('dragging');
+    dragWidget=null;
+    saveOrder();
+  });
+
+  WRAP.addEventListener('dragend',function(e){
+    if(dragWidget){dragWidget.classList.remove('dragging');dragWidget=null;}
+    getWidgets().forEach(w=>w.classList.remove('drag-over','drag-over-below'));
+  });
+
+  restoreOrder();
+})();
 </script>
 </body></html>
