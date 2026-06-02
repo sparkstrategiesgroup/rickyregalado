@@ -545,7 +545,7 @@ LEADS.push(
 );
 const CAL_IDS=["primary","getroute.com_8cpn29hr238lq73gi5611ssg6g@group.calendar.google.com"];
 const DEMO_CAL="getroute.com_8cpn29hr238lq73gi5611ssg6g@group.calendar.google.com";
-const US_DOMAINS=["getroute.com","rozaladocleaning.com","rozaladoservices.com","rozacontractors.com"];
+const US_DOMAINS=["getroute.com","rozaladocleaning.com","rozaladoservices.com","rozacontractors.com","sparkstrategiesgroup.com"];
 const GOAL=1650, CLOSE_GOAL=100, DAILY=8, START=new Date("2026-06-01T00:00:00");
 const REPLY_COLORS={positive:"var(--win)",negative:"var(--hot)",ooo:"var(--warn)",none:"#c2c7cd"};
 const SL={closed:"Closed (Prime)",opp:"Opportunity",meeting:"Meeting booked",positive:"Positive reply",negative:"Declined",ooo:"Out of office",replied:"Replied",linkedin:"LinkedIn sent",contacted:"Awaiting reply",notfit:"Not a fit",new:"Not contacted"};
@@ -616,7 +616,15 @@ const gAuth = {
   },
 
   handleToken(resp) {
-    if (resp.error) { console.error("OAuth error:", resp); return; }
+    if (resp.error) {
+      console.error("OAuth error:", resp);
+      var bar=document.getElementById("authbar");
+      var msg=resp.error_description||resp.error||"Unknown error";
+      if(bar)bar.innerHTML='<div class="auth-status"><span class="auth-dot off"></span><span style="color:var(--hot)">OAuth error: '+msg+'</span></div>'+
+        '<button class="auth-btn google" onclick="gAuth.signIn()">Try again</button>'+
+        '<button class="auth-btn disconnect" onclick="localStorage.removeItem(\'rx_google_client_id\');location.reload()">Change Client ID</button>';
+      return;
+    }
     this.token = resp.access_token;
     this.expiresAt = Date.now() + (resp.expires_in * 1000);
     this.fetchUserInfo().then(() => {
@@ -1076,8 +1084,8 @@ function renderPipeline(d){
   const ok=l=>!st(l.id).notfit&&!st(l.id).removed&&!st(l.id).closed&&!l.meeting;
   const emailTiles=[
     {key:"e1",lbl:"Email 1",sub:"Offer / Request Demo · Day 01",bg:"#e7ecfb",color:"var(--accent)",leads:LEADS.filter(l=>ok(l)&&!l.contacted)},
-    {key:"e2",lbl:"Email 2",sub:"Podcast / Story Invite · Day 05",bg:"#efe9ff",color:"var(--violet)",leads:LEADS.filter(l=>ok(l)&&l.contacted&&(l.sentCount||0)===1&&!l.replied)},
-    {key:"e3",lbl:"Email 3",sub:"Schedule Demo · Day 07",bg:"#fdf0db",color:"var(--warn)",leads:LEADS.filter(l=>ok(l)&&l.contacted&&(l.sentCount||0)===2&&!l.replied)}
+    {key:"e2",lbl:"Email 2",sub:"Podcast / Story Invite · Day 03",bg:"#efe9ff",color:"var(--violet)",leads:LEADS.filter(l=>ok(l)&&l.contacted&&(l.sentCount||0)===1&&!l.replied)},
+    {key:"e3",lbl:"Email 3",sub:"Schedule Demo · Day 07",bg:"#fdf0db",color:"var(--warn)",leads:LEADS.filter(l=>ok(l)&&l.contacted&&(l.sentCount||0)>=2&&!l.replied)}
   ];
   const socialTiles=[
     {key:"li-need",lbl:"Need DM",sub:"Contacted · No DM Sent",bg:"#fff4e6",color:"#e67700",leads:LEADS.filter(l=>ok(l)&&(l.contacted||st(l.id).drafted)&&!st(l.id).linkedin)},
@@ -1391,9 +1399,14 @@ async function generateDrafts(){
 function reset(){errs=[];APPTS=[];LEADS.forEach(l=>{l.contacted=false;l.sentCount=0;l.replied=false;l.sentiment="none";l.meeting=false;l.lastTs=0;l.lastSnippet="";l.emailedToday=false;l.repliedToday=false;});}
 async function loadAll(){
   reset();
+  var updEl=document.getElementById("updated");
   if(gAuth.isConnected()){
+    if(updEl)updEl.innerHTML='syncing Gmail <span class="spin"></span>';
     try{await loadGmail();}catch(e){errs.push("Gmail");}
     try{await classify();}catch(e){}
+    if(updEl)updEl.textContent=errs.length?"sync error: "+errs.join(", "):"synced ✓ "+new Date().toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"});
+  } else {
+    if(updEl)updEl.textContent="Gmail not connected";
   }
   LEADS.forEach(function(l){
     var s=st(l.id);
