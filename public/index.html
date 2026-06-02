@@ -301,10 +301,18 @@ details.editor>summary::-webkit-details-marker{display:none;}
 .today-split{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:18px;}
 @media(max-width:880px){.today-split{grid-template-columns:1fr;}}
 .today-panel{background:var(--card);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--sh-sm);overflow:hidden;}
-.today-panel-hd{display:flex;align-items:center;justify-content:space-between;padding:14px 18px 0;margin-bottom:4px;}
+.today-panel-hd{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:4px 12px;padding:14px 18px 0;margin-bottom:4px;}
 .today-panel-ttl{font-size:13.5px;font-weight:700;color:var(--ink);display:flex;align-items:center;gap:8px;}
 .today-panel-ttl .ico{width:22px;height:22px;border-radius:6px;display:flex;align-items:center;justify-content:center;background:#e7ecfb;color:var(--brand);}
+.today-panel-date{display:block;font-size:15px;font-weight:800;color:var(--brand);margin-top:2px;letter-spacing:-.3px;}
 .today-panel-sub{font-size:11px;color:var(--muted);}
+.pipeline-track{display:flex;align-items:center;gap:0;padding:10px 16px 16px;flex-wrap:wrap;}
+.pipe-stage{flex:1;min-width:90px;text-align:center;padding:14px 8px;border-radius:12px;cursor:pointer;transition:transform .12s,box-shadow .12s;}
+.pipe-stage:hover{transform:translateY(-2px);box-shadow:0 4px 12px rgba(0,0,0,.1);}
+.pipe-num{font-size:28px;font-weight:800;line-height:1;}
+.pipe-lbl{font-size:11px;font-weight:600;margin-top:4px;text-transform:uppercase;letter-spacing:.5px;opacity:.8;}
+.pipe-chevron{font-size:20px;color:var(--muted);flex-shrink:0;margin:0 2px;}
+@media(max-width:600px){.pipeline-track{flex-direction:column;gap:6px;}.pipe-chevron{transform:rotate(90deg);}}
 .today-panel-body{padding:8px 18px 18px;}
 .msg-tabs{display:flex;gap:6px;padding:0 18px;margin-bottom:2px;}
 .msg-tab{font-size:11.5px;font-weight:600;padding:6px 14px;border-radius:8px 8px 0 0;border:1px solid var(--line);border-bottom:none;background:#f5f7fc;color:var(--muted);cursor:pointer;transition:all .12s;}
@@ -388,7 +396,7 @@ details.editor>summary::-webkit-details-marker{display:none;}
   <div class="widget" data-widget="hero">
   <div class="drag-handle" draggable="true"><div class="grip"><div class="grip-row"><i></i><i></i><i></i></div><div class="grip-row"><i></i><i></i><i></i></div></div><span class="wlabel">Mission</span><div class="grip"><div class="grip-row"><i></i><i></i><i></i></div><div class="grip-row"><i></i><i></i><i></i></div></div></div>
   <div class="hero">
-    <div class="eyebrow"><span class="dot"></span> Route Exchange · Prime Contractor Acquisition <span class="stamp" id="updated">initializing <span class="spin"></span></span></div>
+    <div class="eyebrow"><span class="dot"></span> Route Exchange · Prime Contractor Acquisition · <span id="heroDate"></span> <span class="stamp" id="updated">initializing <span class="spin"></span></span></div>
     <div class="mission">Sign <span class="hl">100 Prime Contractors</span></div>
     <div class="countdown-row" id="countdown">
       <div class="cd-box"><div class="cd-val" id="cdDays">---</div><div class="cd-lbl">Days</div></div>
@@ -416,10 +424,10 @@ details.editor>summary::-webkit-details-marker{display:none;}
   </div>
   </div>
 
-  <div class="widget" data-widget="donext">
-  <div class="drag-handle" draggable="true"><div class="grip"><div class="grip-row"><i></i><i></i><i></i></div><div class="grip-row"><i></i><i></i><i></i></div></div><span class="wlabel">Do Next</span><div class="grip"><div class="grip-row"><i></i><i></i><i></i></div><div class="grip-row"><i></i><i></i><i></i></div></div></div>
-  <div class="sec"><span class="ico" id="icDo"></span><h2>Do Next</h2><span class="hint">your shortlist - tap a card to filter the leads below</span></div>
-  <div class="actions" id="actions"></div>
+  <div class="widget" data-widget="pipeline">
+  <div class="drag-handle" draggable="true"><div class="grip"><div class="grip-row"><i></i><i></i><i></i></div><div class="grip-row"><i></i><i></i><i></i></div></div><span class="wlabel">Pipeline</span><div class="grip"><div class="grip-row"><i></i><i></i><i></i></div><div class="grip-row"><i></i><i></i><i></i></div></div></div>
+  <div class="sec"><span class="ico" id="icPipe"></span><h2>Email Stage Progression</h2><span class="hint">leads advancing through outreach stages</span></div>
+  <div class="pipeline-track" id="pipelineTrack"></div>
   </div>
 
   <div class="widget" data-widget="schedule">
@@ -428,7 +436,7 @@ details.editor>summary::-webkit-details-marker{display:none;}
   <div class="sched-grid" id="schedGrid"></div>
   <div class="today-split">
     <div class="today-panel" id="todayChk">
-      <div class="today-panel-hd"><span class="today-panel-ttl"><span class="ico" id="icChk"></span> Today's Checklist</span><span class="today-panel-sub" id="dchkProg">0 of 5 done</span></div>
+      <div class="today-panel-hd"><span class="today-panel-ttl"><span class="ico" id="icChk"></span> Today's Checklist</span><span class="today-panel-date" id="chkDate"></span><span class="today-panel-sub" id="dchkProg">0 of 5 done</span></div>
       <div class="today-panel-body">
         <div class="dchk-bar-bg"><div class="dchk-bar" id="dchkBar"></div></div>
         <div class="dchk-grid" id="dchkGrid"></div>
@@ -764,7 +772,7 @@ function statusOf(l){const s=st(l.id);
   if(l.replied&&l.sentiment==="ooo")return"ooo";if(l.replied)return"replied";
   if(s.notfit)return"notfit";if(s.linkedin)return"linkedin";if(l.contacted)return"contacted";return"new";}
 
-function setIcons(){const m={icDo:ICON.do,icFun:ICON.funnel,icCh:ICON.bolt,icFlow:ICON.flow,icCal:ICON.cal,icLead:ICON.list,icLeg:ICON.info,icSched:ICON.sched,icChk:ICON.do,icMsg:ICON.mail};
+function setIcons(){const m={icDo:ICON.do,icFun:ICON.funnel,icCh:ICON.bolt,icFlow:ICON.flow,icCal:ICON.cal,icLead:ICON.list,icLeg:ICON.info,icSched:ICON.sched,icChk:ICON.do,icMsg:ICON.mail,icPipe:ICON.flow};
   for(const k in m){const e=document.getElementById(k);if(e)e.innerHTML=m[k];}}
 
 function focusLeads(f){const sel=document.getElementById("statusFilter");sel.value=f;renderTable();document.getElementById("leadsCard").scrollIntoView({behavior:"smooth",block:"start"});}
@@ -774,34 +782,34 @@ const DAY_FULL=["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Sat
 const SCHED_DEF=[
   {dow:1,name:"Monday",
    pills:[{t:"E1",c:"se"},{t:"LI msg",c:"sl"},{t:"LI post",c:"spost"}],
-   b1:[{cls:"sb sd-amber",t:"Send E1 emails"},{cls:"sb sl sd-violet",t:"LinkedIn message"},{cls:"sm sd-green",t:"Actively engage"}],
-   b2:[{cls:"sb sd-violet",t:"LinkedIn post"},{cls:"sm sd-green",t:"Reply to likes & comments"}],
+   b1:[{cls:"sb sd-amber",t:"Send E1 emails"},{cls:"sb sd-violet",t:"LinkedIn message"},{cls:"sm sd-green",t:"Actively engage"}],
+   b2:[{cls:"sb sd-violet",t:"LinkedIn post"},{cls:"sm sd-green",t:"Engage with likes & comments"}],
    tasks11:["Send E1 emails to pipeline","LinkedIn messages - subcontracting outreach","Actively engage with connections"],
    tasks12:["Post LinkedIn content (subcontracting)","Engage with post likes & comments"]},
   {dow:2,name:"Tuesday",
-   pills:[],
-   b1:[{cls:"sd-amber",t:"Send follow-up emails"},{cls:"sm sd-green",t:"Actively engage"}],
-   b2:[{cls:"sm sd-green",t:"Reply to likes & comments"}],
-   tasks11:["Send follow-up emails","Actively engage with connections"],
-   tasks12:["Reply to post likes & comments"]},
+   pills:[{t:"Follow-up",c:"se"},{t:"LI msg",c:"sl"}],
+   b1:[{cls:"sd-amber",t:"Send follow-up emails"},{cls:"sb sd-violet",t:"LinkedIn message"},{cls:"sm sd-green",t:"Actively engage"}],
+   b2:[{cls:"sm sd-green",t:"Reply to likes & comments"},{cls:"sm sd-green",t:"Continue engagement"}],
+   tasks11:["Send follow-up emails","LinkedIn messages - subcontracting outreach","Actively engage with connections"],
+   tasks12:["Reply to post likes & comments","Continue engagement"]},
   {dow:3,name:"Wednesday",
-   pills:[{t:"E3",c:"se"},{t:"LI msg",c:"sl"}],
+   pills:[{t:"E3",c:"se"},{t:"LI msg",c:"sl"},{t:"LI post",c:"spost"}],
    b1:[{cls:"sb sd-amber",t:"Send E3 emails"},{cls:"sb sd-violet",t:"LinkedIn message"},{cls:"sm sd-green",t:"Actively engage"}],
-   b2:[{cls:"sm sd-green",t:"Reply to likes & comments"}],
+   b2:[{cls:"sb sd-violet",t:"LinkedIn post"},{cls:"sm sd-green",t:"Engage with likes & comments"}],
    tasks11:["Send E3 emails to pipeline","LinkedIn messages - subcontracting outreach","Actively engage with connections"],
-   tasks12:["Reply to post likes & comments"]},
+   tasks12:["Post LinkedIn content (subcontracting)","Engage with post likes & comments"]},
   {dow:4,name:"Thursday",
-   pills:[],
-   b1:[{cls:"sd-amber",t:"Send follow-up emails"},{cls:"sm sd-green",t:"Actively engage"}],
-   b2:[{cls:"sm sd-green",t:"Reply to likes & comments"}],
-   tasks11:["Send follow-up emails","Actively engage with connections"],
-   tasks12:["Reply to post likes & comments"]},
+   pills:[{t:"Follow-up",c:"se"},{t:"LI msg",c:"sl"}],
+   b1:[{cls:"sd-amber",t:"Send follow-up emails"},{cls:"sb sd-violet",t:"LinkedIn message"},{cls:"sm sd-green",t:"Actively engage"}],
+   b2:[{cls:"sm sd-green",t:"Reply to likes & comments"},{cls:"sm sd-green",t:"Continue engagement"}],
+   tasks11:["Send follow-up emails","LinkedIn messages - subcontracting outreach","Actively engage with connections"],
+   tasks12:["Reply to post likes & comments","Continue engagement"]},
   {dow:5,name:"Friday",
-   pills:[{t:"E5",c:"se"},{t:"LI msg",c:"sl"}],
+   pills:[{t:"E5",c:"se"},{t:"LI msg",c:"sl"},{t:"LI post",c:"spost"}],
    b1:[{cls:"sb sd-amber",t:"Send E5 emails"},{cls:"sb sd-violet",t:"LinkedIn message"},{cls:"sm sd-green",t:"Actively engage"}],
-   b2:[{cls:"sm sd-green",t:"Reply to likes & comments"}],
+   b2:[{cls:"sb sd-violet",t:"LinkedIn post"},{cls:"sm sd-green",t:"Engage with likes & comments"}],
    tasks11:["Send E5 emails to pipeline","LinkedIn messages - subcontracting outreach","Actively engage with connections"],
-   tasks12:["Reply to post likes & comments"]}
+   tasks12:["Post LinkedIn content (subcontracting)","Engage with post likes & comments"]}
 ];
 
 function renderSchedule(){
@@ -879,37 +887,35 @@ function render(d){lastD=d;
   document.getElementById("hPace").style.left=Math.min(100,expected/GOAL*100)+"%";
   document.getElementById("hProj").textContent=proj;
 
-  renderActions(d);
+  renderPipeline(d);
   renderSchedule();
 
 
   renderTable();updateGenBar();if(window._renderMsgTabs)window._renderMsgTabs();if(window._renderActivity)window._renderActivity();
   document.getElementById("updated").innerHTML="updated "+new Date().toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"});
+
+  const now2=new Date();
+  const heroEl=document.getElementById("heroDate");
+  if(heroEl)heroEl.textContent=now2.toLocaleDateString(undefined,{weekday:"long",month:"long",day:"numeric",year:"numeric"});
+  const chkEl=document.getElementById("chkDate");
+  if(chkEl)chkEl.textContent=now2.toLocaleDateString(undefined,{weekday:"short",month:"short",day:"numeric"})+" · "+now2.toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"});
 }
-function renderActions(d){
-  const P=l=>!st(l.id).notfit&&!st(l.id).removed;
-  const book=LEADS.filter(l=>l.sentiment==="positive"&&!l.meeting&&!st(l.id).closed&&!st(l.id).removed);
-  const fup=LEADS.filter(l=>l.contacted&&!l.replied&&!l.meeting&&P(l)&&l.sentCount<3);
-  const li=LEADS.filter(l=>l.contacted&&!l.replied&&!st(l.id).linkedin&&P(l));
-  const start=LEADS.filter(l=>!l.contacted&&!st(l.id).linkedin&&P(l));
-  const C=document.getElementById("actions");
-  const chips=arr=>arr.slice(0,4).map(l=>'<span>'+esc(l.company)+'</span>').join("")+(arr.length>4?'<span>+'+(arr.length-4)+' more</span>':"");
-  const cards=[
-    {n:book.length,t:"Book a demo",s:"Positive replies waiting on times",a:book,f:"positive",c:"var(--win)",bg:"#e3f6ec",ic:ICON.cal},
-    {n:fup.length,t:"Send follow-up",s:"Emailed, no reply - next touch due",a:fup,f:"contacted",c:"var(--accent)",bg:"#e7ecfb",ic:ICON.mail},
-    {n:li.length,t:"LinkedIn touch",s:"Send a 1:1 DM by hand",a:li,f:"contacted",c:"var(--violet)",bg:"#efe9ff",ic:ICON.link},
-    {n:start.length,t:"Start outreach",s:"Fresh leads - aim 8/day",a:start,f:"new",c:"var(--warn)",bg:"#fdf0db",ic:ICON.target},
-  ].filter(c=>c.n>0);
-  if(!cards.length||(d.emailed===0&&d.liSent===0&&book.length===0&&fup.length===0&&li.length===0)){
-    C.innerHTML='<div class="act kick"><div class="top"><div class="badge" style="background:rgba(255,255,255,.14);color:#fff">'+ICON.bolt+'</div><div class="num">10</div></div><div class="ttl">Kick off the campaign</div><div class="sub">Your 10 Email-1 drafts are in Gmail, ready to review &amp; send. Sending them starts the clock - replies, meetings and follow-ups light up here automatically.</div><div class="go">Open Gmail drafts →</div></div>'
-    + (start.length?'<div class="act" data-f="new" style="margin-top:0"><span class="bar" style="background:var(--warn)"></span><div class="top"><div class="badge" style="background:#fdf0db;color:var(--warn)">'+ICON.target+'</div><div class="num">'+start.length+'</div></div><div class="ttl">Leads ready to email</div><div class="sub">Loaded &amp; qualified, not yet contacted.</div><div class="who">'+chips(start)+'</div><div class="go">View leads →</div></div>':"");
-    C.querySelectorAll(".act[data-f]").forEach(el=>el.onclick=()=>focusLeads(el.dataset.f));
-    return;
-  }
-  C.innerHTML=cards.map(c=>'<div class="act" data-f="'+c.f+'"><span class="bar" style="background:'+c.c+'"></span>'+
-    '<div class="top"><div class="badge" style="background:'+c.bg+';color:'+c.c+'">'+c.ic+'</div><div class="num" style="color:'+c.c+'">'+c.n+'</div></div>'+
-    '<div class="ttl">'+c.t+'</div><div class="sub">'+c.s+'</div><div class="who">'+chips(c.a)+'</div><div class="go">View →</div></div>').join("");
-  C.querySelectorAll(".act[data-f]").forEach(el=>el.onclick=()=>focusLeads(el.dataset.f));
+if(!window._chkClockStarted){window._chkClockStarted=true;setInterval(function(){const el=document.getElementById("chkDate");if(el){const n=new Date();el.textContent=n.toLocaleDateString(undefined,{weekday:"short",month:"short",day:"numeric"})+" · "+n.toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"});}},30000);}
+function renderPipeline(d){
+  const track=document.getElementById("pipelineTrack");if(!track)return;
+  const notStarted=LEADS.filter(l=>!l.contacted&&!st(l.id).removed).length;
+  const stages=[
+    {n:notStarted,lbl:"Not Started",bg:"#f1f3f5",color:"var(--muted)",filter:"new"},
+    {n:d.e1,lbl:"E1 Sent",bg:"#e7ecfb",color:"var(--accent)",filter:"contacted"},
+    {n:d.e2,lbl:"E3 Sent",bg:"#efe9ff",color:"var(--violet)",filter:"contacted"},
+    {n:d.e3,lbl:"E5 Sent",bg:"#fdf0db",color:"var(--warn)",filter:"contacted"},
+    {n:d.closed,lbl:"Closed",bg:"#e3f6ec",color:"var(--win)",filter:"closed"}
+  ];
+  track.innerHTML=stages.map((s,i)=>(i>0?'<span class="pipe-chevron">›</span>':'')+
+    '<div class="pipe-stage" data-f="'+s.filter+'" style="background:'+s.bg+'">'+
+    '<div class="pipe-num" style="color:'+s.color+'">'+s.n+'</div>'+
+    '<div class="pipe-lbl" style="color:'+s.color+'">'+s.lbl+'</div></div>').join("");
+  track.querySelectorAll(".pipe-stage").forEach(el=>el.onclick=()=>focusLeads(el.dataset.f));
 }
 let sortK="rank",sortDir=1;
 const RANK={closed:0,opp:1,meeting:2,positive:3,replied:4,ooo:5,linkedin:6,contacted:7,negative:8,notfit:9,new:10};
@@ -937,7 +943,7 @@ function renderTable(){
   document.querySelectorAll(".btn-remove").forEach(b=>b.onclick=()=>toggleRemove(+b.dataset.rid));
   document.querySelectorAll(".status-dd").forEach(sel=>sel.onchange=function(){setLeadStatus(+this.dataset.id,this.value);});
   document.querySelectorAll(".notes-input").forEach(inp=>{inp.onchange=function(){st(+this.dataset.id).notes=this.value;localStorage.setItem("rx_state",JSON.stringify(STATE));};});
-  document.querySelectorAll(".appchk").forEach(c=>c.onchange=()=>{st(+c.dataset.id).approved=c.checked;localStorage.setItem("rx_state",JSON.stringify(STATE));renderActions(lastD||{});updateGenBar();});
+  document.querySelectorAll(".appchk").forEach(c=>c.onchange=()=>{st(+c.dataset.id).approved=c.checked;localStorage.setItem("rx_state",JSON.stringify(STATE));renderPipeline(lastD||{});updateGenBar();});
 }
 document.querySelectorAll("th[data-k]").forEach(th=>th.onclick=()=>{const k=th.dataset.k==="statusLabel"?"rank":th.dataset.k;if(sortK===k)sortDir*=-1;else{sortK=k;sortDir=1;}renderTable();});
 ["search","statusFilter"].forEach(id=>{const el=document.getElementById(id);el.addEventListener("input",()=>{renderTable();try{localStorage.setItem("rxv_"+id,el.value);}catch(e){}});try{const v=localStorage.getItem("rxv_"+id);if(v!=null)el.value=v;}catch(e){}});
@@ -1093,22 +1099,22 @@ setInterval(()=>{if(gAuth.isConnected())loadAll();},90000);
 
 /* ── TODAY'S MESSAGE PANEL ── */
 (function(){
-  const MSG_MAP={e1:"Email 1",li:"LinkedIn DM",e3:"LinkedIn Post"};
-  const MSG_KEYS=["e1","li","e3"];
+  const MSG_MAP={e1:"Email 1 (E1)",e3:"Email 3 (E3)",e5:"Email 5 (E5)",li:"LinkedIn DM",lipost:"LinkedIn Post"};
   let activeTab="e1";
   function renderMsgTabs(){
     const tabs=document.getElementById("msgTabs");if(!tabs)return;
     const todayDow=new Date().getDay();
     const dayDef=SCHED_DEF?SCHED_DEF.find(d=>d.dow===todayDow):null;
     const pills=dayDef?dayDef.pills:[];
-    const hasEmail=pills.some(p=>p.t.startsWith("E"));
-    const hasLI=pills.some(p=>p.t==="LI msg");
-    const hasPost=pills.some(p=>p.t==="LI post");
     const available=[];
-    if(hasEmail)available.push("e1");
-    if(hasLI)available.push("li");
-    if(hasPost)available.push("e3");
-    if(!available.length)available.push("e1","li","e3");
+    pills.forEach(function(p){
+      if(p.t==="E1"&&available.indexOf("e1")<0)available.push("e1");
+      if(p.t==="E3"&&available.indexOf("e3")<0)available.push("e3");
+      if(p.t==="E5"&&available.indexOf("e5")<0)available.push("e5");
+      if(p.t==="LI msg"&&available.indexOf("li")<0)available.push("li");
+      if(p.t==="LI post"&&available.indexOf("lipost")<0)available.push("lipost");
+    });
+    if(!available.length)available.push("e1","li");
     if(!available.includes(activeTab))activeTab=available[0];
     tabs.innerHTML=available.map(k=>'<span class="msg-tab'+(k===activeTab?" active":"")+'" data-tab="'+k+'">'+MSG_MAP[k]+'</span>').join("");
     tabs.querySelectorAll(".msg-tab").forEach(t=>t.onclick=()=>{activeTab=t.dataset.tab;renderMsgTabs();renderMsgPreview();});
@@ -1117,12 +1123,18 @@ setInterval(()=>{if(gAuth.isConnected())loadAll();},90000);
   function renderMsgPreview(){
     const prev=document.getElementById("msgPreview");if(!prev)return;
     const tpl=typeof TPL!=="undefined"?TPL:{};
-    const data=tpl[activeTab]||{};
+    var tplKey=activeTab;
+    if(activeTab==="lipost"){
+      prev.innerHTML='<div class="msg-subj">LinkedIn Post Guidance</div><div class="msg-body">Share a post about subcontracting, BSC growth, or Route Exchange.<br><br><b>Tips:</b><br>• Share a win, lesson, or insight from the field<br>• Tag relevant connections or companies<br>• Use 2-3 relevant hashtags (#BSC #FacilityServices #Subcontracting)<br>• Include a question to drive engagement<br>• Respond to every comment within 24 hours</div>';
+      return;
+    }
+    const data=tpl[tplKey]||{};
     const subj=data.subj||"";
     const body=(data.body||"").replace(/\{first_name\}/g,'<span class="msg-token">{first_name}</span>').replace(/\{company\}/g,'<span class="msg-token">{company}</span>');
     let h="";
     if(subj)h+='<div class="msg-subj">Subject: '+esc(subj).replace(/\{first_name\}/g,'<span class="msg-token">{first_name}</span>').replace(/\{company\}/g,'<span class="msg-token">{company}</span>')+'</div>';
-    h+='<div class="msg-body">'+body.replace(/\n/g,"<br>")+'</div>';
+    if(body)h+='<div class="msg-body">'+body.replace(/\n/g,"<br>")+'</div>';
+    if(!subj&&!body)h='<div class="msg-body" style="color:var(--muted)">No template loaded for this touch. Edit templates in the Template Editor below.</div>';
     prev.innerHTML=h;
   }
   window._renderMsgTabs=renderMsgTabs;
