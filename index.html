@@ -478,7 +478,7 @@ details.editor>summary::-webkit-details-marker{display:none;}
       <div class="today-panel-hd"><span class="today-panel-ttl"><span class="ico" id="icMsg" style="background:#efe9ff;color:var(--violet)"></span> Today's Message</span></div>
       <div class="msg-tabs" id="msgTabs"></div>
       <div class="msg-preview" id="msgPreview"></div>
-      <div class="msg-actions"><button class="primary" id="msgSaveBtn" style="display:none">Save</button><button id="msgOpenEditor" onclick="document.getElementById('editorCard').open=true;document.getElementById('editorCard').scrollIntoView({behavior:'smooth'})">Edit templates</button></div>
+      <div class="msg-actions"><button class="primary" id="msgSaveBtn">Save</button><button id="msgOpenEditor" onclick="document.getElementById('editorCard').open=true;document.getElementById('editorCard').scrollIntoView({behavior:'smooth'})">Edit templates</button></div>
     </div>
   </div>
   </div>
@@ -1321,7 +1321,6 @@ setInterval(()=>{if(gAuth.isConnected())loadAll();},90000);
     const tpl=typeof TPL!=="undefined"?TPL:{};
     var tplKey=activeTab;
     _dirty=false;
-    if(saveBtn)saveBtn.style.display="none";
     if(activeTab==="lipost"){
       prev.innerHTML='<div class="msg-subj">LinkedIn Post Guidance</div><div class="msg-body">Share a post about subcontracting, BSC growth, or Route Exchange.<br><br><b>Tips:</b><br>• Share a win, lesson, or insight from the field<br>• Tag relevant connections or companies<br>• Use 2-3 relevant hashtags (#BSC #FacilityServices #Subcontracting)<br>• Include a question to drive engagement<br>• Respond to every comment within 24 hours</div>';
       return;
@@ -1336,7 +1335,7 @@ setInterval(()=>{if(gAuth.isConnected())loadAll();},90000);
     prev.innerHTML=h;
     prev.querySelectorAll("[contenteditable]").forEach(function(el){
       el.addEventListener("input",function(){
-        if(!_dirty){_dirty=true;if(saveBtn)saveBtn.style.display="";}
+        _dirty=true;
       });
       el.addEventListener("focus",function(){if(el.style.color)el.style.color="";});
     });
@@ -1355,10 +1354,8 @@ setInterval(()=>{if(gAuth.isConnected())loadAll();},90000);
     if(bodyEl)tpl[tplKey].body=bodyEl.textContent;
     saveTpl();
     _dirty=false;
-    saveBtn.style.display="none";
     saveBtn.textContent="Saved!";
-    saveBtn.style.display="";
-    setTimeout(function(){saveBtn.textContent="Save";saveBtn.style.display="none";renderMsgPreview();},1200);
+    setTimeout(function(){saveBtn.textContent="Save";renderMsgPreview();},1200);
   };
   setTimeout(renderMsgTabs,100);
 })();
