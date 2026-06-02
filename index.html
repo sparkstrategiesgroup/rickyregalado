@@ -271,6 +271,18 @@ details.editor>summary::-webkit-details-marker{display:none;}
 .auth-setup{background:#fffbe6;border:1px solid #f0e6b0;border-radius:12px;padding:12px 16px;margin-bottom:14px;font-size:12.5px;color:#6b5900;}
 .auth-setup code{background:#f5f0d0;border-radius:4px;padding:1px 5px;font-size:11px;}
 .auth-setup a{color:#3552e6;font-weight:600;}
+/* DRAG & DROP */
+.widget{position:relative;transition:transform .2s,opacity .2s;}
+.widget .drag-handle{display:flex;align-items:center;justify-content:center;gap:6px;padding:5px 0;cursor:grab;opacity:0;transition:opacity .15s;user-select:none;}
+.widget:hover .drag-handle{opacity:1;}
+.drag-handle:active{cursor:grabbing;}
+.drag-handle .grip{display:flex;gap:2px;}
+.drag-handle .grip i{width:4px;height:4px;border-radius:50%;background:#c2c7cd;}
+.drag-handle .grip-row{display:flex;gap:2px;}
+.drag-handle .wlabel{font-size:9.5px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:#c2c7cd;}
+.widget.dragging{opacity:.4;transform:scale(.98);}
+.widget.drag-over{box-shadow:0 -3px 0 0 var(--brand);}
+.widget.drag-over-below{box-shadow:0 3px 0 0 var(--brand);}
 </style>
 </head>
 <body>
@@ -289,6 +301,8 @@ details.editor>summary::-webkit-details-marker{display:none;}
     </button>
   </div>
 
+  <div class="widget" data-widget="leads">
+  <div class="drag-handle" draggable="true"><div class="grip"><div class="grip-row"><i></i><i></i><i></i></div><div class="grip-row"><i></i><i></i><i></i></div></div><span class="wlabel">Leads</span><div class="grip"><div class="grip-row"><i></i><i></i><i></i></div><div class="grip-row"><i></i><i></i><i></i></div></div></div>
   <div class="card" id="leadsCard"><div class="sec" style="margin-top:0"><span class="ico" id="icLead"></span><h2>Leads <span id="leadCount" style="color:var(--muted);font-weight:600"></span></h2><span class="hint">pipeline tracker - set status, add notes, remove leads you don't need</span></div>
     <div class="genbar"><span class="gb-txt">Approve leads with the checkbox, then <b>generate E1 drafts</b> from the current editor copy (review in Gmail before sending).</span><button id="genDrafts">⚡ Generate E1 drafts</button><span class="gstat" id="genStat"></span></div>
     <div class="toolbar"><input id="search" placeholder="Search company, contact, city...">
@@ -298,7 +312,10 @@ details.editor>summary::-webkit-details-marker{display:none;}
     <table class="leads"><thead><tr><th style="width:28px"></th><th data-k="company">Company</th><th data-k="contact">Contact</th><th data-k="owner">Owner</th><th data-k="statusLabel">Status</th><th>Notes</th><th data-k="lastTs">Last</th><th>Draft?</th></tr></thead><tbody id="rows"></tbody></table>
     </div>
   </div>
+  </div>
 
+  <div class="widget" data-widget="hero">
+  <div class="drag-handle" draggable="true"><div class="grip"><div class="grip-row"><i></i><i></i><i></i></div><div class="grip-row"><i></i><i></i><i></i></div></div><span class="wlabel">Mission</span><div class="grip"><div class="grip-row"><i></i><i></i><i></i></div><div class="grip-row"><i></i><i></i><i></i></div></div></div>
   <div class="hero">
     <div class="eyebrow"><span class="dot"></span> Route Exchange · Prime Contractor Acquisition <span class="stamp" id="updated">initializing <span class="spin"></span></span></div>
     <div class="mission">Sign <span class="hl">100 Prime Contractors</span></div>
@@ -312,11 +329,16 @@ details.editor>summary::-webkit-details-marker{display:none;}
       <div class="hs"><div class="lab">Reached→closed</div><div class="val" id="hConv">—</div></div>
     </div>
   </div>
+  </div>
 
+  <div class="widget" data-widget="donext">
+  <div class="drag-handle" draggable="true"><div class="grip"><div class="grip-row"><i></i><i></i><i></i></div><div class="grip-row"><i></i><i></i><i></i></div></div><span class="wlabel">Do Next</span><div class="grip"><div class="grip-row"><i></i><i></i><i></i></div><div class="grip-row"><i></i><i></i><i></i></div></div></div>
   <div class="sec"><span class="ico" id="icDo"></span><h2>Do Next</h2><span class="hint">your shortlist — tap a card to filter the leads below</span></div>
   <div class="actions" id="actions"></div>
+  </div>
 
-  <!-- ── DAILY SCHEDULE ── -->
+  <div class="widget" data-widget="schedule">
+  <div class="drag-handle" draggable="true"><div class="grip"><div class="grip-row"><i></i><i></i><i></i></div><div class="grip-row"><i></i><i></i><i></i></div></div><span class="wlabel">Schedule</span><div class="grip"><div class="grip-row"><i></i><i></i><i></i></div><div class="grip-row"><i></i><i></i><i></i></div></div></div>
   <div class="sec"><span class="ico" id="icSched"></span><h2>This week's schedule</h2><span class="hint">11:00 am – 1:00 pm · <b id="schedToday">—</b></span></div>
   <div class="sched-grid" id="schedGrid"></div>
   <div class="dchkcard" id="todayChk">
@@ -325,9 +347,11 @@ details.editor>summary::-webkit-details-marker{display:none;}
     <div class="dchk-grid" id="dchkGrid"></div>
     <div class="dchk-acts" id="dchkActs"></div>
   </div>
-  <!-- ── END DAILY SCHEDULE ── -->
+  </div>
 
 
+  <div class="widget" data-widget="editor">
+  <div class="drag-handle" draggable="true"><div class="grip"><div class="grip-row"><i></i><i></i><i></i></div><div class="grip-row"><i></i><i></i><i></i></div></div><span class="wlabel">Email Templates</span><div class="grip"><div class="grip-row"><i></i><i></i><i></i></div><div class="grip-row"><i></i><i></i><i></i></div></div></div>
   <details class="editor" id="editorCard"><summary><span class="ico" id="icEdit" style="background:#efe9ff;color:var(--violet)"></span> Email Copy — edit &amp; preview <span style="font-weight:500;color:var(--muted);font-size:11.5px">· master template for all leads</span></summary>
     <div class="edhint">Tokens <code>{first_name}</code> and <code>{company}</code> fill per lead in the preview. Edits save automatically (this device). This is the <b>template</b> for every lead — for one-off per-lead changes use the markdown/CSV file. Hit <b>Copy edits</b> and paste back to me to push them into drafts.</div>
     <div class="edwrap">
@@ -339,12 +363,19 @@ details.editor>summary::-webkit-details-marker{display:none;}
       </div>
     </div>
   </details>
+  </div>
 
+  <div class="widget" data-widget="calendar">
+  <div class="drag-handle" draggable="true"><div class="grip"><div class="grip-row"><i></i><i></i><i></i></div><div class="grip-row"><i></i><i></i><i></i></div></div><span class="wlabel">Calendar</span><div class="grip"><div class="grip-row"><i></i><i></i><i></i></div><div class="grip-row"><i></i><i></i><i></i></div></div></div>
   <div class="card"><div class="sec" style="margin-top:0"><span class="ico" id="icCal"></span><h2>Booked Demos</h2><span class="hint">live from your Calendar</span></div>
     <div class="calwrap"><div><div class="calmonth" id="calMonth"></div><div id="calGrid"></div></div>
       <div><ul class="agenda" id="agenda"><li class="empty">Loading&hellip;</li></ul></div></div></div>
+  </div>
 
+  <div class="widget" data-widget="legend">
+  <div class="drag-handle" draggable="true"><div class="grip"><div class="grip-row"><i></i><i></i><i></i></div><div class="grip-row"><i></i><i></i><i></i></div></div><span class="wlabel">Legend</span><div class="grip"><div class="grip-row"><i></i><i></i><i></i></div><div class="grip-row"><i></i><i></i><i></i></div></div></div>
   <details class="legend"><summary><span class="ico" id="icLeg" style="background:#eef1f6;color:var(--muted)"></span> Legend — how to read this</summary><div class="legrid" id="legend"></div></details>
+  </div>
 
 </div>
 
@@ -961,5 +992,81 @@ async function loadAll(){
 setIcons();buildEditor();document.getElementById("genDrafts").onclick=generateDrafts;reset();compute();
 gAuth.init();
 setInterval(()=>{if(gAuth.isConnected())loadAll();},90000);
+
+/* ── DRAG & DROP WIDGETS ── */
+(function(){
+  const WRAP=document.querySelector('.wrap');
+  const KEY='rx_widget_order';
+  let dragWidget=null;
+
+  function getWidgets(){return Array.from(WRAP.querySelectorAll(':scope > .widget'));}
+
+  function saveOrder(){
+    const order=getWidgets().map(w=>w.dataset.widget);
+    localStorage.setItem(KEY,JSON.stringify(order));
+  }
+
+  function restoreOrder(){
+    try{
+      const order=JSON.parse(localStorage.getItem(KEY));
+      if(!order||!order.length)return;
+      const widgets={};
+      getWidgets().forEach(w=>{widgets[w.dataset.widget]=w;});
+      const frag=document.createDocumentFragment();
+      order.forEach(name=>{if(widgets[name]){frag.appendChild(widgets[name]);delete widgets[name];}});
+      Object.values(widgets).forEach(w=>frag.appendChild(w));
+      const nonWidgets=Array.from(WRAP.children).filter(c=>!c.classList.contains('widget'));
+      const first=nonWidgets.length?nonWidgets[nonWidgets.length-1].nextSibling:WRAP.firstChild;
+      WRAP.appendChild(frag);
+    }catch(e){}
+  }
+
+  WRAP.addEventListener('dragstart',function(e){
+    const handle=e.target.closest('.drag-handle');
+    if(!handle)return;
+    dragWidget=handle.closest('.widget');
+    if(!dragWidget){e.preventDefault();return;}
+    dragWidget.classList.add('dragging');
+    e.dataTransfer.effectAllowed='move';
+    e.dataTransfer.setData('text/plain',dragWidget.dataset.widget);
+  });
+
+  WRAP.addEventListener('dragover',function(e){
+    if(!dragWidget)return;
+    e.preventDefault();
+    e.dataTransfer.dropEffect='move';
+    const widgets=getWidgets();
+    widgets.forEach(w=>w.classList.remove('drag-over','drag-over-below'));
+    const target=e.target.closest('.widget');
+    if(!target||target===dragWidget)return;
+    const rect=target.getBoundingClientRect();
+    const midY=rect.top+rect.height/2;
+    if(e.clientY<midY){target.classList.add('drag-over');}
+    else{target.classList.add('drag-over-below');}
+  });
+
+  WRAP.addEventListener('drop',function(e){
+    if(!dragWidget)return;
+    e.preventDefault();
+    const widgets=getWidgets();
+    widgets.forEach(w=>w.classList.remove('drag-over','drag-over-below'));
+    const target=e.target.closest('.widget');
+    if(!target||target===dragWidget){dragWidget.classList.remove('dragging');dragWidget=null;return;}
+    const rect=target.getBoundingClientRect();
+    const midY=rect.top+rect.height/2;
+    if(e.clientY<midY){WRAP.insertBefore(dragWidget,target);}
+    else{WRAP.insertBefore(dragWidget,target.nextSibling);}
+    dragWidget.classList.remove('dragging');
+    dragWidget=null;
+    saveOrder();
+  });
+
+  WRAP.addEventListener('dragend',function(e){
+    if(dragWidget){dragWidget.classList.remove('dragging');dragWidget=null;}
+    getWidgets().forEach(w=>w.classList.remove('drag-over','drag-over-below'));
+  });
+
+  restoreOrder();
+})();
 </script>
 </body></html>
