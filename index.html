@@ -616,7 +616,15 @@ const gAuth = {
   },
 
   handleToken(resp) {
-    if (resp.error) { console.error("OAuth error:", resp); return; }
+    if (resp.error) {
+      console.error("OAuth error:", resp);
+      var bar=document.getElementById("authbar");
+      var msg=resp.error_description||resp.error||"Unknown error";
+      if(bar)bar.innerHTML='<div class="auth-status"><span class="auth-dot off"></span><span style="color:var(--hot)">OAuth error: '+msg+'</span></div>'+
+        '<button class="auth-btn google" onclick="gAuth.signIn()">Try again</button>'+
+        '<button class="auth-btn disconnect" onclick="localStorage.removeItem(\'rx_google_client_id\');location.reload()">Change Client ID</button>';
+      return;
+    }
     this.token = resp.access_token;
     this.expiresAt = Date.now() + (resp.expires_in * 1000);
     this.fetchUserInfo().then(() => {
