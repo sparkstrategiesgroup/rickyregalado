@@ -1076,8 +1076,8 @@ function renderPipeline(d){
   const ok=l=>!st(l.id).notfit&&!st(l.id).removed&&!st(l.id).closed&&!l.meeting;
   const emailTiles=[
     {key:"e1",lbl:"Email 1",sub:"Offer / Request Demo · Day 01",bg:"#e7ecfb",color:"var(--accent)",leads:LEADS.filter(l=>ok(l)&&!l.contacted)},
-    {key:"e2",lbl:"Email 2",sub:"Podcast / Story Invite · Day 05",bg:"#efe9ff",color:"var(--violet)",leads:LEADS.filter(l=>ok(l)&&l.contacted&&(l.sentCount||0)===1&&!l.replied)},
-    {key:"e3",lbl:"Email 3",sub:"Schedule Demo · Day 07",bg:"#fdf0db",color:"var(--warn)",leads:LEADS.filter(l=>ok(l)&&l.contacted&&(l.sentCount||0)===2&&!l.replied)}
+    {key:"e2",lbl:"Email 2",sub:"Podcast / Story Invite · Day 03",bg:"#efe9ff",color:"var(--violet)",leads:LEADS.filter(l=>ok(l)&&l.contacted&&(l.sentCount||0)===1&&!l.replied)},
+    {key:"e3",lbl:"Email 3",sub:"Schedule Demo · Day 07",bg:"#fdf0db",color:"var(--warn)",leads:LEADS.filter(l=>ok(l)&&l.contacted&&(l.sentCount||0)>=2&&!l.replied)}
   ];
   const socialTiles=[
     {key:"li-need",lbl:"Need DM",sub:"Contacted · No DM Sent",bg:"#fff4e6",color:"#e67700",leads:LEADS.filter(l=>ok(l)&&(l.contacted||st(l.id).drafted)&&!st(l.id).linkedin)},
@@ -1391,9 +1391,14 @@ async function generateDrafts(){
 function reset(){errs=[];APPTS=[];LEADS.forEach(l=>{l.contacted=false;l.sentCount=0;l.replied=false;l.sentiment="none";l.meeting=false;l.lastTs=0;l.lastSnippet="";l.emailedToday=false;l.repliedToday=false;});}
 async function loadAll(){
   reset();
+  var updEl=document.getElementById("updated");
   if(gAuth.isConnected()){
+    if(updEl)updEl.innerHTML='syncing Gmail <span class="spin"></span>';
     try{await loadGmail();}catch(e){errs.push("Gmail");}
     try{await classify();}catch(e){}
+    if(updEl)updEl.textContent=errs.length?"sync error: "+errs.join(", "):"synced ✓ "+new Date().toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"});
+  } else {
+    if(updEl)updEl.textContent="Gmail not connected";
   }
   LEADS.forEach(function(l){
     var s=st(l.id);
