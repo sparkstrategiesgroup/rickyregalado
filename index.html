@@ -95,21 +95,6 @@ a{color:var(--accent);text-decoration:none;}
 .sact:last-child{margin-bottom:0;}
 .sact input[type=checkbox]{width:14px;height:14px;border-radius:3px;flex-shrink:0;cursor:pointer;accent-color:var(--brand);}
 .sact.done{color:var(--muted);text-decoration:line-through;}
-/* today checklist */
-.dchkcard{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:16px 18px;margin-bottom:18px;box-shadow:var(--sh-sm);}
-.dchk-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
-.dchk-ttl{font-size:13.5px;font-weight:700;}
-.dchk-prog{font-size:11.5px;color:var(--muted);}
-.dchk-bar-bg{height:3px;background:#e6eaf2;border-radius:4px;margin-bottom:14px;}
-.dchk-bar{height:3px;background:var(--brand);border-radius:4px;width:0%;transition:width .3s;}
-.dchk-grid{display:flex;flex-direction:column;gap:4px;}
-.dchk-sec{font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.05em;text-transform:uppercase;margin-bottom:8px;}
-.dchk-row{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--ink);padding:5px 0;cursor:pointer;}
-.dchk-row input[type=checkbox]{accent-color:var(--brand);width:14px;height:14px;flex-shrink:0;cursor:pointer;}
-.dchk-row.done{color:var(--muted);text-decoration:line-through;}
-.dchk-acts{margin-top:12px;padding-top:11px;border-top:1px solid var(--line);display:flex;gap:7px;flex-wrap:wrap;}
-.dchk-acts button.qa{font-size:11.5px;padding:6px 11px;border-radius:9px;border:1px solid var(--line);background:#fff;color:var(--ink2);cursor:pointer;font-weight:600;}
-.dchk-acts button.qa:hover{background:#f5f7fc;}
 
 /* GAME CLOCK */
 .gclock{background:linear-gradient(135deg,#0d1530 0%,#1a2548 100%);border-radius:14px;padding:16px 20px;margin-bottom:14px;color:#fff;display:flex;align-items:center;justify-content:space-between;gap:16px;box-shadow:0 4px 16px rgba(13,21,48,.2);position:relative;overflow:hidden;}
@@ -483,23 +468,13 @@ details.editor>summary::-webkit-details-marker{display:none;}
   </div>
   <div class="sec"><span class="ico" id="icSched"></span><h2>This week's schedule</h2><span class="hint">11:00 am - 1:00 pm · <b id="schedToday">---</b></span></div>
   <div class="sched-grid" id="schedGrid"></div>
-  <div class="today-split">
-    <div class="today-panel" id="todayChk">
-      <div class="today-panel-hd"><span class="today-panel-ttl"><span class="ico" id="icChk"></span> Today's Checklist</span><span class="today-panel-date" id="chkDate"></span><span class="today-panel-sub" id="dchkProg">0 of 5 done</span></div>
-      <div class="today-panel-body">
-        <div class="dchk-bar-bg"><div class="dchk-bar" id="dchkBar"></div></div>
-        <div class="dchk-grid" id="dchkGrid"></div>
-        <div class="dchk-acts" id="dchkActs"></div>
-        <div class="activity-feed" id="activityFeed"></div>
-      </div>
-    </div>
-    <div class="today-panel" id="todayMsg">
-      <div class="today-panel-hd"><span class="today-panel-ttl"><span class="ico" id="icMsg" style="background:#efe9ff;color:var(--violet)"></span> Today's Message</span></div>
-      <div class="msg-tabs" id="msgTabs"></div>
-      <div class="msg-preview" id="msgPreview"></div>
-      <div class="msg-actions"><button class="primary" id="msgSaveBtn">Save</button><button id="msgOpenEditor" onclick="document.getElementById('editorCard').open=true;document.getElementById('editorCard').scrollIntoView({behavior:'smooth'})">Edit templates</button></div>
-    </div>
+  <div class="today-panel" id="todayMsg" style="margin-top:14px;">
+    <div class="today-panel-hd"><span class="today-panel-ttl"><span class="ico" id="icMsg" style="background:#efe9ff;color:var(--violet)"></span> Today's Message</span></div>
+    <div class="msg-tabs" id="msgTabs"></div>
+    <div class="msg-preview" id="msgPreview"></div>
+    <div class="msg-actions"><button class="primary" id="msgSaveBtn">Save</button><button id="msgOpenEditor" onclick="document.getElementById('editorCard').open=true;document.getElementById('editorCard').scrollIntoView({behavior:'smooth'})">Edit templates</button></div>
   </div>
+  <div class="activity-feed" id="activityFeed" style="margin-top:14px;"></div>
   </div>
 
 
@@ -834,7 +809,7 @@ function statusOf(l){const s=st(l.id);
   if(l.replied&&l.sentiment==="ooo")return"ooo";if(l.replied)return"replied";
   if(s.notfit)return"notfit";if(s.linkedin)return"linkedin";if(l.contacted)return"contacted";return"new";}
 
-function setIcons(){const m={icDo:ICON.do,icFun:ICON.funnel,icCh:ICON.bolt,icFlow:ICON.flow,icCal:ICON.cal,icLead:ICON.list,icLeg:ICON.info,icSched:ICON.sched,icChk:ICON.do,icMsg:ICON.mail,icPipe:ICON.flow};
+function setIcons(){const m={icDo:ICON.do,icFun:ICON.funnel,icCh:ICON.bolt,icFlow:ICON.flow,icCal:ICON.cal,icLead:ICON.list,icLeg:ICON.info,icSched:ICON.sched,icMsg:ICON.mail,icPipe:ICON.flow};
   for(const k in m){const e=document.getElementById(k);if(e)e.innerHTML=m[k];}}
 
 function focusLeads(f){const sel=document.getElementById("statusFilter");sel.value=f;renderTable();document.getElementById("leadsCard").scrollIntoView({behavior:"smooth",block:"start"});}
@@ -895,39 +870,11 @@ function renderSchedule(){
         // Sync today's checklist if same day
         var todayKey="rx_dchk_"+now.toLocaleDateString();
         if(dk===todayKey){
-          var match=document.querySelector('#dchkGrid input[data-ki="'+ki+'"]');
-          if(match&&match.checked!==this.checked){match.checked=this.checked;match.dispatchEvent(new Event("change"));}
           updateGameClock();
         }
       });
     });
   }
-  // Build today checklist
-  const todayDef=SCHED_DEF.find(d=>d.dow===todayDow);
-  const chkCard=document.getElementById("todayChk");
-  if(!todayDef){
-    const body=chkCard?chkCard.querySelector(".today-panel-body"):null;
-    if(body)body.innerHTML='<p style="font-size:13px;color:var(--muted);margin:0">Outreach runs Monday - Friday, 11 am - 1 pm.</p>';
-    return;
-  }
-  const KEY="rx_dchk_"+now.toLocaleDateString();
-  let saved={};try{saved=JSON.parse(localStorage.getItem(KEY)||"{}");}catch(e){}
-  const allTasks=[...todayDef.b1,...todayDef.b2];
-  const TOTAL=allTasks.length;
-  function countDone(){return allTasks.filter((_,i)=>saved["t"+i]).length;}
-  function updBar(){const d=countDone();const bar=document.getElementById("dchkBar");const prog=document.getElementById("dchkProg");if(bar)bar.style.width=Math.round(d/TOTAL*100)+"%";if(prog)prog.textContent=d+" of "+TOTAL+" done";}
-  function buildSec(tasks,label,offset){let h='<div class="dchk-sec">'+esc(label)+'</div>';tasks.forEach((t,i)=>{const ki="t"+(i+offset);h+='<label class="dchk-row'+(saved[ki]?" done":"")+'"><input type="checkbox"'+(saved[ki]?' checked="checked"':'')+' data-ki="'+ki+'"> '+esc(t)+'</label>';});return h;}
-  const grid2=document.getElementById("dchkGrid");
-  if(grid2)grid2.innerHTML=buildSec(todayDef.b1,"11:00 - 12:00",0)+buildSec(todayDef.b2,"12:00 - 1:00",todayDef.b1.length);
-  updBar();
-  document.querySelectorAll("#dchkGrid .dchk-row input[type=checkbox]").forEach(cb=>{cb.addEventListener("change",()=>{
-    saved[cb.dataset.ki]=cb.checked;cb.closest(".dchk-row").classList.toggle("done",cb.checked);localStorage.setItem(KEY,JSON.stringify(saved));updBar();
-    var schedCb=document.querySelector('#schedGrid input[data-daykey="'+KEY+'"][data-ki="'+cb.dataset.ki+'"]');
-    if(schedCb&&schedCb.checked!==cb.checked){schedCb.checked=cb.checked;schedCb.closest(".sact").classList.toggle("done",cb.checked);}
-    updateGameClock();
-  });});
-  const acts=document.getElementById("dchkActs");
-  if(acts){acts.innerHTML='<button class="qa" onclick="focusLeads(\'new\')">View new leads →</button><button class="qa" onclick="focusLeads(\'positive\')">Book positive replies →</button><button class="qa" onclick="document.getElementById(\'editorCard\').open=true;document.getElementById(\'editorCard\').scrollIntoView({behavior:\'smooth\'})">Review email copy →</button>';}
 }
 /* ── END SCHEDULE ── */
 
@@ -1123,10 +1070,7 @@ function render(d){lastD=d;
   const now2=new Date();
   const heroEl=document.getElementById("heroDate");
   if(heroEl)heroEl.textContent=now2.toLocaleDateString(undefined,{weekday:"long",month:"long",day:"numeric",year:"numeric"});
-  const chkEl=document.getElementById("chkDate");
-  if(chkEl)chkEl.textContent=now2.toLocaleDateString(undefined,{weekday:"short",month:"short",day:"numeric"})+" · "+now2.toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"});
 }
-if(!window._chkClockStarted){window._chkClockStarted=true;setInterval(function(){const el=document.getElementById("chkDate");if(el){const n=new Date();el.textContent=n.toLocaleDateString(undefined,{weekday:"short",month:"short",day:"numeric"})+" · "+n.toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"});}},30000);}
 let _pipeActive=null;
 function renderPipeline(d){
   const ok=l=>!st(l.id).notfit&&!st(l.id).removed&&!st(l.id).closed&&!l.meeting;
