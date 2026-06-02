@@ -102,8 +102,7 @@ a{color:var(--accent);text-decoration:none;}
 .dchk-prog{font-size:11.5px;color:var(--muted);}
 .dchk-bar-bg{height:3px;background:#e6eaf2;border-radius:4px;margin-bottom:14px;}
 .dchk-bar{height:3px;background:var(--brand);border-radius:4px;width:0%;transition:width .3s;}
-.dchk-grid{display:grid;grid-template-columns:1fr 1fr;gap:2px 28px;}
-@media(max-width:680px){.dchk-grid{grid-template-columns:1fr;}}
+.dchk-grid{display:flex;flex-direction:column;gap:4px;}
 .dchk-sec{font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.05em;text-transform:uppercase;margin-bottom:8px;}
 .dchk-row{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--ink);padding:5px 0;cursor:pointer;}
 .dchk-row input[type=checkbox]{accent-color:var(--brand);width:14px;height:14px;flex-shrink:0;cursor:pointer;}
@@ -821,33 +820,23 @@ const SCHED_DEF=[
   {dow:1,name:"Monday",
    pills:[{t:"E1",c:"se"},{t:"LI msg",c:"sl"},{t:"LI post",c:"spost"}],
    b1:["Send emails","LinkedIn DM messages","Actively engage with connections"],
-   b2:["Post social media content","Comment and engage"],
-   tasks11:["Send E1 emails to pipeline","LinkedIn messages - subcontracting outreach","Actively engage with connections"],
-   tasks12:["Post LinkedIn content (subcontracting)","Engage with post likes & comments"]},
+   b2:["Post social media content","Comment and engage"]},
   {dow:2,name:"Tuesday",
    pills:[{t:"Follow-up",c:"se"},{t:"LI msg",c:"sl"}],
    b1:["Send emails","LinkedIn DM messages","Actively engage with connections"],
-   b2:["Comment and engage"],
-   tasks11:["Send follow-up emails","LinkedIn messages - subcontracting outreach","Actively engage with connections"],
-   tasks12:["Reply to post likes & comments","Continue engagement"]},
+   b2:["Comment and engage"]},
   {dow:3,name:"Wednesday",
    pills:[{t:"E3",c:"se"},{t:"LI msg",c:"sl"},{t:"LI post",c:"spost"}],
    b1:["Send emails","LinkedIn DM messages","Actively engage with connections"],
-   b2:["Post social media content","Comment and engage"],
-   tasks11:["Send E3 emails to pipeline","LinkedIn messages - subcontracting outreach","Actively engage with connections"],
-   tasks12:["Post LinkedIn content (subcontracting)","Engage with post likes & comments"]},
+   b2:["Post social media content","Comment and engage"]},
   {dow:4,name:"Thursday",
    pills:[{t:"Follow-up",c:"se"},{t:"LI msg",c:"sl"}],
    b1:["Send emails","LinkedIn DM messages","Actively engage with connections"],
-   b2:["Comment and engage"],
-   tasks11:["Send follow-up emails","LinkedIn messages - subcontracting outreach","Actively engage with connections"],
-   tasks12:["Reply to post likes & comments","Continue engagement"]},
+   b2:["Comment and engage"]},
   {dow:5,name:"Friday",
    pills:[{t:"E5",c:"se"},{t:"LI msg",c:"sl"},{t:"LI post",c:"spost"}],
    b1:["Send emails","LinkedIn DM messages","Actively engage with connections"],
-   b2:["Post social media content","Comment and engage"],
-   tasks11:["Send E5 emails to pipeline","LinkedIn messages - subcontracting outreach","Actively engage with connections"],
-   tasks12:["Post LinkedIn content (subcontracting)","Engage with post likes & comments"]}
+   b2:["Post social media content","Comment and engage"]}
 ];
 
 function renderSchedule(){
@@ -878,13 +867,13 @@ function renderSchedule(){
   }
   const KEY="rx_dchk_"+now.toLocaleDateString();
   let saved={};try{saved=JSON.parse(localStorage.getItem(KEY)||"{}");}catch(e){}
-  const allTasks=[...todayDef.tasks11,...todayDef.tasks12];
+  const allTasks=[...todayDef.b1,...todayDef.b2];
   const TOTAL=allTasks.length;
   function countDone(){return allTasks.filter((_,i)=>saved["t"+i]).length;}
   function updBar(){const d=countDone();const bar=document.getElementById("dchkBar");const prog=document.getElementById("dchkProg");if(bar)bar.style.width=Math.round(d/TOTAL*100)+"%";if(prog)prog.textContent=d+" of "+TOTAL+" done";}
   function buildSec(tasks,label,offset){let h='<div class="dchk-sec">'+esc(label)+'</div>';tasks.forEach((t,i)=>{const ki="t"+(i+offset);h+='<label class="dchk-row'+(saved[ki]?" done":"")+'"><input type="checkbox"'+(saved[ki]?' checked="checked"':'')+' data-ki="'+ki+'"> '+esc(t)+'</label>';});return h;}
   const grid2=document.getElementById("dchkGrid");
-  if(grid2)grid2.innerHTML='<div>'+buildSec(todayDef.tasks11,"11:00 - 12:00 OUTREACH",0)+'</div><div>'+buildSec(todayDef.tasks12,"12:00 - 1:00 ENGAGE",todayDef.tasks11.length)+'</div>';
+  if(grid2)grid2.innerHTML=buildSec(todayDef.b1,"11:00 - 12:00",0)+buildSec(todayDef.b2,"12:00 - 1:00",todayDef.b1.length);
   updBar();
   document.querySelectorAll("#dchkGrid .dchk-row input[type=checkbox]").forEach(cb=>{cb.addEventListener("change",()=>{saved[cb.dataset.ki]=cb.checked;cb.closest(".dchk-row").classList.toggle("done",cb.checked);localStorage.setItem(KEY,JSON.stringify(saved));updBar();});});
   const acts=document.getElementById("dchkActs");
