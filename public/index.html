@@ -318,6 +318,14 @@ details.editor>summary::-webkit-details-marker{display:none;}
 .msg-actions button:hover{background:#f5f7fc;}
 .msg-actions button.primary{background:var(--brand);color:#fff;border-color:transparent;}
 .msg-actions button.primary:hover{background:#2a44c8;}
+
+/* LEADS COLLAPSE */
+.leads-toggle{display:flex;align-items:center;gap:6px;padding:6px 12px;border-radius:9px;border:1px solid var(--line);background:#fff;color:var(--ink2);cursor:pointer;font-size:11.5px;font-weight:600;transition:all .12s;margin-left:auto;}
+.leads-toggle:hover{background:#f5f7fc;}
+.leads-toggle svg{transition:transform .2s;}
+.leads-toggle.collapsed svg{transform:rotate(-90deg);}
+.leads-body{transition:max-height .3s ease,opacity .2s;overflow:hidden;}
+.leads-body.collapsed{max-height:0 !important;opacity:0;padding:0;margin:0;}
 </style>
 </head>
 <body>
@@ -338,13 +346,16 @@ details.editor>summary::-webkit-details-marker{display:none;}
 
   <div class="widget" data-widget="leads">
   <div class="drag-handle" draggable="true"><div class="grip"><div class="grip-row"><i></i><i></i><i></i></div><div class="grip-row"><i></i><i></i><i></i></div></div><span class="wlabel">Leads</span><div class="grip"><div class="grip-row"><i></i><i></i><i></i></div><div class="grip-row"><i></i><i></i><i></i></div></div></div>
-  <div class="card" id="leadsCard"><div class="sec" style="margin-top:0"><span class="ico" id="icLead"></span><h2>Leads <span id="leadCount" style="color:var(--muted);font-weight:600"></span></h2><span class="hint">pipeline tracker - set status, add notes, remove leads you don't need</span></div>
+  <div class="card" id="leadsCard"><div class="sec" style="margin-top:0"><span class="ico" id="icLead"></span><h2>Leads <span id="leadCount" style="color:var(--muted);font-weight:600"></span></h2><span class="hint">pipeline tracker - set status, add notes, remove leads you don't need</span>
+    <button class="leads-toggle" id="leadsToggle"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg><span id="leadsToggleLabel">Collapse</span></button></div>
+    <div class="leads-body" id="leadsBody">
     <div class="genbar"><span class="gb-txt">Approve leads with the checkbox, then <b>generate E1 drafts</b> from the current editor copy (review in Gmail before sending).</span><button id="genDrafts">⚡ Generate E1 drafts</button><span class="gstat" id="genStat"></span></div>
     <div class="toolbar"><input id="search" placeholder="Search company, contact, city...">
       <select id="statusFilter"><option value="">All statuses</option><option value="closed">Closed (Prime)</option><option value="opp">Opportunity</option><option value="meeting">Meeting booked</option><option value="positive">Positive reply</option><option value="replied">Any reply</option><option value="linkedin">LinkedIn sent</option><option value="contacted">Emailed, awaiting</option><option value="new">Not contacted</option></select>
       <label class="tgl-removed" id="tglRemoved"><input type="checkbox" id="showRemoved" style="display:none"><span>Show removed</span> <span class="cnt" id="removedCnt">0</span></label></div>
     <div class="table-scroll">
     <table class="leads"><thead><tr><th style="width:28px"></th><th data-k="company">Company</th><th data-k="contact">Contact</th><th data-k="owner">Owner</th><th data-k="statusLabel">Status</th><th>Notes</th><th data-k="lastTs">Last</th><th>Draft?</th></tr></thead><tbody id="rows"></tbody></table>
+    </div>
     </div>
   </div>
   </div>
@@ -1059,6 +1070,21 @@ async function loadAll(){
 setIcons();buildEditor();document.getElementById("genDrafts").onclick=generateDrafts;reset();compute();
 gAuth.init();
 setInterval(()=>{if(gAuth.isConnected())loadAll();},90000);
+
+/* ── LEADS COLLAPSE/EXPAND ── */
+(function(){
+  const btn=document.getElementById("leadsToggle"),body=document.getElementById("leadsBody"),lbl=document.getElementById("leadsToggleLabel");
+  if(!btn||!body)return;
+  const KEY="rx_leads_collapsed";
+  function apply(collapsed){
+    body.classList.toggle("collapsed",collapsed);
+    btn.classList.toggle("collapsed",collapsed);
+    lbl.textContent=collapsed?"Expand":"Collapse";
+    localStorage.setItem(KEY,collapsed?"1":"0");
+  }
+  btn.onclick=()=>apply(!body.classList.contains("collapsed"));
+  if(localStorage.getItem(KEY)==="1")apply(true);
+})();
 
 /* ── COUNTDOWN TIMER ── */
 (function(){
