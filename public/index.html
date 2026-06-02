@@ -981,15 +981,17 @@ function renderPipeline(d){
         document.querySelectorAll(".pipe-expand").forEach(e=>{if(e.id!==expandId){e.classList.add("collapsed");e.innerHTML="";}});
         document.querySelectorAll(".pipe-row .pipe-tile.active").forEach(t=>{if(!row.contains(t))t.classList.remove("active");});
         var tplKey=tile.key==="e1"?"e1":tile.key==="e2"?"e2":tile.key==="e3"?"e3":"e1";
-        var allLeads=tile.leads.filter(function(l){return l.email;});
+        var isLi=tile.key.indexOf("li-")===0;
+        var allLeads=isLi?tile.leads:tile.leads.filter(function(l){return l.email;});
         var skipped=new Set();
+        var btnLabel=isLi?"Mark as DM Sent":"Send Email";
         function getBatch(){return allLeads.filter(function(l){return !skipped.has(l.id);}).slice(0,BATCH);}
         function renderBatch(){
           var batch=getBatch();
           var remaining=allLeads.filter(function(l){return !skipped.has(l.id);}).length;
           var h='<div class="pipe-expand-hd"><span class="pe-title">'+tile.lbl+' — '+tile.sub+'</span><span class="pe-cnt">'+remaining+' of '+allLeads.length+' remaining</span></div>';
           if(batch.length){
-            h+='<div class="pe-action-bar"><label class="pe-sel-all"><input type="checkbox" id="peSelectAll" checked> Select all ('+batch.length+')</label><span class="pe-sel-count" id="peSelCount">'+batch.length+' selected</span><button class="pe-send-btn" id="peSendBtn">Send '+batch.length+' Email'+(batch.length>1?"s":"")+'</button><span class="pe-send-status" id="peSendStatus"></span></div>';
+            h+='<div class="pe-action-bar"><label class="pe-sel-all"><input type="checkbox" id="peSelectAll" checked> Select all ('+batch.length+')</label><span class="pe-sel-count" id="peSelCount">'+batch.length+' selected</span><button class="pe-send-btn" id="peSendBtn">'+(isLi?btnLabel+" ("+batch.length+")":"Send "+batch.length+" Email"+(batch.length>1?"s":""))+'</button><span class="pe-send-status" id="peSendStatus"></span></div>';
             h+='<div class="pe-table-wrap"><table class="pe-table"><thead><tr><th style="width:32px"></th><th>Company</th><th>Contact</th><th>Owner</th><th>Status</th><th>Emailed</th><th style="width:32px"></th></tr></thead><tbody>';
             batch.forEach(function(l){
               var s=st(l.id),status=statusOf(l);
@@ -1023,7 +1025,7 @@ function renderPipeline(d){
             var chks=expand.querySelectorAll(".pe-chk");
             var n=expand.querySelectorAll(".pe-chk:checked").length;
             if(countEl)countEl.textContent=n+" selected";
-            if(sendBtn){sendBtn.disabled=n===0;sendBtn.textContent=n>0?"Send "+n+" Email"+(n>1?"s":""):"Send Emails";}
+            if(sendBtn){sendBtn.disabled=n===0;sendBtn.textContent=isLi?(n>0?btnLabel+" ("+n+")":btnLabel):(n>0?"Send "+n+" Email"+(n>1?"s":""):"Send Emails");}
             if(selAll)selAll.checked=n===chks.length&&chks.length>0;
           }
           if(selAll)selAll.onchange=function(){expand.querySelectorAll(".pe-chk").forEach(function(c){c.checked=selAll.checked;});updateCount();};
@@ -1049,31 +1051,38 @@ function renderPipeline(d){
             };
           });
           if(sendBtn)sendBtn.onclick=async function(){
-            if(!gAuth.isConnected()){alert("Sign in with Google first.");return;}
             var ids=[];expand.querySelectorAll(".pe-chk:checked").forEach(function(c){ids.push(+c.dataset.id);});
             if(!ids.length)return;
             var leads=ids.map(function(id){return LEADS.find(function(l){return l.id===id;});}).filter(Boolean);
-            var tpl=typeof TPL!=="undefined"?TPL:{};
-            var tmpl=tpl[tplKey]||{};
-            if(!tmpl.subj&&!tmpl.body){alert("No template found for "+tplKey+". Edit templates first.");return;}
-            if(!confirm("Send "+tile.lbl+" emails to "+leads.length+" lead(s)? This will send immediately from your Gmail account."))return;
-            sendBtn.disabled=true;var ok=0;
-            for(var i=0;i<leads.length;i++){
-              var l=leads[i];if(statusEl)statusEl.textContent="Sending "+(i+1)+"/"+leads.length+"...";
-              try{
-                var subj=tok(tmpl.subj,l),body=tok(tmpl.body,l);
-                var r=await sendGmailEmail(l.email,subj,body);
-                if(r&&(r.id||r.labelIds)){ok++;l.contacted=true;l.sentCount=(l.sentCount||0)+1;l.emailedToday=true;st(l.id).drafted=true;skipped.add(l.id);}
-              }catch(e){if(statusEl)statusEl.textContent="Error: "+l.company+" - "+e.message;}
+            if(isLi){
+              leads.forEach(function(l){st(l.id).linkedin=true;skipped.add(l.id);});
+              localStorage.setItem("rx_state",JSON.stringify(STATE));
+              if(statusEl)statusEl.textContent=leads.length+" marked as DM sent ✓";
+              setTimeout(function(){compute();renderBatch();},800);
+            } else {
+              if(!gAuth.isConnected()){alert("Sign in with Google first.");return;}
+              var tpl=typeof TPL!=="undefined"?TPL:{};
+              var tmpl=tpl[tplKey]||{};
+              if(!tmpl.subj&&!tmpl.body){alert("No template found for "+tplKey+". Edit templates first.");return;}
+              if(!confirm("Send "+tile.lbl+" emails to "+leads.length+" lead(s)? This will send immediately from your Gmail account."))return;
+              sendBtn.disabled=true;var ok=0;
+              for(var i=0;i<leads.length;i++){
+                var l=leads[i];if(statusEl)statusEl.textContent="Sending "+(i+1)+"/"+leads.length+"...";
+                try{
+                  var subj=tok(tmpl.subj,l),body=tok(tmpl.body,l);
+                  var r=await sendGmailEmail(l.email,subj,body);
+                  if(r&&(r.id||r.labelIds)){ok++;l.contacted=true;l.sentCount=(l.sentCount||0)+1;l.emailedToday=true;l.lastTs=Date.now();st(l.id).sentCount=l.sentCount;st(l.id).contacted=true;st(l.id).lastTs=l.lastTs;skipped.add(l.id);}
+                }catch(e){if(statusEl)statusEl.textContent="Error: "+l.company+" - "+e.message;}
+              }
+              localStorage.setItem("rx_state",JSON.stringify(STATE));
+              if(statusEl)statusEl.textContent=ok+" email"+(ok>1?"s":"")+" sent ✓ — opening LinkedIn DMs...";
+              setTimeout(function(){
+                compute();
+                _pipeActive=null;
+                var liTile=document.querySelector('#pipeSocialRow .pipe-tile[data-key="li-need"]');
+                if(liTile)liTile.click();
+              },1500);
             }
-            localStorage.setItem("rx_state",JSON.stringify(STATE));
-            if(statusEl)statusEl.textContent=ok+" email"+(ok>1?"s":"")+" sent ✓ — opening LinkedIn DMs...";
-            setTimeout(function(){
-              compute();
-              _pipeActive=null;
-              var liTile=document.querySelector('#pipeSocialRow .pipe-tile[data-key="li-need"]');
-              if(liTile)liTile.click();
-            },1500);
           };
         }
         if(!allLeads.length){
@@ -1259,6 +1268,12 @@ async function loadAll(){
     try{await loadGmail();}catch(e){errs.push("Gmail");}
     try{await classify();}catch(e){}
   }
+  LEADS.forEach(function(l){
+    var s=st(l.id);
+    if(s.sentCount&&(!l.contacted||l.sentCount<s.sentCount)){l.contacted=true;l.sentCount=Math.max(l.sentCount||0,s.sentCount);}
+    if(s.contacted&&!l.contacted){l.contacted=true;}
+    if(s.lastTs&&(!l.lastTs||l.lastTs<s.lastTs)){l.lastTs=s.lastTs;}
+  });
   compute();
 }
 setIcons();buildEditor();document.getElementById("genDrafts").onclick=generateDrafts;reset();compute();
