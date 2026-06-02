@@ -313,6 +313,7 @@ details.editor>summary::-webkit-details-marker{display:none;}
 .pipe-tile.active{box-shadow:0 0 0 2px var(--brand),0 4px 12px rgba(0,0,0,.1);transform:translateY(-2px);}
 .pipe-tile .pt-num{font-size:26px;font-weight:800;line-height:1;}
 .pipe-tile .pt-lbl{font-size:10.5px;font-weight:600;margin-top:4px;text-transform:uppercase;letter-spacing:.4px;opacity:.85;}
+.pipe-tile .pt-sub{font-size:9px;font-weight:500;margin-top:2px;opacity:.65;text-transform:none;letter-spacing:0;}
 .pipe-expand{padding:0 16px 16px;overflow:hidden;transition:max-height .25s ease,opacity .2s;max-height:600px;opacity:1;}
 .pipe-expand.collapsed{max-height:0;opacity:0;padding:0 16px;}
 .pipe-expand-hd{display:flex;align-items:center;justify-content:space-between;padding:8px 0 6px;border-bottom:1px solid var(--line);margin-bottom:0;}
@@ -930,9 +931,9 @@ let _pipeActive=null;
 function renderPipeline(d){
   const ok=l=>!st(l.id).notfit&&!st(l.id).removed&&!st(l.id).closed&&!l.meeting;
   const emailTiles=[
-    {key:"e1",lbl:"E1",sub:"First Outreach",bg:"#e7ecfb",color:"var(--accent)",leads:LEADS.filter(l=>ok(l)&&!l.contacted)},
-    {key:"e3",lbl:"E3",sub:"Follow-up",bg:"#efe9ff",color:"var(--violet)",leads:LEADS.filter(l=>ok(l)&&l.contacted&&(l.sentCount||0)===1&&!l.replied)},
-    {key:"e5",lbl:"E5",sub:"Final Close",bg:"#fdf0db",color:"var(--warn)",leads:LEADS.filter(l=>ok(l)&&l.contacted&&(l.sentCount||0)===2&&!l.replied)},
+    {key:"e1",lbl:"Email 1",sub:"Offer / Request Demo · Day 01",bg:"#e7ecfb",color:"var(--accent)",leads:LEADS.filter(l=>ok(l)&&!l.contacted)},
+    {key:"e2",lbl:"Email 2",sub:"Podcast / Story Invite · Day 05",bg:"#efe9ff",color:"var(--violet)",leads:LEADS.filter(l=>ok(l)&&l.contacted&&(l.sentCount||0)===1&&!l.replied)},
+    {key:"e3",lbl:"Email 3",sub:"Schedule Demo · Day 07",bg:"#fdf0db",color:"var(--warn)",leads:LEADS.filter(l=>ok(l)&&l.contacted&&(l.sentCount||0)===2&&!l.replied)},
     {key:"closed",lbl:"Closed",sub:"Signed Primes",bg:"#e3f6ec",color:"var(--win)",leads:LEADS.filter(l=>st(l.id).closed)}
   ];
   const socialTiles=[
@@ -947,7 +948,8 @@ function renderPipeline(d){
       const isActive=_pipeActive===t.key;
       return '<div class="pipe-tile'+(isActive?" active":"")+'" data-key="'+t.key+'" style="background:'+t.bg+'">'+
         '<div class="pt-num" style="color:'+t.color+'">'+t.leads.length+'</div>'+
-        '<div class="pt-lbl" style="color:'+t.color+'">'+t.lbl+'</div></div>';
+        '<div class="pt-lbl" style="color:'+t.color+'">'+t.lbl+'</div>'+
+        '<div class="pt-sub" style="color:'+t.color+'">'+t.sub+'</div></div>';
     }).join("");
     row.querySelectorAll(".pipe-tile").forEach(el=>{
       el.onclick=function(){
