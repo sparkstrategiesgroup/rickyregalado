@@ -111,6 +111,27 @@ a{color:var(--accent);text-decoration:none;}
 .dchk-acts button.qa{font-size:11.5px;padding:6px 11px;border-radius:9px;border:1px solid var(--line);background:#fff;color:var(--ink2);cursor:pointer;font-weight:600;}
 .dchk-acts button.qa:hover{background:#f5f7fc;}
 
+/* GAME CLOCK */
+.gclock{background:linear-gradient(135deg,#0d1530 0%,#1a2548 100%);border-radius:14px;padding:16px 20px;margin-bottom:14px;color:#fff;display:flex;align-items:center;justify-content:space-between;gap:16px;box-shadow:0 4px 16px rgba(13,21,48,.2);position:relative;overflow:hidden;}
+.gclock.pregame{background:linear-gradient(135deg,#1a2548 0%,#2a3868 100%);}
+.gclock.halftime{background:linear-gradient(135deg,#0d1530 0%,#1b3a0d 80%);}
+.gclock.gameon{background:linear-gradient(135deg,#0f2e08 0%,#1b6b0a 100%);animation:pulse-glow 2s ease-in-out infinite;}
+.gclock.urgent{background:linear-gradient(135deg,#6b0a0a 0%,#a82020 100%);animation:pulse-glow 1s ease-in-out infinite;}
+.gclock.postgame{background:linear-gradient(135deg,#0d1530 0%,#1a2548 100%);}
+@keyframes pulse-glow{0%,100%{box-shadow:0 4px 16px rgba(13,21,48,.2)}50%{box-shadow:0 4px 24px rgba(15,157,88,.35)}}
+.gclock.urgent .gc-phase{animation:none;}
+@keyframes pulse-glow-red{0%,100%{box-shadow:0 4px 16px rgba(13,21,48,.2)}50%{box-shadow:0 4px 24px rgba(239,71,87,.35)}}
+.gclock.urgent{animation:pulse-glow-red 1s ease-in-out infinite;}
+.gc-left{flex:1;min-width:0;}
+.gc-phase{font-size:10px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;opacity:.7;margin-bottom:2px;}
+.gc-msg{font-size:15px;font-weight:700;line-height:1.3;}
+.gc-sub{font-size:11px;opacity:.6;margin-top:3px;}
+.gc-right{text-align:right;flex-shrink:0;}
+.gc-time{font-family:var(--mono);font-size:28px;font-weight:800;letter-spacing:-1px;line-height:1;}
+.gc-countdown{font-size:11px;opacity:.7;margin-top:4px;}
+.gc-pts{display:inline-flex;align-items:center;gap:5px;background:rgba(255,255,255,.15);border-radius:8px;padding:4px 10px;margin-top:6px;font-size:12px;font-weight:700;}
+.gc-pts .gc-pts-num{font-family:var(--mono);font-size:16px;}
+
 /* CARDS / GRID */
 .grid2{display:grid;grid-template-columns:1.25fr 1fr;gap:16px;margin-bottom:18px;}
 @media(max-width:880px){.grid2{grid-template-columns:1fr;}}
@@ -458,6 +479,10 @@ details.editor>summary::-webkit-details-marker{display:none;}
   <div class="drag-handle" draggable="true"><div class="grip"><div class="grip-row"><i></i><i></i><i></i></div><div class="grip-row"><i></i><i></i><i></i></div></div><span class="wlabel">Schedule</span><div class="grip"><div class="grip-row"><i></i><i></i><i></i></div><div class="grip-row"><i></i><i></i><i></i></div></div></div>
   <div class="sec"><span class="ico" id="icSched"></span><h2>This week's schedule</h2><span class="hint">11:00 am - 1:00 pm · <b id="schedToday">---</b></span></div>
   <div class="sched-grid" id="schedGrid"></div>
+  <div class="gclock" id="gameClock">
+    <div class="gc-left"><div class="gc-phase" id="gcPhase"></div><div class="gc-msg" id="gcMsg"></div><div class="gc-sub" id="gcSub"></div></div>
+    <div class="gc-right"><div class="gc-time" id="gcTime"></div><div class="gc-countdown" id="gcCountdown"></div><div class="gc-pts" id="gcPts"></div></div>
+  </div>
   <div class="today-split">
     <div class="today-panel" id="todayChk">
       <div class="today-panel-hd"><span class="today-panel-ttl"><span class="ico" id="icChk"></span> Today's Checklist</span><span class="today-panel-date" id="chkDate"></span><span class="today-panel-sub" id="dchkProg">0 of 5 done</span></div>
@@ -881,6 +906,106 @@ function renderSchedule(){
 }
 /* ── END SCHEDULE ── */
 
+/* ── GAME CLOCK ── */
+function updateGameClock(){
+  const now=new Date();
+  const h=now.getHours(),m=now.getMinutes();
+  const dow=now.getDay();
+  const el=document.getElementById("gameClock");
+  if(!el)return;
+  const phaseEl=document.getElementById("gcPhase");
+  const msgEl=document.getElementById("gcMsg");
+  const subEl=document.getElementById("gcSub");
+  const timeEl=document.getElementById("gcTime");
+  const cdEl=document.getElementById("gcCountdown");
+  const ptsEl=document.getElementById("gcPts");
+
+  const timeStr=now.toLocaleTimeString([],{hour:"numeric",minute:"2-digit"});
+  timeEl.textContent=timeStr;
+
+  const KEY="rx_dchk_"+now.toLocaleDateString();
+  let saved={};try{saved=JSON.parse(localStorage.getItem(KEY)||"{}");}catch(e){}
+  const todayDef=SCHED_DEF.find(d=>d.dow===dow);
+  const total=todayDef?(todayDef.b1.length+todayDef.b2.length):0;
+  let done=0;
+  if(todayDef){for(let i=0;i<total;i++){if(saved["t"+i])done++;}}
+  const pts=done*10;
+
+  ptsEl.innerHTML='<span class="gc-pts-num">'+pts+'</span> pts';
+
+  function minsUntil(targetH,targetM){return(targetH-h)*60+(targetM-m);}
+  function fmtMins(mins){var hh=Math.floor(mins/60),mm=mins%60;return hh>0?(hh+"h "+mm+"m"):(mm+"m");}
+
+  if(dow===0||dow===6){
+    el.className="gclock postgame";
+    phaseEl.textContent="WEEKEND";
+    msgEl.textContent="Rest up. Monday we go again.";
+    subEl.textContent="Enjoy the downtime - you earned it";
+    cdEl.textContent="Back at it Monday";
+  } else if(h<10){
+    el.className="gclock pregame";
+    phaseEl.textContent="PRE-GAME";
+    msgEl.textContent="Morning prep. Review your pipeline.";
+    subEl.textContent="Game time starts at 11:00 - get your mind right";
+    cdEl.textContent=fmtMins(minsUntil(11,0))+" until tip-off";
+  } else if(h===10){
+    el.className="gclock pregame";
+    phaseEl.textContent="WARM-UP";
+    msgEl.textContent="Have you sent your LinkedIn messages?";
+    subEl.textContent="Get your DMs out now. Tip-off in "+fmtMins(minsUntil(11,0));
+    cdEl.textContent=fmtMins(minsUntil(11,0))+" until game time";
+  } else if(h===11){
+    var left=minsUntil(12,0);
+    el.className=done<2?"gclock urgent":"gclock gameon";
+    phaseEl.textContent="1ST HALF";
+    if(done===0){
+      msgEl.textContent="Clock is running! Send those emails NOW.";
+      subEl.textContent="We're falling behind - every minute counts!";
+    } else if(done<todayDef.b1.length){
+      msgEl.textContent="Good start! Keep pushing - "+done+" down, "+(total-done)+" to go.";
+      subEl.textContent="Stay locked in. Don't let up.";
+    } else {
+      msgEl.textContent="First half domination! Emails and DMs handled.";
+      subEl.textContent="Cruise into halftime with momentum";
+    }
+    cdEl.textContent=left+"m left in the 1st half";
+  } else if(h===12){
+    var left=minsUntil(13,0);
+    el.className=done<todayDef.b1.length?"gclock urgent":"gclock gameon";
+    phaseEl.textContent="2ND HALF";
+    if(done<todayDef.b1.length){
+      msgEl.textContent="Behind on 1st half tasks - dig deep!";
+      subEl.textContent="Champions close the gap. Push through!";
+    } else if(done<total){
+      msgEl.textContent="Social media + engagement time. Finish strong!";
+      subEl.textContent="This is where you separate from the pack";
+    } else {
+      msgEl.textContent="PERFECT GAME! Every task crushed.";
+      subEl.textContent="That's how you dominate. Victory lap.";
+    }
+    cdEl.textContent=left+"m left in the 2nd half";
+  } else {
+    el.className="gclock postgame";
+    phaseEl.textContent="FINAL SCORE";
+    if(done===total&&total>0){
+      msgEl.textContent="PERFECT GAME! "+done+"/"+total+" tasks completed.";
+      subEl.textContent="MVP performance. That's a W.";
+    } else if(done>0){
+      msgEl.textContent="Game over. "+done+" of "+total+" completed.";
+      subEl.textContent="Solid effort. Come back stronger tomorrow.";
+    } else if(total>0){
+      msgEl.textContent="Game over. No tasks checked off today.";
+      subEl.textContent="Tomorrow's a new game. Show up ready.";
+    } else {
+      msgEl.textContent="No game scheduled today.";
+      subEl.textContent="";
+    }
+    cdEl.textContent="Next game tomorrow at 11:00";
+  }
+}
+setInterval(updateGameClock,15000);
+/* ── END GAME CLOCK ── */
+
 function compute(){
   const reached=LEADS.filter(l=>{const s=st(l.id);return l.contacted||l.replied||l.meeting||s.linkedin||s.opp||s.closed;}).length;
   const d={reached,replies:LEADS.filter(l=>l.replied).length,meetings:LEADS.filter(l=>l.meeting).length,
@@ -916,7 +1041,7 @@ function render(d){lastD=d;
 
   renderPipeline(d);
   renderSchedule();
-
+  updateGameClock();
 
   renderTable();updateGenBar();if(window._renderMsgTabs)window._renderMsgTabs();if(window._renderActivity)window._renderActivity();
   document.getElementById("updated").innerHTML="updated "+new Date().toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"});
