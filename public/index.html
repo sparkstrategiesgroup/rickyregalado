@@ -478,7 +478,7 @@ details.editor>summary::-webkit-details-marker{display:none;}
       <div class="today-panel-hd"><span class="today-panel-ttl"><span class="ico" id="icMsg" style="background:#efe9ff;color:var(--violet)"></span> Today's Message</span></div>
       <div class="msg-tabs" id="msgTabs"></div>
       <div class="msg-preview" id="msgPreview"></div>
-      <div class="msg-actions"><button class="primary" id="msgGenDrafts">Generate drafts</button><button id="msgOpenEditor" onclick="document.getElementById('editorCard').open=true;document.getElementById('editorCard').scrollIntoView({behavior:'smooth'})">Edit templates</button></div>
+      <div class="msg-actions"><button class="primary" id="msgSaveBtn" style="display:none">Save</button><button id="msgOpenEditor" onclick="document.getElementById('editorCard').open=true;document.getElementById('editorCard').scrollIntoView({behavior:'smooth'})">Edit templates</button></div>
     </div>
   </div>
   </div>
@@ -1314,26 +1314,52 @@ setInterval(()=>{if(gAuth.isConnected())loadAll();},90000);
     tabs.querySelectorAll(".msg-tab").forEach(t=>t.onclick=()=>{activeTab=t.dataset.tab;renderMsgTabs();renderMsgPreview();});
     renderMsgPreview();
   }
+  var _dirty=false;
   function renderMsgPreview(){
     const prev=document.getElementById("msgPreview");if(!prev)return;
+    const saveBtn=document.getElementById("msgSaveBtn");
     const tpl=typeof TPL!=="undefined"?TPL:{};
     var tplKey=activeTab;
+    _dirty=false;
+    if(saveBtn)saveBtn.style.display="none";
     if(activeTab==="lipost"){
       prev.innerHTML='<div class="msg-subj">LinkedIn Post Guidance</div><div class="msg-body">Share a post about subcontracting, BSC growth, or Route Exchange.<br><br><b>Tips:</b><br>• Share a win, lesson, or insight from the field<br>• Tag relevant connections or companies<br>• Use 2-3 relevant hashtags (#BSC #FacilityServices #Subcontracting)<br>• Include a question to drive engagement<br>• Respond to every comment within 24 hours</div>';
       return;
     }
     const data=tpl[tplKey]||{};
     const subj=data.subj||"";
-    const body=(data.body||"").replace(/\{first_name\}/g,'<span class="msg-token">{first_name}</span>').replace(/\{company\}/g,'<span class="msg-token">{company}</span>');
+    const body=data.body||"";
     let h="";
-    if(subj)h+='<div class="msg-subj">Subject: '+esc(subj).replace(/\{first_name\}/g,'<span class="msg-token">{first_name}</span>').replace(/\{company\}/g,'<span class="msg-token">{company}</span>')+'</div>';
-    if(body)h+='<div class="msg-body">'+body.replace(/\n/g,"<br>")+'</div>';
-    if(!subj&&!body)h='<div class="msg-body" style="color:var(--muted)">No template loaded for this touch. Edit templates in the Template Editor below.</div>';
+    if(subj)h+='<div class="msg-subj" contenteditable="true" data-field="subj" spellcheck="true">'+esc(subj)+'</div>';
+    h+='<div class="msg-body" contenteditable="true" data-field="body" spellcheck="true" style="white-space:pre-wrap;outline:none;min-height:60px;">'+esc(body)+'</div>';
+    if(!subj&&!body)h='<div class="msg-body" contenteditable="true" data-field="body" spellcheck="true" style="white-space:pre-wrap;outline:none;min-height:60px;color:var(--muted)">Type your template here...</div>';
     prev.innerHTML=h;
+    prev.querySelectorAll("[contenteditable]").forEach(function(el){
+      el.addEventListener("input",function(){
+        if(!_dirty){_dirty=true;if(saveBtn)saveBtn.style.display="";}
+      });
+      el.addEventListener("focus",function(){if(el.style.color)el.style.color="";});
+    });
   }
   window._renderMsgTabs=renderMsgTabs;
-  const btn=document.getElementById("msgGenDrafts");
-  if(btn)btn.onclick=function(){document.getElementById("genDrafts").click();};
+  var saveBtn=document.getElementById("msgSaveBtn");
+  if(saveBtn)saveBtn.onclick=function(){
+    var prev=document.getElementById("msgPreview");if(!prev)return;
+    var tpl=typeof TPL!=="undefined"?TPL:{};
+    var tplKey=activeTab;
+    if(tplKey==="lipost")return;
+    if(!tpl[tplKey])tpl[tplKey]={};
+    var subjEl=prev.querySelector('[data-field="subj"]');
+    var bodyEl=prev.querySelector('[data-field="body"]');
+    if(subjEl)tpl[tplKey].subj=subjEl.textContent;
+    if(bodyEl)tpl[tplKey].body=bodyEl.textContent;
+    saveTpl();
+    _dirty=false;
+    saveBtn.style.display="none";
+    saveBtn.textContent="Saved!";
+    saveBtn.style.display="";
+    setTimeout(function(){saveBtn.textContent="Save";saveBtn.style.display="none";renderMsgPreview();},1200);
+  };
   setTimeout(renderMsgTabs,100);
 })();
 
