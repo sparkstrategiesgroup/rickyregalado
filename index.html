@@ -907,6 +907,60 @@ function renderSchedule(){
 /* ── END SCHEDULE ── */
 
 /* ── GAME CLOCK ── */
+const GC_QUOTES=[
+"You didn't come this far to stop now.",
+"The pain of discipline weighs ounces. The pain of regret weighs tons.",
+"One day or day one. You decide.",
+"You can quit. Or you can keep going. Both hurt.",
+"The comeback is always stronger than the setback.",
+"Nobody is coming to save you. Be your own hero.",
+"Your future is watching what you do today.",
+"The only way out is through.",
+"Comfort is expensive. Growth is priceless.",
+"You are stronger than the excuse you're about to make.",
+"Every master was once a beginner who refused to quit.",
+"When you're tired, learn to rest—not surrender.",
+"The mountain isn't in your way. It is your way.",
+"Keep showing up. Consistency beats intensity.",
+"You don't have to be fearless. Just don't let fear drive.",
+"The harder the battle, the sweeter the victory.",
+"Success is built on days when you didn't feel like it.",
+"Small steps still move you forward.",
+"You have survived 100% of your hardest days.",
+"The version of you that wins is built by the choices you make today.",
+"Nobody remembers the excuses. Everyone remembers the result.",
+"Your dreams deserve your effort.",
+"What feels impossible today becomes your warm-up tomorrow.",
+"You were not built to stay small.",
+"Courage is action in the presence of fear.",
+"Keep going. The person you want to become is waiting.",
+"The obstacle is not the enemy. Quitting is.",
+"Doubt kills more dreams than failure ever will.",
+"Pressure creates diamonds.",
+"Your potential is too valuable to waste on hesitation.",
+"Every champion was once overlooked.",
+"The grind is temporary. Pride lasts.",
+"You don't rise to your goals. You fall to your habits.",
+"Stop negotiating with your excuses.",
+"Be stubborn about your goals and flexible about your path.",
+"The next chapter will thank you for not giving up.",
+"If it matters, make time. If not, make excuses.",
+"You are capable of far more than your current circumstances suggest.",
+"Action creates confidence.",
+"No one can outwork a person who refuses to quit.",
+"Progress is earned, not awarded.",
+"Your breakthrough may be one more attempt away.",
+"The strongest people keep moving when nobody is watching.",
+"Fear says 'what if you fail?' Faith says 'what if you fly?'",
+"You owe it to yourself to see what happens if you don't quit.",
+"The road gets easier when you get stronger.",
+"Keep building. Keep believing. Keep moving.",
+"Your story isn't over yet.",
+"The difference between ordinary and extraordinary is one more effort.",
+"You were given this life because you are strong enough to live it."
+];
+function gcQuote(){var idx=Math.floor(Date.now()/30000)%GC_QUOTES.length;return GC_QUOTES[idx];}
+
 function updateGameClock(){
   const now=new Date();
   const h=now.getHours(),m=now.getMinutes();
@@ -936,23 +990,25 @@ function updateGameClock(){
   function minsUntil(targetH,targetM){return(targetH-h)*60+(targetM-m);}
   function fmtMins(mins){var hh=Math.floor(mins/60),mm=mins%60;return hh>0?(hh+"h "+mm+"m"):(mm+"m");}
 
+  var q=gcQuote();
+
   if(dow===0||dow===6){
     el.className="gclock postgame";
     phaseEl.textContent="WEEKEND";
     msgEl.textContent="Rest up. Monday we go again.";
-    subEl.textContent="Enjoy the downtime - you earned it";
+    subEl.textContent=q;
     cdEl.textContent="Back at it Monday";
   } else if(h<10){
     el.className="gclock pregame";
     phaseEl.textContent="PRE-GAME";
     msgEl.textContent="Morning prep. Review your pipeline.";
-    subEl.textContent="Game time starts at 11:00 - get your mind right";
+    subEl.textContent=q;
     cdEl.textContent=fmtMins(minsUntil(11,0))+" until tip-off";
   } else if(h===10){
     el.className="gclock pregame";
     phaseEl.textContent="WARM-UP";
     msgEl.textContent="Have you sent your LinkedIn messages?";
-    subEl.textContent="Get your DMs out now. Tip-off in "+fmtMins(minsUntil(11,0));
+    subEl.textContent=q;
     cdEl.textContent=fmtMins(minsUntil(11,0))+" until game time";
   } else if(h===11){
     var left=minsUntil(12,0);
@@ -960,14 +1016,12 @@ function updateGameClock(){
     phaseEl.textContent="1ST HALF";
     if(done===0){
       msgEl.textContent="Clock is running! Send those emails NOW.";
-      subEl.textContent="We're falling behind - every minute counts!";
     } else if(done<todayDef.b1.length){
-      msgEl.textContent="Good start! Keep pushing - "+done+" down, "+(total-done)+" to go.";
-      subEl.textContent="Stay locked in. Don't let up.";
+      msgEl.textContent="Keep pushing - "+done+" down, "+(total-done)+" to go.";
     } else {
       msgEl.textContent="First half domination! Emails and DMs handled.";
-      subEl.textContent="Cruise into halftime with momentum";
     }
+    subEl.textContent=q;
     cdEl.textContent=left+"m left in the 1st half";
   } else if(h===12){
     var left=minsUntil(13,0);
@@ -975,31 +1029,26 @@ function updateGameClock(){
     phaseEl.textContent="2ND HALF";
     if(done<todayDef.b1.length){
       msgEl.textContent="Behind on 1st half tasks - dig deep!";
-      subEl.textContent="Champions close the gap. Push through!";
     } else if(done<total){
       msgEl.textContent="Social media + engagement time. Finish strong!";
-      subEl.textContent="This is where you separate from the pack";
     } else {
       msgEl.textContent="PERFECT GAME! Every task crushed.";
-      subEl.textContent="That's how you dominate. Victory lap.";
     }
+    subEl.textContent=q;
     cdEl.textContent=left+"m left in the 2nd half";
   } else {
     el.className="gclock postgame";
     phaseEl.textContent="FINAL SCORE";
     if(done===total&&total>0){
       msgEl.textContent="PERFECT GAME! "+done+"/"+total+" tasks completed.";
-      subEl.textContent="MVP performance. That's a W.";
     } else if(done>0){
       msgEl.textContent="Game over. "+done+" of "+total+" completed.";
-      subEl.textContent="Solid effort. Come back stronger tomorrow.";
     } else if(total>0){
       msgEl.textContent="Game over. No tasks checked off today.";
-      subEl.textContent="Tomorrow's a new game. Show up ready.";
     } else {
       msgEl.textContent="No game scheduled today.";
-      subEl.textContent="";
     }
+    subEl.textContent=q;
     cdEl.textContent="Next game tomorrow at 11:00";
   }
 }
