@@ -91,15 +91,10 @@ a{color:var(--accent);text-decoration:none;}
 .sblock{padding:10px 13px;flex:1;}
 .sblock:not(:last-child){border-bottom:1px solid var(--line);}
 .stlbl{font-size:9.5px;font-weight:700;color:var(--muted);letter-spacing:.05em;text-transform:uppercase;margin-bottom:8px;}
-.sact{display:flex;align-items:flex-start;gap:7px;font-size:12px;color:var(--ink2);margin-bottom:5px;line-height:1.4;}
+.sact{display:flex;align-items:flex-start;gap:8px;font-size:12px;color:var(--ink2);margin-bottom:6px;line-height:1.4;}
 .sact:last-child{margin-bottom:0;}
-.sact.sm{color:var(--muted);}
-.sact.sb{font-weight:700;color:var(--ink);}
-.sdot{width:6px;height:6px;border-radius:1px;flex-shrink:0;margin-top:3px;}
-.sd-blue{background:var(--accent);}
-.sd-violet{background:var(--violet);}
-.sd-amber{background:var(--warn);}
-.sd-green{background:var(--win);}
+.sact .scheck{width:14px;height:14px;border-radius:3px;border:1.5px solid var(--line);flex-shrink:0;margin-top:1px;display:flex;align-items:center;justify-content:center;font-size:8px;color:transparent;}
+.sact:hover .scheck{border-color:var(--accent);}
 /* today checklist */
 .dchkcard{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:16px 18px;margin-bottom:18px;box-shadow:var(--sh-sm);}
 .dchk-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
@@ -825,32 +820,32 @@ const DAY_FULL=["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Sat
 const SCHED_DEF=[
   {dow:1,name:"Monday",
    pills:[{t:"E1",c:"se"},{t:"LI msg",c:"sl"},{t:"LI post",c:"spost"}],
-   b1:[{cls:"sb sd-amber",t:"Send E1 emails"},{cls:"sb sd-violet",t:"LinkedIn message"},{cls:"sm sd-green",t:"Actively engage"}],
-   b2:[{cls:"sb sd-violet",t:"LinkedIn post"},{cls:"sm sd-green",t:"Engage with likes & comments"}],
+   b1:["Send emails","LinkedIn DM messages","Actively engage with connections"],
+   b2:["Post social media content","Comment and engage"],
    tasks11:["Send E1 emails to pipeline","LinkedIn messages - subcontracting outreach","Actively engage with connections"],
    tasks12:["Post LinkedIn content (subcontracting)","Engage with post likes & comments"]},
   {dow:2,name:"Tuesday",
    pills:[{t:"Follow-up",c:"se"},{t:"LI msg",c:"sl"}],
-   b1:[{cls:"sd-amber",t:"Send follow-up emails"},{cls:"sb sd-violet",t:"LinkedIn message"},{cls:"sm sd-green",t:"Actively engage"}],
-   b2:[{cls:"sm sd-green",t:"Reply to likes & comments"},{cls:"sm sd-green",t:"Continue engagement"}],
+   b1:["Send emails","LinkedIn DM messages","Actively engage with connections"],
+   b2:["Comment and engage"],
    tasks11:["Send follow-up emails","LinkedIn messages - subcontracting outreach","Actively engage with connections"],
    tasks12:["Reply to post likes & comments","Continue engagement"]},
   {dow:3,name:"Wednesday",
    pills:[{t:"E3",c:"se"},{t:"LI msg",c:"sl"},{t:"LI post",c:"spost"}],
-   b1:[{cls:"sb sd-amber",t:"Send E3 emails"},{cls:"sb sd-violet",t:"LinkedIn message"},{cls:"sm sd-green",t:"Actively engage"}],
-   b2:[{cls:"sb sd-violet",t:"LinkedIn post"},{cls:"sm sd-green",t:"Engage with likes & comments"}],
+   b1:["Send emails","LinkedIn DM messages","Actively engage with connections"],
+   b2:["Post social media content","Comment and engage"],
    tasks11:["Send E3 emails to pipeline","LinkedIn messages - subcontracting outreach","Actively engage with connections"],
    tasks12:["Post LinkedIn content (subcontracting)","Engage with post likes & comments"]},
   {dow:4,name:"Thursday",
    pills:[{t:"Follow-up",c:"se"},{t:"LI msg",c:"sl"}],
-   b1:[{cls:"sd-amber",t:"Send follow-up emails"},{cls:"sb sd-violet",t:"LinkedIn message"},{cls:"sm sd-green",t:"Actively engage"}],
-   b2:[{cls:"sm sd-green",t:"Reply to likes & comments"},{cls:"sm sd-green",t:"Continue engagement"}],
+   b1:["Send emails","LinkedIn DM messages","Actively engage with connections"],
+   b2:["Comment and engage"],
    tasks11:["Send follow-up emails","LinkedIn messages - subcontracting outreach","Actively engage with connections"],
    tasks12:["Reply to post likes & comments","Continue engagement"]},
   {dow:5,name:"Friday",
    pills:[{t:"E5",c:"se"},{t:"LI msg",c:"sl"},{t:"LI post",c:"spost"}],
-   b1:[{cls:"sb sd-amber",t:"Send E5 emails"},{cls:"sb sd-violet",t:"LinkedIn message"},{cls:"sm sd-green",t:"Actively engage"}],
-   b2:[{cls:"sb sd-violet",t:"LinkedIn post"},{cls:"sm sd-green",t:"Engage with likes & comments"}],
+   b1:["Send emails","LinkedIn DM messages","Actively engage with connections"],
+   b2:["Post social media content","Comment and engage"],
    tasks11:["Send E5 emails to pipeline","LinkedIn messages - subcontracting outreach","Actively engage with connections"],
    tasks12:["Post LinkedIn content (subcontracting)","Engage with post likes & comments"]}
 ];
@@ -868,8 +863,8 @@ function renderSchedule(){
     const isToday=date.toDateString()===now.toDateString();
     const dateStr=date.toLocaleDateString(undefined,{month:"short",day:"numeric"});
     grid+='<div class="sday'+(isToday?" today-col":"")+'"><div class="sday-hd"><div class="sday-hd-row"><span class="sday-name">'+day.name+'</span>'+(isToday?'<span class="sday-tbadge">Today</span>':'')+'</div><div class="sday-date">'+dateStr+'</div><div class="spills">'+day.pills.map(p=>'<span class="spill '+p.c+'">'+p.t+'</span>').join('')+'</div></div>';
-    grid+='<div class="sblock"><div class="stlbl">11:00 - 12:00</div>'+day.b1.map(a=>'<div class="sact '+a.cls+'"><span class="sdot '+a.cls.split(" ")[1]+'"></span>'+esc(a.t)+'</div>').join('')+'</div>';
-    grid+='<div class="sblock"><div class="stlbl">12:00 - 1:00</div>'+day.b2.map(a=>'<div class="sact '+a.cls+'"><span class="sdot '+a.cls.split(" ")[1]+'"></span>'+esc(a.t)+'</div>').join('')+'</div>';
+    grid+='<div class="sblock"><div class="stlbl">11:00 - 12:00</div>'+day.b1.map(t=>'<div class="sact"><span class="scheck"></span>'+esc(t)+'</div>').join('')+'</div>';
+    grid+='<div class="sblock"><div class="stlbl">12:00 - 1:00</div>'+day.b2.map(t=>'<div class="sact"><span class="scheck"></span>'+esc(t)+'</div>').join('')+'</div>';
     grid+='</div>';
   });
   const sg=document.getElementById("schedGrid");if(sg)sg.innerHTML=grid;
