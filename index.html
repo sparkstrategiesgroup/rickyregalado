@@ -1248,7 +1248,10 @@ function renderPipeline(d){
                 else{s[tsKey]=ts;var cnt=0;if(s.e1Ts)cnt++;if(s.e2Ts)cnt++;if(s.e3Ts)cnt++;s.sentCount=cnt;l.sentCount=cnt;s.contacted=true;l.contacted=true;s.lastTs=ts;l.lastTs=ts;}
               }
               localStorage.setItem("rx_state",JSON.stringify(STATE));
-              compute();renderBatch();
+              var activeKey=_pipeActive;
+              _pipeActive=null;
+              compute();
+              if(activeKey){var t=document.querySelector('.pipe-tile[data-key="'+activeKey+'"]');if(t)t.click();}
             };
           });
           expand.querySelectorAll(".li-link[data-lid]").forEach(function(a){
