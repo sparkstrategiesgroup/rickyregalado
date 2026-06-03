@@ -463,13 +463,12 @@ details.editor>summary::-webkit-details-marker{display:none;}
 
   <div class="widget" data-widget="pipeline">
   <div class="drag-handle" draggable="true"><div class="grip"><div class="grip-row"><i></i><i></i><i></i></div><div class="grip-row"><i></i><i></i><i></i></div></div><span class="wlabel">Pipeline</span><div class="grip"><div class="grip-row"><i></i><i></i><i></i></div><div class="grip-row"><i></i><i></i><i></i></div></div></div>
-  <div class="sec"><span class="ico" id="icPipe"></span><h2>Outreach Pipeline</h2><span class="hint">click a tile to see companies</span></div>
-  <div class="pipe-row-label">Email Stages</div>
-  <div class="pipe-row" id="pipeEmailRow"></div>
-  <div class="pipe-expand collapsed" id="pipeEmailExpand"></div>
-  <div class="pipe-row-label">LinkedIn / Social</div>
-  <div class="pipe-row" id="pipeSocialRow"></div>
-  <div class="pipe-expand collapsed" id="pipeSocialExpand"></div>
+  <div class="sec"><span class="ico" id="icPipe"></span><h2>Today's Pipeline</h2><span class="hint">click a tile to see companies</span></div>
+  <div class="pipe-row" id="pipeTodayRow"></div>
+  <div class="pipe-expand collapsed" id="pipeTodayExpand"></div>
+  <div class="pipe-row-label">Follow-up Sends</div>
+  <div class="pipe-row" id="pipeFollowupRow"></div>
+  <div class="pipe-expand collapsed" id="pipeFollowupExpand"></div>
   </div>
 
   <div class="widget-fixed">
@@ -1095,14 +1094,13 @@ function render(d){lastD=d;
 let _pipeActive=null;
 function renderPipeline(d){
   const ok=l=>!st(l.id).notfit&&!st(l.id).removed&&!st(l.id).closed&&!l.meeting;
-  const emailTiles=[
+  const todayTiles=[
     {key:"e1",lbl:"Email 1",sub:"Offer / Request Demo · Day 01",bg:"#e7ecfb",color:"var(--accent)",leads:LEADS.filter(l=>ok(l)&&!l.contacted)},
+    {key:"li-need",lbl:"Needs DM",sub:"LinkedIn DM · after Email 1",bg:"#fff4e6",color:"#e67700",leads:LEADS.filter(l=>ok(l)&&(l.contacted||st(l.id).drafted)&&!st(l.id).linkedin)}
+  ];
+  const followupTiles=[
     {key:"e2",lbl:"Email 2",sub:"Podcast / Story Invite · Day 03",bg:"#efe9ff",color:"var(--violet)",leads:LEADS.filter(l=>ok(l)&&l.contacted&&(l.sentCount||0)===1&&!l.replied)},
     {key:"e3",lbl:"Email 3",sub:"Schedule Demo · Day 07",bg:"#fdf0db",color:"var(--warn)",leads:LEADS.filter(l=>ok(l)&&l.contacted&&(l.sentCount||0)>=2&&!l.replied)}
-  ];
-  const socialTiles=[
-    {key:"li-need",lbl:"Need DM",sub:"Contacted · No DM Sent",bg:"#fff4e6",color:"#e67700",leads:LEADS.filter(l=>ok(l)&&(l.contacted||st(l.id).drafted)&&!st(l.id).linkedin)},
-    {key:"li-sent",lbl:"DM Sent",sub:"LinkedIn Done",bg:"#d4f4e2",color:"#0f9d58",leads:LEADS.filter(l=>st(l.id).linkedin&&!st(l.id).removed)}
   ];
   function renderRow(rowId,expandId,tiles){
     const row=document.getElementById(rowId);if(!row)return;
@@ -1225,7 +1223,7 @@ function renderPipeline(d){
               setTimeout(function(){
                 compute();
                 _pipeActive=null;
-                var liTile=document.querySelector('#pipeSocialRow .pipe-tile[data-key="li-need"]');
+                var liTile=document.querySelector('#pipeTodayRow .pipe-tile[data-key="li-need"]');
                 if(liTile)liTile.click();
               },1500);
             }
@@ -1246,8 +1244,8 @@ function renderPipeline(d){
       else{expand.classList.add("collapsed");expand.innerHTML="";}
     }
   }
-  renderRow("pipeEmailRow","pipeEmailExpand",emailTiles);
-  renderRow("pipeSocialRow","pipeSocialExpand",socialTiles);
+  renderRow("pipeTodayRow","pipeTodayExpand",todayTiles);
+  renderRow("pipeFollowupRow","pipeFollowupExpand",followupTiles);
 }
 let sortK="rank",sortDir=1;
 const RANK={closed:0,opp:1,meeting:2,positive:3,replied:4,ooo:5,linkedin:6,contacted:7,negative:8,notfit:9,new:10};
