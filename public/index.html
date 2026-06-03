@@ -272,6 +272,7 @@ details.editor>summary::-webkit-details-marker{display:none;}
 .auth-setup code{background:#f5f0d0;border-radius:4px;padding:1px 5px;font-size:11px;}
 .auth-setup a{color:#3552e6;font-weight:600;}
 /* DRAG & DROP */
+.widget-fixed{position:relative;}
 .widget{position:relative;transition:transform .2s,opacity .2s;}
 .widget .drag-handle{display:flex;align-items:center;justify-content:center;gap:6px;padding:5px 0;cursor:grab;opacity:0;transition:opacity .15s;user-select:none;}
 .widget:hover .drag-handle{opacity:1;}
@@ -424,8 +425,7 @@ details.editor>summary::-webkit-details-marker{display:none;}
   </div>
   </div>
 
-  <div class="widget" data-widget="hero">
-  <div class="drag-handle" draggable="true"><div class="grip"><div class="grip-row"><i></i><i></i><i></i></div><div class="grip-row"><i></i><i></i><i></i></div></div><span class="wlabel">Mission</span><div class="grip"><div class="grip-row"><i></i><i></i><i></i></div><div class="grip-row"><i></i><i></i><i></i></div></div></div>
+  <div class="widget-fixed">
   <div class="hero">
     <div class="eyebrow"><span class="dot"></span> Route Exchange · Prime Contractor Acquisition · <span id="heroDate"></span> <span class="stamp" id="updated">initializing <span class="spin"></span></span></div>
     <div class="mission">Sign <span class="hl">100 Prime Contractors</span></div>
@@ -460,8 +460,7 @@ details.editor>summary::-webkit-details-marker{display:none;}
   <div class="pipe-expand collapsed" id="pipeSocialExpand"></div>
   </div>
 
-  <div class="widget" data-widget="schedule">
-  <div class="drag-handle" draggable="true"><div class="grip"><div class="grip-row"><i></i><i></i><i></i></div><div class="grip-row"><i></i><i></i><i></i></div></div><span class="wlabel">Schedule</span><div class="grip"><div class="grip-row"><i></i><i></i><i></i></div><div class="grip-row"><i></i><i></i><i></i></div></div></div>
+  <div class="widget-fixed">
   <div class="gclock" id="gameClock">
     <div class="gc-left"><div class="gc-phase" id="gcPhase"></div><div class="gc-msg" id="gcMsg"></div><div class="gc-sub" id="gcSub"></div></div>
     <div class="gc-right"><div class="gc-time" id="gcTime"></div><div class="gc-countdown" id="gcCountdown"></div><div class="gc-pts" id="gcPts"></div></div>
@@ -1683,6 +1682,12 @@ renderActivityFeed();
   });
 
   restoreOrder();
+
+  // Pin hero + schedule at top, before any draggable widgets
+  var firstDrag=WRAP.querySelector('.widget');
+  WRAP.querySelectorAll('.widget-fixed').forEach(function(fw){
+    if(firstDrag)WRAP.insertBefore(fw,firstDrag);
+  });
 })();
 </script>
 </body></html>
