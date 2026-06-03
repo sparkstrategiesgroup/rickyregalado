@@ -756,9 +756,9 @@ function emailReadyDate(e1Ts,calendarDaysAfter){
   LEADS.forEach(function(l){
     var s=st(l.id);
     var cnt=s.sentCount||l.sentCount||0;
-    if(cnt>=1&&!s.e1Ts){s.e1Ts=s.lastTs||l.lastTs||Date.now();s.contacted=true;l.contacted=true;s.sentCount=cnt;l.sentCount=cnt;}
-    if(cnt>=2&&!s.e2Ts){s.e2Ts=s.lastTs||l.lastTs||Date.now();}
-    if(cnt>=3&&!s.e3Ts){s.e3Ts=s.lastTs||l.lastTs||Date.now();}
+    if(cnt>=1){s.contacted=true;l.contacted=true;s.sentCount=cnt;l.sentCount=cnt;if(!s.e1Ts&&(s.lastTs||l.lastTs))s.e1Ts=s.lastTs||l.lastTs;}
+    if(cnt>=2&&!s.e2Ts&&(s.lastTs||l.lastTs))s.e2Ts=s.lastTs||l.lastTs;
+    if(cnt>=3&&!s.e3Ts&&(s.lastTs||l.lastTs))s.e3Ts=s.lastTs||l.lastTs;
   });
   localStorage.setItem("rx_state",JSON.stringify(STATE));
 })();
