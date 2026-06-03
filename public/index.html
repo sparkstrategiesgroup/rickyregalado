@@ -271,6 +271,18 @@ details.editor>summary::-webkit-details-marker{display:none;}
 .auth-setup{background:#fffbe6;border:1px solid #f0e6b0;border-radius:12px;padding:12px 16px;margin-bottom:14px;font-size:12.5px;color:#6b5900;}
 .auth-setup code{background:#f5f0d0;border-radius:4px;padding:1px 5px;font-size:11px;}
 .auth-setup a{color:#3552e6;font-weight:600;}
+/* COLLAPSIBLE PANELS */
+.today-panel-body{transition:max-height .25s ease,opacity .2s;}
+.today-panel-body.collapsed{max-height:0!important;opacity:0;overflow:hidden;padding:0;margin:0;}
+.today-panel-toggle{display:flex;align-items:center;gap:5px;padding:4px 10px;border-radius:8px;border:1px solid var(--line);background:#fff;color:var(--ink2);cursor:pointer;font-size:11px;font-weight:600;transition:all .12s;margin-left:auto;}
+.today-panel-toggle:hover{background:#f5f7fc;}
+.today-panel-toggle svg{transition:transform .2s;}
+.today-panel-toggle.collapsed svg{transform:rotate(-90deg);}
+/* ACTIVITY TABS */
+.activity-tabs{display:flex;gap:6px;margin-bottom:10px;}
+.activity-tab{font-size:11px;font-weight:600;padding:5px 12px;border-radius:8px;border:1px solid var(--line);background:#f5f7fc;color:var(--muted);cursor:pointer;transition:all .12s;}
+.activity-tab.active{background:var(--brand);color:#fff;border-color:transparent;}
+.activity-tab:hover:not(.active){background:#eef1f7;color:var(--ink2);}
 /* DRAG & DROP */
 .widget-fixed{position:relative;}
 .widget{position:relative;transition:transform .2s,opacity .2s;}
@@ -419,7 +431,7 @@ details.editor>summary::-webkit-details-marker{display:none;}
       <select id="statusFilter"><option value="">All statuses</option><option value="closed">Closed (Prime)</option><option value="opp">Opportunity</option><option value="meeting">Meeting booked</option><option value="positive">Positive reply</option><option value="replied">Any reply</option><option value="linkedin">LinkedIn sent</option><option value="contacted">Emailed, awaiting</option><option value="new">Not contacted</option></select>
       <label class="tgl-removed" id="tglRemoved"><input type="checkbox" id="showRemoved" style="display:none"><span>Show removed</span> <span class="cnt" id="removedCnt">0</span></label></div>
     <div class="table-scroll">
-    <table class="leads"><thead><tr><th style="width:28px"></th><th data-k="company">Company</th><th data-k="contact">Contact</th><th data-k="owner">Owner</th><th data-k="statusLabel">Status</th><th>Notes</th><th data-k="lastTs">Last</th><th>Draft?</th></tr></thead><tbody id="rows"></tbody></table>
+    <table class="leads"><thead><tr><th style="width:28px"></th><th data-k="company">Company</th><th data-k="contact">Contact</th><th data-k="statusLabel">Status</th><th>Notes</th><th data-k="lastTs">Last</th><th>Draft?</th></tr></thead><tbody id="rows"></tbody></table>
     </div>
     </div>
   </div>
@@ -468,10 +480,12 @@ details.editor>summary::-webkit-details-marker{display:none;}
   <div class="sec"><span class="ico" id="icSched"></span><h2>This week's schedule</h2><span class="hint">11:00 am - 1:00 pm · <b id="schedToday">---</b></span></div>
   <div class="sched-grid" id="schedGrid"></div>
   <div class="today-panel" id="todayMsg" style="margin-top:14px;">
-    <div class="today-panel-hd"><span class="today-panel-ttl"><span class="ico" id="icMsg" style="background:#efe9ff;color:var(--violet)"></span> Today's Message</span></div>
+    <div class="today-panel-hd"><span class="today-panel-ttl"><span class="ico" id="icMsg" style="background:#efe9ff;color:var(--violet)"></span> Today's Message</span><button class="today-panel-toggle" id="msgToggle"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg> Edit templates</button></div>
+    <div class="today-panel-body" id="msgBody">
     <div class="msg-tabs" id="msgTabs"></div>
     <div class="msg-preview" id="msgPreview"></div>
-    <div class="msg-actions"><button class="primary" id="msgSaveBtn">Save</button><button id="msgOpenEditor" onclick="document.getElementById('editorCard').open=true;document.getElementById('editorCard').scrollIntoView({behavior:'smooth'})">Edit templates</button></div>
+    <div class="msg-actions"><button class="primary" id="msgSaveBtn">Save</button><button id="msgOpenEditor" onclick="document.getElementById('editorCard').open=true;document.getElementById('editorCard').scrollIntoView({behavior:'smooth'})">Open full editor</button></div>
+    </div>
   </div>
   <div class="activity-feed" id="activityFeed" style="margin-top:14px;"></div>
   </div>
@@ -1126,10 +1140,9 @@ function renderPipeline(d){
           var h='<div class="pipe-expand-hd"><span class="pe-title">'+tile.lbl+' — '+tile.sub+'</span><span class="pe-cnt">'+remaining+' of '+allLeads.length+' remaining</span></div>';
           if(batch.length){
             h+='<div class="pe-action-bar"><label class="pe-sel-all"><input type="checkbox" id="peSelectAll" checked> Select all ('+batch.length+')</label><span class="pe-sel-count" id="peSelCount">'+batch.length+' selected</span><button class="pe-send-btn" id="peSendBtn">'+(isLi?btnLabel+" ("+batch.length+")":"Send "+batch.length+" Email"+(batch.length>1?"s":""))+'</button><span class="pe-send-status" id="peSendStatus"></span></div>';
-            h+='<div class="pe-table-wrap"><table class="pe-table"><thead><tr><th style="width:32px"></th><th>Company</th><th>Contact</th><th>Owner</th><th>Status</th><th>Emailed</th><th style="width:32px"></th></tr></thead><tbody>';
+            h+='<div class="pe-table-wrap"><table class="pe-table"><thead><tr><th style="width:32px"></th><th>Company</th><th>Contact</th><th>Status</th><th>Emailed</th><th style="width:32px"></th></tr></thead><tbody>';
             batch.forEach(function(l){
               var s=st(l.id),status=statusOf(l);
-              var ownerCls=l.owner==="JE"?"owner-je":l.owner==="RR"?"owner-rr":"owner-none";
               var liUrl=l.linkedin_url||('https://www.linkedin.com/search/results/people/?keywords='+encodeURIComponent(l.contact+" "+l.company));
               var liFill=l.linkedin_url?"#0a66c2":"currentColor";
               var emailedDate=l.lastTs?new Date(l.lastTs).toLocaleDateString(undefined,{month:"short",day:"numeric"}):"---";
@@ -1137,7 +1150,6 @@ function renderPipeline(d){
               h+='<td><input type="checkbox" class="pe-chk" data-id="'+l.id+'" checked></td>';
               h+='<td class="pe-co-cell"><div class="co">'+esc(l.company)+'</div><div class="em">'+(l.website||"")+'</div></td>';
               h+='<td class="pe-contact-cell">'+esc(l.contact)+' <a href="'+liUrl+'" target="_blank" rel="noopener" class="li-link" data-lid="'+l.id+'" title="Copy DM &amp; open LinkedIn"><svg width="13" height="13" viewBox="0 0 24 24" fill="'+liFill+'"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg></a><div class="em">'+esc(l.email||"")+'</div></td>';
-              h+='<td><span class="owner-badge '+ownerCls+'">'+esc(l.owner||"-")+'</span></td>';
               h+='<td class="pe-status"><span class="badge" style="color:'+SC[status]+'">'+SL[status]+'</span></td>';
               h+='<td style="font-family:var(--mono);font-size:11px;color:var(--muted);white-space:nowrap">'+emailedDate+'</td>';
               h+='<td><button class="pe-skip-btn" data-id="'+l.id+'" title="Skip this lead">✕</button></td>';
@@ -1248,7 +1260,7 @@ function renderTable(){
   tgl.classList.toggle("active",showRm&&removedCount>0);
   let rows=LEADS.map(l=>{const s=statusOf(l);return{l,s,statusLabel:SL[s],rank:RANK[s],company:l.company,contact:l.contact,loc:(l.city?l.city+", ":"")+l.state,owner:l.owner||"",icpTier:l.icpTier,lastTs:l.lastTs||0,email:l.email,removed:!!st(l.id).removed};});
   if(!showRm)rows=rows.filter(r=>!r.removed);
-  if(q)rows=rows.filter(r=>(r.company+" "+r.contact+" "+r.loc+" "+r.email+" "+(r.owner||"")+" "+(st(r.l.id).notes||r.l.notes||"")).toLowerCase().includes(q));
+  if(q)rows=rows.filter(r=>(r.company+" "+r.contact+" "+r.loc+" "+r.email+" "+(st(r.l.id).notes||r.l.notes||"")).toLowerCase().includes(q));
   if(sf)rows=rows.filter(r=>{const s=st(r.l.id);return sf==="closed"?s.closed:sf==="opp"?s.opp:sf==="meeting"?r.l.meeting:sf==="positive"?r.l.sentiment==="positive":sf==="replied"?r.l.replied:sf==="linkedin"?s.linkedin:sf==="contacted"?(r.l.contacted&&!r.l.replied):sf==="new"?!(r.l.contacted||s.linkedin):true;});
   rows.sort((a,b)=>{let x=a[sortK],y=b[sortK];if(typeof x==="string"){x=x.toLowerCase();y=(y||"").toLowerCase();}return(x>y?1:x<y?-1:0)*sortDir;});
   document.getElementById("leadCount").textContent="· "+rows.length+" shown / "+LEADS.length;
@@ -1256,10 +1268,8 @@ function renderTable(){
   const undoSvg='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>';
   const statusOpts=["new","contacted","linkedin","replied","positive","meeting","opp","closed","ooo","negative","notfit"].map(k=>'<option value="'+k+'">'+SL[k]+'</option>').join("");
   document.getElementById("rows").innerHTML=rows.map(r=>{const col=SC[r.s],s=st(r.l.id),L=r.l;
-    const ownerCls=L.owner==="JE"?"owner-je":L.owner==="RR"?"owner-rr":"owner-none";
-    const ownerLabel=L.owner||"-";
     const notes=s.notes!=null?s.notes:(L.notes||"");
-    return '<tr class="'+(r.removed?"removed-row":"")+'"><td><button class="btn-remove'+(r.removed?" is-removed":"")+'" data-rid="'+L.id+'" title="'+(r.removed?"Restore":"Remove from list")+'">'+(r.removed?undoSvg:xSvg)+'</button></td><td><div class="co">'+esc(r.company)+'</div><div class="em">'+(L.website||"")+'</div></td><td>'+esc(r.contact)+' <a href="'+(L.linkedin_url||('https://www.linkedin.com/search/results/people/?keywords='+encodeURIComponent(r.contact+" "+r.company)))+'" target="_blank" rel="noopener" class="li-link" data-lid="'+L.id+'" title="Copy DM &amp; open LinkedIn"><svg width="13" height="13" viewBox="0 0 24 24" fill="'+(L.linkedin_url?"#0a66c2":"currentColor")+'"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg></a><div class="em">'+esc(r.email||"")+'</div></td><td><span class="owner-badge '+ownerCls+'">'+esc(ownerLabel)+'</span></td><td><select class="status-dd" data-id="'+L.id+'">'+statusOpts.replace('value="'+r.s+'"','value="'+r.s+'" selected')+'</select></td><td><input class="notes-input" data-id="'+L.id+'" value="'+esc(notes)+'" placeholder="Add notes..."></td><td style="font-family:var(--mono);color:var(--muted);white-space:nowrap">'+(r.lastTs?new Date(r.lastTs).toLocaleDateString(undefined,{month:"short",day:"numeric"}):"---")+'</td>'+'<td><label class="dchk"><input type="checkbox" class="appchk" data-id="'+L.id+'"'+(s.approved?" checked":"")+'>'+(s.drafted?'<span class="draftedtag">drafted</span>':'<span>draft?</span>')+'</label></td></tr>';}).join("")||'<tr><td colspan="8" class="empty">No leads match.</td></tr>';
+    return '<tr class="'+(r.removed?"removed-row":"")+'"><td><button class="btn-remove'+(r.removed?" is-removed":"")+'" data-rid="'+L.id+'" title="'+(r.removed?"Restore":"Remove from list")+'">'+(r.removed?undoSvg:xSvg)+'</button></td><td><div class="co">'+esc(r.company)+'</div><div class="em">'+(L.website||"")+'</div></td><td>'+esc(r.contact)+' <a href="'+(L.linkedin_url||('https://www.linkedin.com/search/results/people/?keywords='+encodeURIComponent(r.contact+" "+r.company)))+'" target="_blank" rel="noopener" class="li-link" data-lid="'+L.id+'" title="Copy DM &amp; open LinkedIn"><svg width="13" height="13" viewBox="0 0 24 24" fill="'+(L.linkedin_url?"#0a66c2":"currentColor")+'"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg></a><div class="em">'+esc(r.email||"")+'</div></td><td><select class="status-dd" data-id="'+L.id+'">'+statusOpts.replace('value="'+r.s+'"','value="'+r.s+'" selected')+'</select></td><td><input class="notes-input" data-id="'+L.id+'" value="'+esc(notes)+'" placeholder="Add notes..."></td><td style="font-family:var(--mono);color:var(--muted);white-space:nowrap">'+(r.lastTs?new Date(r.lastTs).toLocaleDateString(undefined,{month:"short",day:"numeric"}):"---")+'</td>'+'<td><label class="dchk"><input type="checkbox" class="appchk" data-id="'+L.id+'"'+(s.approved?" checked":"")+'>'+(s.drafted?'<span class="draftedtag">drafted</span>':'<span>draft?</span>')+'</label></td></tr>';}).join("")||'<tr><td colspan="7" class="empty">No leads match.</td></tr>';
   document.querySelectorAll(".btn-remove").forEach(b=>b.onclick=()=>toggleRemove(+b.dataset.rid));
   document.querySelectorAll(".status-dd").forEach(sel=>sel.onchange=function(){setLeadStatus(+this.dataset.id,this.value);});
   document.querySelectorAll(".notes-input").forEach(inp=>{inp.onchange=function(){st(+this.dataset.id).notes=this.value;localStorage.setItem("rx_state",JSON.stringify(STATE));};});
@@ -1449,22 +1459,11 @@ setInterval(()=>{if(gAuth.isConnected())loadAll();},90000);
 
 /* ── TODAY'S MESSAGE PANEL ── */
 (function(){
-  const MSG_MAP={e1:"Email 1 (E1)",e3:"Email 3 (E3)",e5:"Email 5 (E5)",li:"LinkedIn DM",lipost:"LinkedIn Post"};
+  const MSG_MAP={e1:"Email 1",e2:"Email 2",e3:"Email 3",li:"LinkedIn DM",lipost:"LinkedIn Post"};
   let activeTab="e1";
   function renderMsgTabs(){
     const tabs=document.getElementById("msgTabs");if(!tabs)return;
-    const todayDow=new Date().getDay();
-    const dayDef=SCHED_DEF?SCHED_DEF.find(d=>d.dow===todayDow):null;
-    const pills=dayDef?dayDef.pills:[];
-    const available=[];
-    pills.forEach(function(p){
-      if(p.t==="E1"&&available.indexOf("e1")<0)available.push("e1");
-      if(p.t==="E3"&&available.indexOf("e3")<0)available.push("e3");
-      if(p.t==="E5"&&available.indexOf("e5")<0)available.push("e5");
-      if(p.t==="LI msg"&&available.indexOf("li")<0)available.push("li");
-      if(p.t==="LI post"&&available.indexOf("lipost")<0)available.push("lipost");
-    });
-    if(!available.length)available.push("e1","li");
+    const available=["e1","e2","e3","li","lipost"];
     if(!available.includes(activeTab))activeTab=available[0];
     tabs.innerHTML=available.map(k=>'<span class="msg-tab'+(k===activeTab?" active":"")+'" data-tab="'+k+'">'+MSG_MAP[k]+'</span>').join("");
     tabs.querySelectorAll(".msg-tab").forEach(t=>t.onclick=()=>{activeTab=t.dataset.tab;renderMsgTabs();renderMsgPreview();});
@@ -1516,7 +1515,17 @@ setInterval(()=>{if(gAuth.isConnected())loadAll();},90000);
   setTimeout(renderMsgTabs,100);
 })();
 
+/* ── MSG PANEL COLLAPSE ── */
+(function(){
+  var btn=document.getElementById("msgToggle"),body=document.getElementById("msgBody");
+  if(!btn||!body)return;
+  function apply(c){body.classList.toggle("collapsed",c);btn.classList.toggle("collapsed",c);}
+  apply(localStorage.getItem("rx_msg_collapsed")!=="0");
+  btn.onclick=function(){var next=!body.classList.contains("collapsed");apply(next);localStorage.setItem("rx_msg_collapsed",next?"1":"0");};
+})();
+
 /* ── TODAY'S ACTIVITY FEED ── */
+var _activityTab=localStorage.getItem("rx_activity_tab")||"pipeline";
 function renderActivityFeed(){
   const feed=document.getElementById("activityFeed");if(!feed)return;
   const emailedToday=LEADS.filter(l=>l.emailedToday);
@@ -1531,72 +1540,102 @@ function renderActivityFeed(){
   const replyIcon='<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="9 17 4 12 9 7"/><path d="M20 18v-2a4 4 0 0 0-4-4H4"/></svg>';
   const checkIcon='<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>';
 
-  let h='<div class="activity-hd"><span class="live-dot"></span> Today\'s Activity</div>';
-  h+='<div class="activity-counters">';
-  h+='<div class="act-counter'+(emailedToday.length>0?" done":"")+'"><span class="act-icon email-ic">'+mailIcon+'</span><span class="act-num">'+emailedToday.length+'</span> emails sent</div>';
-  h+='<div class="act-counter'+(liCount>0?" done":"")+'"><span class="act-icon li-ic">'+liIcon+'</span><span class="act-num">'+liCount+'</span> LinkedIn sent</div>';
-  h+='<div class="act-counter'+(repliedToday.length>0?" done":"")+'"><span class="act-icon reply-ic">'+replyIcon+'</span><span class="act-num">'+repliedToday.length+'</span> replies</div>';
+  let h='<div class="activity-hd"><span class="live-dot"></span> Today\'s activity in the outreach pipeline</div>';
+  h+='<div class="activity-tabs">';
+  h+='<span class="activity-tab'+(_activityTab==="pipeline"?" active":"")+'" data-atab="pipeline">Today\'s outreach pipeline</span>';
+  h+='<span class="activity-tab'+(_activityTab==="linkedin"?" active":"")+'" data-atab="linkedin">LinkedIn social</span>';
+  h+='<span class="activity-tab'+(_activityTab==="previous"?" active":"")+'" data-atab="previous">Previous activity</span>';
   h+='</div>';
 
-  const items=[];
-  emailedToday.forEach(l=>items.push({type:"email",co:l.company,contact:l.fn,ts:l.lastTs}));
-  repliedToday.forEach(l=>items.push({type:"reply",co:l.company,contact:l.fn,ts:l.lastTs}));
-  LEADS.forEach(l=>{if(liSentToday[l.id])items.push({type:"li",co:l.company,contact:l.fn,ts:Date.now()});});
-  items.sort((a,b)=>(b.ts||0)-(a.ts||0));
-
-  if(items.length){
-    h+='<ul class="activity-list">';
-    items.forEach(it=>{
-      const cls=it.type==="email"?"al-email":it.type==="li"?"al-li":"al-reply";
-      const ic=it.type==="email"?checkIcon:it.type==="li"?checkIcon:replyIcon;
-      const label=it.type==="email"?"Emailed":it.type==="li"?"LinkedIn sent":"Replied";
-      const time=it.ts?new Date(it.ts).toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"}):"";
-      h+='<li><span class="al-icon '+cls+'">'+ic+'</span><span class="al-co">'+esc(it.co)+'</span> <span>'+label+'</span><span class="al-time">'+time+'</span></li>';
-    });
-    h+='</ul>';
-  } else {
-    h+='<div class="activity-empty">No outreach activity yet today. Send emails or mark LinkedIn messages to see them here.</div>';
-  }
-
-  // LinkedIn quick-mark section
-  const liLeads=LEADS.filter(l=>l.emailedToday&&!liSentToday[l.id]&&!st(l.id).linkedin);
-  if(liLeads.length){
-    h+='<div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--line)">';
-    h+='<div style="font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:6px">Mark LinkedIn sent</div>';
-    liLeads.slice(0,10).forEach(l=>{
-      h+='<label class="dchk-row" style="padding:3px 0"><input type="checkbox" class="li-mark" data-id="'+l.id+'"> '+esc(l.company)+' ('+esc(l.fn)+')</label>';
-    });
+  if(_activityTab==="pipeline"){
+    h+='<div class="activity-counters">';
+    h+='<div class="act-counter'+(emailedToday.length>0?" done":"")+'"><span class="act-icon email-ic">'+mailIcon+'</span><span class="act-num">'+emailedToday.length+'</span> emails sent</div>';
+    h+='<div class="act-counter'+(liCount>0?" done":"")+'"><span class="act-icon li-ic">'+liIcon+'</span><span class="act-num">'+liCount+'</span> LinkedIn sent</div>';
+    h+='<div class="act-counter'+(repliedToday.length>0?" done":"")+'"><span class="act-icon reply-ic">'+replyIcon+'</span><span class="act-num">'+repliedToday.length+'</span> replies</div>';
     h+='</div>';
-  }
-
-  const yEmailed=LEADS.filter(l=>l.emailedYesterday);
-  const yReplied=LEADS.filter(l=>l.repliedYesterday);
-  const yestKey=new Date(new Date().setDate(new Date().getDate()-1)).toLocaleDateString();
-  const Y_LI_KEY="rx_li_today_"+yestKey;
-  let yLiSent={};try{yLiSent=JSON.parse(localStorage.getItem(Y_LI_KEY)||"{}");}catch(e){}
-  const yLiIds=Object.keys(yLiSent).filter(k=>yLiSent[k]);
-  const yLiLeads=yLiIds.map(id=>LEADS.find(l=>l.id===+id)).filter(Boolean);
-  const yTotal=yEmailed.length+yReplied.length+yLiLeads.length;
-  if(yTotal>0){
+    const items=[];
+    emailedToday.forEach(l=>items.push({type:"email",co:l.company,contact:l.fn,ts:l.lastTs}));
+    repliedToday.forEach(l=>items.push({type:"reply",co:l.company,contact:l.fn,ts:l.lastTs}));
+    LEADS.forEach(l=>{if(liSentToday[l.id])items.push({type:"li",co:l.company,contact:l.fn,ts:Date.now()});});
+    items.sort((a,b)=>(b.ts||0)-(a.ts||0));
+    if(items.length){
+      h+='<ul class="activity-list">';
+      items.forEach(it=>{
+        const cls=it.type==="email"?"al-email":it.type==="li"?"al-li":"al-reply";
+        const ic=it.type==="email"?checkIcon:it.type==="li"?checkIcon:replyIcon;
+        const label=it.type==="email"?"Emailed":it.type==="li"?"LinkedIn sent":"Replied";
+        const time=it.ts?new Date(it.ts).toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"}):"";
+        h+='<li><span class="al-icon '+cls+'">'+ic+'</span><span class="al-co">'+esc(it.co)+'</span> <span>'+label+'</span><span class="al-time">'+time+'</span></li>';
+      });
+      h+='</ul>';
+    } else {
+      h+='<div class="activity-empty">No outreach activity yet today. Send emails or mark LinkedIn messages to see them here.</div>';
+    }
+  } else if(_activityTab==="linkedin"){
+    h+='<div class="activity-counters">';
+    h+='<div class="act-counter'+(liCount>0?" done":"")+'"><span class="act-icon li-ic">'+liIcon+'</span><span class="act-num">'+liCount+'</span> LinkedIn DMs sent today</div>';
+    h+='</div>';
+    const liLeads=LEADS.filter(l=>l.emailedToday&&!liSentToday[l.id]&&!st(l.id).linkedin);
+    if(liLeads.length){
+      h+='<div style="font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:6px">Mark LinkedIn sent</div>';
+      liLeads.slice(0,10).forEach(l=>{
+        h+='<label class="dchk-row" style="padding:3px 0"><input type="checkbox" class="li-mark" data-id="'+l.id+'"> '+esc(l.company)+' ('+esc(l.fn)+')</label>';
+      });
+    }
+    const liDone=LEADS.filter(l=>liSentToday[l.id]);
+    if(liDone.length){
+      h+='<div style="margin-top:10px;font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:6px">Sent today</div>';
+      h+='<ul class="activity-list">';
+      liDone.forEach(l=>{h+='<li><span class="al-icon al-li">'+checkIcon+'</span><span class="al-co">'+esc(l.company)+'</span> <span>'+esc(l.fn)+'</span></li>';});
+      h+='</ul>';
+    }
+    if(!liLeads.length&&!liDone.length){
+      h+='<div class="activity-empty">No LinkedIn activity today. Send emails first, then come back to mark DMs.</div>';
+    }
+  } else if(_activityTab==="previous"){
+    const yEmailed=LEADS.filter(l=>l.emailedYesterday);
+    const yReplied=LEADS.filter(l=>l.repliedYesterday);
+    const yestKey=new Date(new Date().setDate(new Date().getDate()-1)).toLocaleDateString();
+    const Y_LI_KEY="rx_li_today_"+yestKey;
+    let yLiSent={};try{yLiSent=JSON.parse(localStorage.getItem(Y_LI_KEY)||"{}");}catch(e){}
+    const yLiIds=Object.keys(yLiSent).filter(k=>yLiSent[k]);
+    const yLiLeads=yLiIds.map(id=>LEADS.find(l=>l.id===+id)).filter(Boolean);
     const yd=new Date();yd.setDate(yd.getDate()-1);
     const yLabel=yd.toLocaleDateString(undefined,{weekday:"short",month:"short",day:"numeric"});
-    h+='<div class="yesterday-section">';
-    h+='<div class="activity-hd" style="margin-top:14px;padding-top:12px;border-top:1px solid var(--line);">Yesterday · '+yLabel+' <span style="font-weight:400;color:var(--muted)">('+yTotal+' touches)</span></div>';
-    const yItems=[];
-    yEmailed.forEach(l=>yItems.push({type:"email",co:l.company,contact:l.contact||l.fn||""}));
-    yReplied.forEach(l=>yItems.push({type:"reply",co:l.company,contact:l.contact||l.fn||""}));
-    yLiLeads.forEach(l=>yItems.push({type:"li",co:l.company,contact:l.contact||l.fn||""}));
-    h+='<ul class="activity-list">';
-    yItems.forEach(it=>{
-      const cls=it.type==="email"?"al-email":it.type==="li"?"al-li":"al-reply";
-      const label=it.type==="email"?"Emailed":it.type==="li"?"LinkedIn sent":"Replied";
-      h+='<li><span class="al-icon '+cls+'">'+checkIcon+'</span><span class="al-co">'+esc(it.co)+'</span> <span style="color:var(--muted)">'+esc(it.contact)+'</span><span class="al-time">'+label+'</span></li>';
+    h+='<div style="font-size:11px;color:var(--muted);margin-bottom:8px">'+yLabel+'</div>';
+    h+='<div class="activity-counters">';
+    h+='<div class="act-counter'+(yEmailed.length>0?" done":"")+'"><span class="act-icon email-ic">'+mailIcon+'</span><span class="act-num">'+yEmailed.length+'</span> emails</div>';
+    h+='<div class="act-counter'+(yLiLeads.length>0?" done":"")+'"><span class="act-icon li-ic">'+liIcon+'</span><span class="act-num">'+yLiLeads.length+'</span> LinkedIn</div>';
+    h+='<div class="act-counter'+(yReplied.length>0?" done":"")+'"><span class="act-icon reply-ic">'+replyIcon+'</span><span class="act-num">'+yReplied.length+'</span> replies</div>';
+    h+='</div>';
+    const yE1=yEmailed.filter(l=>(l.sentCount||0)===1);
+    const yE2=yEmailed.filter(l=>(l.sentCount||0)===2);
+    const yE3=yEmailed.filter(l=>(l.sentCount||0)>=3);
+    [{lbl:"Email 1",list:yE1},{lbl:"Email 2",list:yE2},{lbl:"Email 3",list:yE3}].forEach(g=>{
+      if(!g.list.length)return;
+      h+='<div style="font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin:8px 0 4px">'+g.lbl+' ('+g.list.length+')</div>';
+      h+='<ul class="activity-list">';
+      g.list.forEach(l=>{h+='<li><span class="al-icon al-email">'+checkIcon+'</span><span class="al-co">'+esc(l.company)+'</span> <span style="color:var(--muted)">'+esc(l.contact||l.fn||"")+'</span></li>';});
+      h+='</ul>';
     });
-    h+='</ul></div>';
+    if(yLiLeads.length){
+      h+='<div style="font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin:8px 0 4px">LinkedIn DM ('+yLiLeads.length+')</div>';
+      h+='<ul class="activity-list">';
+      yLiLeads.forEach(l=>{h+='<li><span class="al-icon al-li">'+checkIcon+'</span><span class="al-co">'+esc(l.company)+'</span> <span style="color:var(--muted)">'+esc(l.contact||l.fn||"")+'</span></li>';});
+      h+='</ul>';
+    }
+    if(!yEmailed.length&&!yReplied.length&&!yLiLeads.length){
+      h+='<div class="activity-empty">No activity recorded for yesterday.</div>';
+    }
   }
 
   feed.innerHTML=h;
 
+  feed.querySelectorAll(".activity-tab").forEach(t=>{t.onclick=function(){
+    _activityTab=this.dataset.atab;
+    localStorage.setItem("rx_activity_tab",_activityTab);
+    renderActivityFeed();
+  };});
   feed.querySelectorAll(".li-mark").forEach(cb=>{cb.onchange=function(){
     const id=+this.dataset.id;
     liSentToday[id]=this.checked;
