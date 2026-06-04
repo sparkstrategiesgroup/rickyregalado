@@ -743,15 +743,18 @@ function emailReadyDate(e1Ts,calendarDaysAfter){
   var d=new Date(e1Ts);d.setHours(0,0,0,0);d.setDate(d.getDate()+calendarDaysAfter);return nextBizDay(d);
 }
 
-(function reconcileState(){
-  LEADS.forEach(function(l){
-    var s=st(l.id);
-    var cnt=s.sentCount||l.sentCount||0;
-    if(cnt>=1){s.contacted=true;l.contacted=true;s.sentCount=cnt;l.sentCount=cnt;if(!s.e1Ts&&(s.lastTs||l.lastTs))s.e1Ts=s.lastTs||l.lastTs;}
-    if(cnt>=2&&!s.e2Ts&&(s.lastTs||l.lastTs))s.e2Ts=s.lastTs||l.lastTs;
-    if(cnt>=3&&!s.e3Ts&&(s.lastTs||l.lastTs))s.e3Ts=s.lastTs||l.lastTs;
-  });
-  localStorage.setItem("rx_state",JSON.stringify(STATE));
+(function migrateState(){
+  var VER_KEY="rx_state_ver";
+  var ver=+(localStorage.getItem(VER_KEY)||"0");
+  if(ver<2){
+    Object.keys(STATE).forEach(function(k){
+      var s=STATE[k];
+      delete s.e1Ts;delete s.e2Ts;delete s.e3Ts;
+      delete s.sentCount;delete s.contacted;delete s.lastTs;
+    });
+    localStorage.setItem("rx_state",JSON.stringify(STATE));
+    localStorage.setItem(VER_KEY,"2");
+  }
 })();
 
 function chunk(a,n){const o=[];for(let i=0;i<a.length;i+=n)o.push(a.slice(i,i+n));return o;}
