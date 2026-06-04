@@ -601,6 +601,13 @@ const gAuth = {
       scope: GOOGLE_SCOPES,
       callback: (resp) => this.handleToken(resp),
     });
+    var savedTk=localStorage.getItem("rx_google_token");
+    var savedExp=+(localStorage.getItem("rx_google_expiry")||"0");
+    if(savedTk&&Date.now()<savedExp){
+      this.token=savedTk;this.expiresAt=savedExp;
+      this.fetchUserInfo().then(()=>{this.renderUI();loadAll();});
+      return;
+    }
     this.renderUI();
   },
 
@@ -624,6 +631,8 @@ const gAuth = {
     this.token = null;
     this.user = null;
     this.expiresAt = 0;
+    localStorage.removeItem("rx_google_token");
+    localStorage.removeItem("rx_google_expiry");
     this.renderUI();
   },
 
@@ -639,6 +648,8 @@ const gAuth = {
     }
     this.token = resp.access_token;
     this.expiresAt = Date.now() + (resp.expires_in * 1000);
+    localStorage.setItem("rx_google_token",this.token);
+    localStorage.setItem("rx_google_expiry",String(this.expiresAt));
     this.fetchUserInfo().then(() => {
       this.renderUI();
       loadAll();
@@ -659,18 +670,40 @@ const gAuth = {
   },
 
   async api(url, opts = {}) {
-    if (!this.isConnected()) throw new Error("Not authenticated");
+    if (!this.isConnected()) {
+      localStorage.removeItem("rx_google_token");
+      localStorage.removeItem("rx_google_expiry");
+      this.renderUI();
+      throw new Error("Not authenticated — please sign in again");
+    }
     const headers = { Authorization: "Bearer " + this.token, ...(opts.headers || {}) };
     const r = await fetch(url, { ...opts, headers });
-    if (r.status === 401) { this.token = null; this.renderUI(); throw new Error("Token expired"); }
+    if (r.status === 401) {
+      this.token=null;this.expiresAt=0;
+      localStorage.removeItem("rx_google_token");
+      localStorage.removeItem("rx_google_expiry");
+      this.renderUI();
+      throw new Error("Token expired — please sign in again");
+    }
+    if (!r.ok) {
+      var body; try{body=await r.json();}catch(e){body={};}
+      throw new Error("Gmail API "+(body.error&&body.error.message||r.status));
+    }
     return r.json();
   },
 
   promptClientId() {
     const id = prompt(
       "Enter your Google OAuth Client ID to connect Gmail & Calendar.\n\n" +
-      "Get one at: console.cloud.google.com → APIs & Services → Credentials → Create OAuth Client ID (Web application)\n\n" +
-      "Add this page's origin to Authorized JavaScript Origins."
+      "Setup steps:\n" +
+      "1. Go to console.cloud.google.com\n" +
+      "2. Create a project (or select existing)\n" +
+      "3. Enable Gmail API + Calendar API\n" +
+      "4. Go to APIs & Services → Credentials\n" +
+      "5. Create OAuth Client ID → Web application\n" +
+      "6. Add to Authorized JavaScript Origins:\n" +
+      "   " + location.origin + "\n" +
+      "7. Copy the Client ID and paste below"
     );
     if (id && id.includes(".apps.googleusercontent.com")) {
       localStorage.setItem("rx_google_client_id", id);
@@ -769,6 +802,7 @@ function esc(s){return String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;","
    ══════════════════════════════════════════════════════════════ */
 async function loadGmail(){
   if (!gAuth.isConnected()) return;
+  var sentTsMap={};
   for(const g of chunk(LEADS.filter(l=>l.domain),6)){
     const q="newer_than:120d ("+g.map(l=>"from:"+l.domain+" OR to:"+l.domain).join(" OR ")+")";
     const url="https://gmail.googleapis.com/gmail/v1/users/me/threads?q="+encodeURIComponent(q)+"&maxResults=50";
@@ -800,12 +834,29 @@ async function loadGmail(){
         const fromLead = domainOf(from)===lead.domain;
         const todayStart=new Date();todayStart.setHours(0,0,0,0);
         const yesterdayStart=new Date(todayStart);yesterdayStart.setDate(yesterdayStart.getDate()-1);
-        if(fromUs && domainOf(to)===lead.domain){lead.contacted=true;lead.sentCount++;if(ts>=todayStart.getTime())lead.emailedToday=true;if(ts>=yesterdayStart.getTime()&&ts<todayStart.getTime())lead.emailedYesterday=true;}
+        if(fromUs && domainOf(to)===lead.domain){
+          lead.contacted=true;lead.sentCount++;
+          if(!sentTsMap[lead.id])sentTsMap[lead.id]=[];
+          sentTsMap[lead.id].push(ts);
+          if(ts>=todayStart.getTime())lead.emailedToday=true;
+          if(ts>=yesterdayStart.getTime()&&ts<todayStart.getTime())lead.emailedYesterday=true;
+        }
         if(fromLead){lead.replied=true;if(ts>=todayStart.getTime())lead.repliedToday=true;if(ts>=yesterdayStart.getTime()&&ts<todayStart.getTime())lead.repliedYesterday=true;if(ts>lead.lastTs){lead.lastTs=ts;lead.lastSnippet=m.snippet||"";}}
         if(fromUs&&ts>lead.lastTs)lead.lastTs=ts;
       }
     }
   }
+  Object.keys(sentTsMap).forEach(function(id){
+    var times=sentTsMap[id].sort(function(a,b){return a-b;});
+    var s=st(+id);
+    if(times[0])s.e1Ts=times[0];
+    if(times[1])s.e2Ts=times[1];
+    if(times[2])s.e3Ts=times[2];
+    s.sentCount=Math.min(times.length,3);
+    s.contacted=true;
+    if(times.length)s.lastTs=times[times.length-1];
+  });
+  localStorage.setItem("rx_state",JSON.stringify(STATE));
 }
 
 async function createGmailDraft(to, subject, body){
