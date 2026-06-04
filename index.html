@@ -1286,7 +1286,7 @@ function renderPipeline(d){
                 try{
                   var subj=tok(tmpl.subj,l),body=tok(tmpl.body,l);
                   var r=await sendGmailEmail(l.email,subj,body);
-                  if(r&&(r.id||r.labelIds)){ok++;l.contacted=true;l.sentCount=(l.sentCount||0)+1;l.emailedToday=true;l.lastTs=Date.now();st(l.id).sentCount=l.sentCount;st(l.id).contacted=true;st(l.id).lastTs=l.lastTs;if(l.sentCount===1)st(l.id).e1Ts=l.lastTs;else if(l.sentCount===2)st(l.id).e2Ts=l.lastTs;else if(l.sentCount>=3)st(l.id).e3Ts=l.lastTs;skipped.add(l.id);}
+                  if(r&&(r.id||r.labelIds)){ok++;l.lastTs=Date.now();st(l.id).lastTs=l.lastTs;if(tplKey==="e1")st(l.id).e1Ts=l.lastTs;else if(tplKey==="e2")st(l.id).e2Ts=l.lastTs;else if(tplKey==="e3")st(l.id).e3Ts=l.lastTs;var cnt=0;if(st(l.id).e1Ts)cnt=1;if(st(l.id).e2Ts)cnt=Math.max(cnt,2);if(st(l.id).e3Ts)cnt=Math.max(cnt,3);l.sentCount=cnt;l.contacted=true;l.emailedToday=true;st(l.id).sentCount=cnt;st(l.id).contacted=true;skipped.add(l.id);}
                 }catch(e){if(statusEl)statusEl.textContent="Error: "+l.company+" - "+e.message;}
               }
               localStorage.setItem("rx_state",JSON.stringify(STATE));
