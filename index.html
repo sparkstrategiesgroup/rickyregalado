@@ -616,12 +616,27 @@ const gAuth = {
       this.promptClientId();
       return;
     }
-    if (!this.tokenClient) {
-      this.init();
-      setTimeout(() => { if (this.tokenClient) this.tokenClient.requestAccessToken(); }, 600);
+    var bar=document.getElementById("authbar");
+    if (typeof google==="undefined"||!google.accounts) {
+      if(bar)bar.innerHTML='<div class="auth-status"><span class="auth-dot off"></span><span style="color:var(--hot)">Google script blocked — disable ad blocker or allow accounts.google.com</span></div>';
       return;
     }
-    this.tokenClient.requestAccessToken();
+    if (!this.tokenClient) {
+      this.tokenClient=google.accounts.oauth2.initTokenClient({client_id:GOOGLE_CLIENT_ID,scope:GOOGLE_SCOPES,callback:(resp)=>this.handleToken(resp)});
+    }
+    if(bar)bar.innerHTML='<div class="auth-status"><span class="auth-dot off"></span><span>Opening Google sign-in popup…</span></div>';
+    var popupTimer=setTimeout(function(){if(bar)bar.innerHTML='<div class="auth-status"><span class="auth-dot off"></span><span style="color:var(--hot)">Popup blocked — click the 🔒 icon in your address bar to allow popups for this site, then try again</span></div>'+
+      '<button class="auth-btn google" onclick="gAuth.signIn()">Try again</button>'+
+      '<button class="auth-btn disconnect" onclick="localStorage.removeItem(\'rx_google_client_id\');location.reload()">Change Client ID</button>';},4000);
+    try {
+      this.tokenClient.requestAccessToken();
+      this._popupTimer=popupTimer;
+    } catch(e) {
+      clearTimeout(popupTimer);
+      if(bar)bar.innerHTML='<div class="auth-status"><span class="auth-dot off"></span><span style="color:var(--hot)">OAuth error: '+e.message+'</span></div>'+
+        '<button class="auth-btn google" onclick="gAuth.signIn()">Try again</button>'+
+        '<button class="auth-btn disconnect" onclick="localStorage.removeItem(\'rx_google_client_id\');location.reload()">Change Client ID</button>';
+    }
   },
 
   signOut() {
@@ -637,6 +652,7 @@ const gAuth = {
   },
 
   handleToken(resp) {
+    if(this._popupTimer){clearTimeout(this._popupTimer);this._popupTimer=null;}
     if (resp.error) {
       console.error("OAuth error:", resp);
       var bar=document.getElementById("authbar");
