@@ -738,9 +738,9 @@ function isBusinessDay(dt){
   if(!_holidayCache[yr])_holidayCache[yr]=getHolidays(yr);
   return !_holidayCache[yr].has(d.toDateString());
 }
-function nextBizDay(dt){var d=new Date(dt);while(!isBusinessDay(d))d.setDate(d.getDate()+1);return d;}
+function nextBizDay(dt){var d=new Date(dt);d.setHours(0,0,0,0);while(!isBusinessDay(d))d.setDate(d.getDate()+1);return d;}
 function emailReadyDate(e1Ts,calendarDaysAfter){
-  var d=new Date(e1Ts);d.setDate(d.getDate()+calendarDaysAfter);return nextBizDay(d);
+  var d=new Date(e1Ts);d.setHours(0,0,0,0);d.setDate(d.getDate()+calendarDaysAfter);return nextBizDay(d);
 }
 
 (function reconcileState(){
