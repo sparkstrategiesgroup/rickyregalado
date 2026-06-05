@@ -795,14 +795,14 @@ function emailReadyDate(e1Ts,calendarDaysAfter){
 (function migrateState(){
   var VER_KEY="rx_state_ver";
   var ver=+(localStorage.getItem(VER_KEY)||"0");
-  if(ver<2){
+  if(ver<3){
     Object.keys(STATE).forEach(function(k){
       var s=STATE[k];
       delete s.e1Ts;delete s.e2Ts;delete s.e3Ts;
       delete s.sentCount;delete s.contacted;delete s.lastTs;
     });
     localStorage.setItem("rx_state",JSON.stringify(STATE));
-    localStorage.setItem(VER_KEY,"2");
+    localStorage.setItem(VER_KEY,"3");
   }
 })();
 
@@ -818,62 +818,89 @@ function esc(s){return String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;","
    ══════════════════════════════════════════════════════════════ */
 async function loadGmail(){
   if (!gAuth.isConnected()) return;
-  var sentTsMap={};
+  var tplSubjs={e1:(TPL.e1&&TPL.e1.subj||"").toLowerCase().trim(),e2:(TPL.e2&&TPL.e2.subj||"").toLowerCase().trim(),e3:(TPL.e3&&TPL.e3.subj||"").toLowerCase().trim()};
+  function matchStage(subj){
+    var s=(subj||"").toLowerCase().trim();
+    if(!s)return null;
+    if(tplSubjs.e1&&s.indexOf(tplSubjs.e1)!==-1)return "e1";
+    if(tplSubjs.e2&&s.indexOf(tplSubjs.e2)!==-1)return "e2";
+    if(tplSubjs.e3&&s.indexOf(tplSubjs.e3)!==-1)return "e3";
+    return null;
+  }
+  var stageMap={};
+  var cutoff=new Date("2026-06-01T00:00:00").getTime();
   for(const g of chunk(LEADS.filter(l=>l.domain),6)){
-    const q="newer_than:120d ("+g.map(l=>"from:"+l.domain+" OR to:"+l.domain).join(" OR ")+")";
-    const url="https://gmail.googleapis.com/gmail/v1/users/me/threads?q="+encodeURIComponent(q)+"&maxResults=50";
+    const q="after:2026/06/01 in:sent ("+g.map(l=>"to:"+l.domain).join(" OR ")+")";
+    const url="https://gmail.googleapis.com/gmail/v1/users/me/messages?q="+encodeURIComponent(q)+"&maxResults=100";
     let res;
     try { res = await gAuth.api(url); } catch(e) { errs.push("Gmail"); return; }
-    const threads = res.threads || [];
-    for(const tRef of threads){
-      let th;
-      try { th = await gAuth.api("https://gmail.googleapis.com/gmail/v1/users/me/threads/"+tRef.id+"?format=metadata&metadataHeaders=From&metadataHeaders=To&metadataHeaders=Date"); } catch(e) { continue; }
-      const msgs = th.messages || [];
-      let lead = null;
-      for(const m of msgs){
-        const hdrs = m.payload && m.payload.headers || [];
-        const from = (hdrs.find(h=>h.name==="From")||{}).value||"";
-        const to = (hdrs.find(h=>h.name==="To")||{}).value||"";
-        const d1 = domainOf(from);
-        if(byDomain[d1]){lead=byDomain[d1];break;}
-        const d2 = domainOf(to);
-        if(byDomain[d2]){lead=byDomain[d2];break;}
-      }
+    const messages = res.messages || [];
+    for(const mRef of messages){
+      let m;
+      try { m = await gAuth.api("https://gmail.googleapis.com/gmail/v1/users/me/messages/"+mRef.id+"?format=metadata&metadataHeaders=From&metadataHeaders=To&metadataHeaders=Subject&metadataHeaders=Date"); } catch(e) { continue; }
+      const hdrs = m.payload && m.payload.headers || [];
+      const from = (hdrs.find(h=>h.name==="From")||{}).value||"";
+      const to = (hdrs.find(h=>h.name==="To")||{}).value||"";
+      const subj = (hdrs.find(h=>h.name==="Subject")||{}).value||"";
+      const dateStr = (hdrs.find(h=>h.name==="Date")||{}).value||"";
+      const ts = Date.parse(dateStr)||Number(m.internalDate)||0;
+      if(ts<cutoff)continue;
+      if(!isUs(from))continue;
+      var toDom=domainOf(to);
+      var lead=byDomain[toDom];
       if(!lead)continue;
-      for(const m of msgs){
-        const hdrs = m.payload && m.payload.headers || [];
-        const from = (hdrs.find(h=>h.name==="From")||{}).value||"";
-        const to = (hdrs.find(h=>h.name==="To")||{}).value||"";
-        const dateStr = (hdrs.find(h=>h.name==="Date")||{}).value||"";
-        const ts = Date.parse(dateStr)||Number(m.internalDate)||0;
-        const fromUs = isUs(from);
-        const fromLead = domainOf(from)===lead.domain;
-        const todayStart=new Date();todayStart.setHours(0,0,0,0);
-        const yesterdayStart=new Date(todayStart);yesterdayStart.setDate(yesterdayStart.getDate()-1);
-        if(fromUs && domainOf(to)===lead.domain){
-          lead.contacted=true;lead.sentCount++;
-          if(!sentTsMap[lead.id])sentTsMap[lead.id]=[];
-          sentTsMap[lead.id].push(ts);
-          if(ts>=todayStart.getTime())lead.emailedToday=true;
-          if(ts>=yesterdayStart.getTime()&&ts<todayStart.getTime())lead.emailedYesterday=true;
-        }
-        if(fromLead){lead.replied=true;if(ts>=todayStart.getTime())lead.repliedToday=true;if(ts>=yesterdayStart.getTime()&&ts<todayStart.getTime())lead.repliedYesterday=true;if(ts>lead.lastTs){lead.lastTs=ts;lead.lastSnippet=m.snippet||"";}}
-        if(fromUs&&ts>lead.lastTs)lead.lastTs=ts;
-      }
+      var stage=matchStage(subj);
+      if(!stage)continue;
+      if(!stageMap[lead.id])stageMap[lead.id]={};
+      if(!stageMap[lead.id][stage]||ts<stageMap[lead.id][stage])stageMap[lead.id][stage]=ts;
+      var todayStart=new Date();todayStart.setHours(0,0,0,0);
+      var yesterdayStart=new Date(todayStart);yesterdayStart.setDate(yesterdayStart.getDate()-1);
+      if(ts>=todayStart.getTime())lead.emailedToday=true;
+      if(ts>=yesterdayStart.getTime()&&ts<todayStart.getTime())lead.emailedYesterday=true;
+      lead.contacted=true;
+      if(ts>lead.lastTs)lead.lastTs=ts;
     }
   }
-  var matchedLeads=Object.keys(sentTsMap).length;
+  for(const g of chunk(LEADS.filter(l=>l.domain),6)){
+    const q="after:2026/06/01 in:inbox ("+g.map(l=>"from:"+l.domain).join(" OR ")+")";
+    const url="https://gmail.googleapis.com/gmail/v1/users/me/messages?q="+encodeURIComponent(q)+"&maxResults=50";
+    let res;
+    try { res = await gAuth.api(url); } catch(e) { continue; }
+    const messages = res.messages || [];
+    for(const mRef of messages){
+      let m;
+      try { m = await gAuth.api("https://gmail.googleapis.com/gmail/v1/users/me/messages/"+mRef.id+"?format=metadata&metadataHeaders=From&metadataHeaders=Date"); } catch(e) { continue; }
+      const hdrs = m.payload && m.payload.headers || [];
+      const from = (hdrs.find(h=>h.name==="From")||{}).value||"";
+      const dateStr = (hdrs.find(h=>h.name==="Date")||{}).value||"";
+      const ts = Date.parse(dateStr)||Number(m.internalDate)||0;
+      if(ts<cutoff)continue;
+      var fromDom=domainOf(from);
+      var lead=byDomain[fromDom];
+      if(!lead)continue;
+      lead.replied=true;
+      var todayStart=new Date();todayStart.setHours(0,0,0,0);
+      var yesterdayStart=new Date(todayStart);yesterdayStart.setDate(yesterdayStart.getDate()-1);
+      if(ts>=todayStart.getTime())lead.repliedToday=true;
+      if(ts>=yesterdayStart.getTime()&&ts<todayStart.getTime())lead.repliedYesterday=true;
+      if(ts>lead.lastTs){lead.lastTs=ts;lead.lastSnippet=m.snippet||"";}
+    }
+  }
+  var matchedLeads=Object.keys(stageMap).length;
   var totalEmails=0;
-  Object.keys(sentTsMap).forEach(function(id){
-    var times=sentTsMap[id].sort(function(a,b){return a-b;});
-    totalEmails+=times.length;
+  Object.keys(stageMap).forEach(function(id){
+    var stages=stageMap[id];
     var s=st(+id);
-    if(times[0])s.e1Ts=times[0];
-    if(times[1])s.e2Ts=times[1];
-    if(times[2])s.e3Ts=times[2];
-    s.sentCount=Math.min(times.length,3);
+    if(stages.e1){s.e1Ts=stages.e1;totalEmails++;}
+    if(stages.e2){s.e2Ts=stages.e2;totalEmails++;}
+    if(stages.e3){s.e3Ts=stages.e3;totalEmails++;}
+    var cnt=0;
+    if(s.e1Ts)cnt=1;if(s.e2Ts)cnt=Math.max(cnt,2);if(s.e3Ts)cnt=Math.max(cnt,3);
+    s.sentCount=cnt;
     s.contacted=true;
-    if(times.length)s.lastTs=times[times.length-1];
+    if(stages.e3)s.lastTs=Math.max(s.lastTs||0,stages.e3);
+    else if(stages.e2)s.lastTs=Math.max(s.lastTs||0,stages.e2);
+    else if(stages.e1)s.lastTs=Math.max(s.lastTs||0,stages.e1);
   });
   localStorage.setItem("rx_state",JSON.stringify(STATE));
   return {leads:matchedLeads,emails:totalEmails};
