@@ -820,7 +820,7 @@ async function loadGmail(){
   if (!gAuth.isConnected()) return;
   var defSubjs={e1:"fellow bsc - talk shop?",e2:"come share your story on cleaning & cocktails",e3:"20 minutes on exchange?"};
   var curSubjs={e1:(TPL.e1&&TPL.e1.subj||"").toLowerCase().trim(),e2:(TPL.e2&&TPL.e2.subj||"").toLowerCase().trim(),e3:(TPL.e3&&TPL.e3.subj||"").toLowerCase().trim()};
-  function cleanSubj(s){return (s||"").toLowerCase().replace(/^(re|fwd|fw)\s*:\s*/i,"").replace(/^(re|fwd|fw)\s*:\s*/i,"").trim();}
+  function cleanSubj(s){return (s||"").toLowerCase().replace(/^(re|fwd|fw)\s*:\s*/gi,"").trim();}
   function matchStage(subj){
     var s=cleanSubj(subj);
     if(!s)return null;
@@ -833,12 +833,15 @@ async function loadGmail(){
   var stageMap={};
   var unmatchedMap={};
   var cutoff=new Date("2026-06-01T00:00:00").getTime();
-  for(const g of chunk(LEADS.filter(l=>l.domain),6)){
-    const q="after:2026/06/01 in:sent ("+g.map(l=>"to:"+l.domain).join(" OR ")+")";
+  var leadsWithEmail=LEADS.filter(l=>l.email);
+  console.log("[Gmail scanner] scanning "+leadsWithEmail.length+" leads with emails");
+  for(const g of chunk(leadsWithEmail,5)){
+    const q="after:2026/06/01 from:me ("+g.map(l=>"to:"+l.email).join(" OR ")+")";
     const url="https://gmail.googleapis.com/gmail/v1/users/me/messages?q="+encodeURIComponent(q)+"&maxResults=100";
     let res;
-    try { res = await gAuth.api(url); } catch(e) { errs.push("Gmail"); return; }
+    try { res = await gAuth.api(url); } catch(e) { errs.push("Gmail: "+e.message); return; }
     const messages = res.messages || [];
+    console.log("[Gmail scanner] query returned "+messages.length+" messages for chunk: "+g.map(l=>l.company).join(", "));
     for(const mRef of messages){
       let m;
       try { m = await gAuth.api("https://gmail.googleapis.com/gmail/v1/users/me/messages/"+mRef.id+"?format=metadata&metadataHeaders=From&metadataHeaders=To&metadataHeaders=Subject&metadataHeaders=Date"); } catch(e) { continue; }
@@ -849,10 +852,10 @@ async function loadGmail(){
       const dateStr = (hdrs.find(h=>h.name==="Date")||{}).value||"";
       const ts = Date.parse(dateStr)||Number(m.internalDate)||0;
       if(ts<cutoff)continue;
-      if(!isUs(from))continue;
       var toDom=domainOf(to);
       var lead=byDomain[toDom];
-      if(!lead)continue;
+      if(!lead){var toEmail=(to.match(/[^@<\s]+@[^>\s]+/)||[""])[0].toLowerCase();lead=leadsWithEmail.find(l=>l.email.toLowerCase()===toEmail);}
+      if(!lead){console.log("[Gmail scanner] no lead match for to:"+to);continue;}
       var todayStart=new Date();todayStart.setHours(0,0,0,0);
       var yesterdayStart=new Date(todayStart);yesterdayStart.setDate(yesterdayStart.getDate()-1);
       if(ts>=todayStart.getTime())lead.emailedToday=true;
@@ -860,6 +863,7 @@ async function loadGmail(){
       lead.contacted=true;
       if(ts>lead.lastTs)lead.lastTs=ts;
       var stage=matchStage(subj);
+      console.log("[Gmail scanner] "+lead.company+" | subj: \""+subj+"\" | stage: "+(stage||"unmatched"));
       if(stage){
         if(!stageMap[lead.id])stageMap[lead.id]={};
         if(!stageMap[lead.id][stage]||ts<stageMap[lead.id][stage])stageMap[lead.id][stage]=ts;
@@ -869,8 +873,8 @@ async function loadGmail(){
       }
     }
   }
-  for(const g of chunk(LEADS.filter(l=>l.domain),6)){
-    const q="after:2026/06/01 in:inbox ("+g.map(l=>"from:"+l.domain).join(" OR ")+")";
+  for(const g of chunk(leadsWithEmail,5)){
+    const q="after:2026/06/01 to:me ("+g.map(l=>"from:"+l.email).join(" OR ")+")";
     const url="https://gmail.googleapis.com/gmail/v1/users/me/messages?q="+encodeURIComponent(q)+"&maxResults=50";
     let res;
     try { res = await gAuth.api(url); } catch(e) { continue; }
@@ -911,18 +915,22 @@ async function loadGmail(){
     else if(stages.e1)s.lastTs=Math.max(s.lastTs||0,stages.e1);
   });
   Object.keys(unmatchedMap).forEach(function(id){
-    if(stageMap[id])return;
     var times=unmatchedMap[id].sort(function(a,b){return a-b;});
     var s=st(+id);
-    if(times[0]&&!s.e1Ts){s.e1Ts=times[0];totalEmails++;}
-    if(times[1]&&!s.e2Ts){s.e2Ts=times[1];totalEmails++;}
-    if(times[2]&&!s.e3Ts){s.e3Ts=times[2];totalEmails++;}
+    var slots=[];
+    if(!s.e1Ts&&!stageMap[id])slots.push("e1Ts");
+    if(!s.e2Ts&&!(stageMap[id]&&stageMap[id].e2))slots.push("e2Ts");
+    if(!s.e3Ts&&!(stageMap[id]&&stageMap[id].e3))slots.push("e3Ts");
+    for(var i=0;i<times.length&&i<slots.length;i++){
+      s[slots[i]]=times[i];totalEmails++;
+    }
     var cnt=0;
     if(s.e1Ts)cnt=1;if(s.e2Ts)cnt=Math.max(cnt,2);if(s.e3Ts)cnt=Math.max(cnt,3);
     s.sentCount=cnt;s.contacted=true;
     if(times.length)s.lastTs=Math.max(s.lastTs||0,times[times.length-1]);
-    matchedLeads++;
+    if(!stageMap[id])matchedLeads++;
   });
+  console.log("[Gmail scanner] done: "+matchedLeads+" leads, "+totalEmails+" emails");
   localStorage.setItem("rx_state",JSON.stringify(STATE));
   return {leads:matchedLeads,emails:totalEmails};
 }
