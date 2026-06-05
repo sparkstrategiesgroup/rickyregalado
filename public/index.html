@@ -818,16 +818,20 @@ function esc(s){return String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;","
    ══════════════════════════════════════════════════════════════ */
 async function loadGmail(){
   if (!gAuth.isConnected()) return;
-  var tplSubjs={e1:(TPL.e1&&TPL.e1.subj||"").toLowerCase().trim(),e2:(TPL.e2&&TPL.e2.subj||"").toLowerCase().trim(),e3:(TPL.e3&&TPL.e3.subj||"").toLowerCase().trim()};
+  var defSubjs={e1:"fellow bsc - talk shop?",e2:"come share your story on cleaning & cocktails",e3:"20 minutes on exchange?"};
+  var curSubjs={e1:(TPL.e1&&TPL.e1.subj||"").toLowerCase().trim(),e2:(TPL.e2&&TPL.e2.subj||"").toLowerCase().trim(),e3:(TPL.e3&&TPL.e3.subj||"").toLowerCase().trim()};
+  function cleanSubj(s){return (s||"").toLowerCase().replace(/^(re|fwd|fw)\s*:\s*/i,"").replace(/^(re|fwd|fw)\s*:\s*/i,"").trim();}
   function matchStage(subj){
-    var s=(subj||"").toLowerCase().trim();
+    var s=cleanSubj(subj);
     if(!s)return null;
-    if(tplSubjs.e1&&s.indexOf(tplSubjs.e1)!==-1)return "e1";
-    if(tplSubjs.e2&&s.indexOf(tplSubjs.e2)!==-1)return "e2";
-    if(tplSubjs.e3&&s.indexOf(tplSubjs.e3)!==-1)return "e3";
+    for(var k of ["e1","e2","e3"]){
+      if(curSubjs[k]&&s.indexOf(curSubjs[k])!==-1)return k;
+      if(defSubjs[k]&&s.indexOf(defSubjs[k])!==-1)return k;
+    }
     return null;
   }
   var stageMap={};
+  var unmatchedMap={};
   var cutoff=new Date("2026-06-01T00:00:00").getTime();
   for(const g of chunk(LEADS.filter(l=>l.domain),6)){
     const q="after:2026/06/01 in:sent ("+g.map(l=>"to:"+l.domain).join(" OR ")+")";
@@ -849,16 +853,20 @@ async function loadGmail(){
       var toDom=domainOf(to);
       var lead=byDomain[toDom];
       if(!lead)continue;
-      var stage=matchStage(subj);
-      if(!stage)continue;
-      if(!stageMap[lead.id])stageMap[lead.id]={};
-      if(!stageMap[lead.id][stage]||ts<stageMap[lead.id][stage])stageMap[lead.id][stage]=ts;
       var todayStart=new Date();todayStart.setHours(0,0,0,0);
       var yesterdayStart=new Date(todayStart);yesterdayStart.setDate(yesterdayStart.getDate()-1);
       if(ts>=todayStart.getTime())lead.emailedToday=true;
       if(ts>=yesterdayStart.getTime()&&ts<todayStart.getTime())lead.emailedYesterday=true;
       lead.contacted=true;
       if(ts>lead.lastTs)lead.lastTs=ts;
+      var stage=matchStage(subj);
+      if(stage){
+        if(!stageMap[lead.id])stageMap[lead.id]={};
+        if(!stageMap[lead.id][stage]||ts<stageMap[lead.id][stage])stageMap[lead.id][stage]=ts;
+      } else {
+        if(!unmatchedMap[lead.id])unmatchedMap[lead.id]=[];
+        unmatchedMap[lead.id].push(ts);
+      }
     }
   }
   for(const g of chunk(LEADS.filter(l=>l.domain),6)){
@@ -901,6 +909,19 @@ async function loadGmail(){
     if(stages.e3)s.lastTs=Math.max(s.lastTs||0,stages.e3);
     else if(stages.e2)s.lastTs=Math.max(s.lastTs||0,stages.e2);
     else if(stages.e1)s.lastTs=Math.max(s.lastTs||0,stages.e1);
+  });
+  Object.keys(unmatchedMap).forEach(function(id){
+    if(stageMap[id])return;
+    var times=unmatchedMap[id].sort(function(a,b){return a-b;});
+    var s=st(+id);
+    if(times[0]&&!s.e1Ts){s.e1Ts=times[0];totalEmails++;}
+    if(times[1]&&!s.e2Ts){s.e2Ts=times[1];totalEmails++;}
+    if(times[2]&&!s.e3Ts){s.e3Ts=times[2];totalEmails++;}
+    var cnt=0;
+    if(s.e1Ts)cnt=1;if(s.e2Ts)cnt=Math.max(cnt,2);if(s.e3Ts)cnt=Math.max(cnt,3);
+    s.sentCount=cnt;s.contacted=true;
+    if(times.length)s.lastTs=Math.max(s.lastTs||0,times[times.length-1]);
+    matchedLeads++;
   });
   localStorage.setItem("rx_state",JSON.stringify(STATE));
   return {leads:matchedLeads,emails:totalEmails};
