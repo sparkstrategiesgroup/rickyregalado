@@ -862,8 +862,11 @@ async function loadGmail(){
       }
     }
   }
+  var matchedLeads=Object.keys(sentTsMap).length;
+  var totalEmails=0;
   Object.keys(sentTsMap).forEach(function(id){
     var times=sentTsMap[id].sort(function(a,b){return a-b;});
+    totalEmails+=times.length;
     var s=st(+id);
     if(times[0])s.e1Ts=times[0];
     if(times[1])s.e2Ts=times[1];
@@ -873,6 +876,7 @@ async function loadGmail(){
     if(times.length)s.lastTs=times[times.length-1];
   });
   localStorage.setItem("rx_state",JSON.stringify(STATE));
+  return {leads:matchedLeads,emails:totalEmails};
 }
 
 async function createGmailDraft(to, subject, body){
@@ -1556,9 +1560,14 @@ async function loadAll(){
   var updEl=document.getElementById("updated");
   if(gAuth.isConnected()){
     if(updEl)updEl.innerHTML='syncing Gmail <span class="spin"></span>';
-    try{await loadGmail();}catch(e){errs.push("Gmail");}
+    var gmailResult=null;
+    try{gmailResult=await loadGmail();}catch(e){errs.push("Gmail: "+e.message);}
     try{await classify();}catch(e){}
-    if(updEl)updEl.textContent=errs.length?"sync error: "+errs.join(", "):"synced ✓ "+new Date().toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"});
+    if(updEl){
+      if(errs.length){updEl.textContent="sync error: "+errs.join(", ");}
+      else if(gmailResult){updEl.textContent="synced ✓ "+gmailResult.emails+" emails found across "+gmailResult.leads+" leads · "+new Date().toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"});}
+      else{updEl.textContent="synced ✓ 0 emails matched · "+new Date().toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"});}
+    }
   } else {
     if(updEl)updEl.textContent="Gmail not connected";
   }
