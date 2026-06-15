@@ -4578,7 +4578,7 @@ function render(d){lastD=d;
   var hE3=document.getElementById("hE3Count");if(hE3)hE3.textContent=d.e3;
   var hCc=document.getElementById("hClosedCount");if(hCc)hCc.textContent=d.closed;
 
-  renderPipeline(d);
+  if(!_pipeActive)renderPipeline(d);
   renderSchedule();
   updateGameClock();
 
@@ -4623,7 +4623,7 @@ function renderPipeline(d){
       el.onclick=function(){
         const key=this.dataset.key;
         const tile=tiles.find(t=>t.key===key);
-        if(_pipeActive===key){_pipeActive=null;expand.classList.add("collapsed");expand.innerHTML="";row.querySelectorAll(".pipe-tile").forEach(t=>t.classList.remove("active"));return;}
+        if(_pipeActive===key){_pipeActive=null;expand.classList.add("collapsed");expand.innerHTML="";row.querySelectorAll(".pipe-tile").forEach(t=>t.classList.remove("active"));renderPipeline(lastD);return;}
         _pipeActive=key;
         row.querySelectorAll(".pipe-tile").forEach(t=>t.classList.remove("active"));
         this.classList.add("active");
