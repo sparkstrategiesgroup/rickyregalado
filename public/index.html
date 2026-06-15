@@ -4077,7 +4077,7 @@ function esc(s){return String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;","
    ══════════════════════════════════════════════════════════════ */
 async function loadGmail(){
   if (!gAuth.isConnected()) return;
-  var defSubjs={e1:"fellow bsc - talk shop?",e2:"come share your story on cleaning & cocktails",e3:"20 minutes on exchange?"};
+  var defSubjs={e1:"come share your story on cleaning & cocktails",e2:"fellow bsc - talk shop?",e3:"20 minutes on exchange?"};
   var curSubjs={e1:(TPL.e1&&TPL.e1.subj||"").toLowerCase().trim(),e2:(TPL.e2&&TPL.e2.subj||"").toLowerCase().trim(),e3:(TPL.e3&&TPL.e3.subj||"").toLowerCase().trim()};
   function cleanSubj(s){return (s||"").toLowerCase().replace(/^(re|fwd|fw)\s*:\s*/gi,"").trim();}
   function matchStage(subj){
@@ -4807,7 +4807,19 @@ const TOUCHES=[
  {k:"e3",lbl:"E3 - schedule demo",pin:"Day 7",subj:true},
  {k:"e5",lbl:"E5 - takeaway close",pin:"Day 13",subj:true}];
 const DEFAULT_TPL={
- e1:{subj:"fellow BSC - talk shop?",body:`Hi {first_name},
+ e1:{subj:"come share your story on Cleaning & Cocktails",body:`Hi {first_name},
+
+Different note - no platform talk this time.
+
+I host Cleaning & Cocktails, where operators trade the real stories of building a cleaning company - the wins, the scars, all of it. I'd love to have you on to share {company}'s story: how you've grown, what you've learned running the work, and your honest take on the prime/sub model.
+
+No script, no pitch - just two BSC operators talking shop. Your story would mean a lot to the operators coming up behind you.
+
+Grab a time that works and we'll record: [your podcast booking link]
+
+${SIG_T}`},
+ li:{subj:"",body:`Hi {first_name} - I am a fellow BSC owner (Rozalado Services) and ISSA board member. Just sent you a quick note by email too. We're on a mission to improve subcontracting, which is why we built the Exchange. I would love to connect and talk shop!`},
+ e2:{subj:"fellow BSC - talk shop?",body:`Hi {first_name},
 
 I'm a fellow BSC owner (Rozalado Services) who has navigated the subcontracting model to scale from $1M to $35M across multiple markets - 20-30% YoY growth.
 
@@ -4818,18 +4830,6 @@ That role is grounded in giving the BSC community resources, guidance and tools 
 I'd love to grab some time and walk you through the platform - and honestly, to get your perspective on subcontracting and talk shop.
 
 If you're open, just reply and I'll send a couple of times that work.
-
-${SIG_T}`},
- li:{subj:"",body:`Hi {first_name} - I am a fellow BSC owner (Rozalado Services) and ISSA board member. Just sent you a quick note by email too. We're on a mission to improve subcontracting, which is why we built the Exchange. I would love to connect and talk shop!`},
- e2:{subj:"come share your story on Cleaning & Cocktails",body:`Hi {first_name},
-
-Different note - no platform talk this time.
-
-I host Cleaning & Cocktails, where operators trade the real stories of building a cleaning company - the wins, the scars, all of it. I'd love to have you on to share {company}'s story: how you've grown, what you've learned running the work, and your honest take on the prime/sub model.
-
-No script, no pitch - just two BSC operators talking shop. Your story would mean a lot to the operators coming up behind you.
-
-Grab a time that works and we'll record: [your podcast booking link]
 
 ${SIG_T}`},
  e3:{subj:"20 minutes on Exchange?",body:`Hi {first_name},
@@ -4853,7 +4853,7 @@ But if there's even a 15-minute version of this conversation worth having - your
 Either way, I'm rooting for {company}. We're all stronger together.
 
 ${SIG_T}`}};
-const TPL_VERSION=3;
+const TPL_VERSION=4;
 let TPL; try{TPL=JSON.parse(localStorage.getItem("rx_templates"));}catch(e){TPL=null;}
 if(!TPL||!TPL.e1||(+localStorage.getItem("rx_tpl_v")||0)<TPL_VERSION){TPL=JSON.parse(JSON.stringify(DEFAULT_TPL));localStorage.setItem("rx_tpl_v",TPL_VERSION);}
 function saveTpl(){localStorage.setItem("rx_templates",JSON.stringify(TPL));document.getElementById("edExport").value=JSON.stringify(TPL,null,1);}
