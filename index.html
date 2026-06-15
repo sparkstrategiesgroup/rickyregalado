@@ -4516,7 +4516,8 @@ let _pipeActive=null;
 function renderPipeline(d){
   const ok=l=>!st(l.id).notfit&&!st(l.id).removed&&!st(l.id).closed&&!l.meeting;
   const todayTiles=[
-    {key:"e1",lbl:"Email 1",sub:"Offer / Request Demo · Day 01",bg:"#e7ecfb",color:"var(--accent)",leads:LEADS.filter(l=>ok(l)&&!st(l.id).e1Ts)},
+    {key:"new",lbl:"New Leads",sub:"Not yet contacted",bg:"#f0f2f5",color:"var(--muted)",leads:LEADS.filter(l=>ok(l)&&!st(l.id).e1Ts),tplKey:"e1"},
+    {key:"e1",lbl:"Email 1",sub:"Sent E1 · In pipeline",bg:"#e7ecfb",color:"var(--accent)",leads:LEADS.filter(l=>ok(l)&&!!st(l.id).e1Ts&&!st(l.id).e2Ts)},
     {key:"li-need",lbl:"Needs DM",sub:"LinkedIn DM · after Email 1",bg:"#fff4e6",color:"#e67700",leads:LEADS.filter(l=>ok(l)&&!!st(l.id).e1Ts&&!st(l.id).e2Ts&&!st(l.id).linkedin)}
   ];
   const now_=new Date();now_.setHours(0,0,0,0);
@@ -4548,8 +4549,9 @@ function renderPipeline(d){
         this.classList.add("active");
         document.querySelectorAll(".pipe-expand").forEach(e=>{if(e.id!==expandId){e.classList.add("collapsed");e.innerHTML="";}});
         document.querySelectorAll(".pipe-row .pipe-tile.active").forEach(t=>{if(!row.contains(t))t.classList.remove("active");});
-        var tplKey=tile.key==="e1"?"e1":tile.key==="e2"?"e2":tile.key==="e3"?"e3":"e1";
+        var tplKey=tile.tplKey||tile.key;
         var isLi=tile.key.indexOf("li-")===0;
+        var isViewOnly=tile.key==="e1";
         var allLeads=isLi?tile.leads:tile.leads.filter(function(l){return l.email;});
         var skipped=new Set();
         var btnLabel=isLi?"Mark as DM Sent":"Send Email";
@@ -4559,7 +4561,7 @@ function renderPipeline(d){
           var remaining=allLeads.filter(function(l){return !skipped.has(l.id);}).length;
           var h='<div class="pipe-expand-hd"><span class="pe-title">'+tile.lbl+' — '+tile.sub+'</span><span class="pe-cnt">'+remaining+' of '+allLeads.length+' remaining</span></div>';
           if(batch.length){
-            h+='<div class="pe-action-bar"><label class="pe-sel-all"><input type="checkbox" id="peSelectAll" checked> Select all ('+batch.length+')</label><span class="pe-sel-count" id="peSelCount">'+batch.length+' selected</span><button class="pe-send-btn" id="peSendBtn">'+(isLi?btnLabel+" ("+batch.length+")":"Send "+batch.length+" Email"+(batch.length>1?"s":""))+'</button><span class="pe-send-status" id="peSendStatus"></span></div>';
+            h+='<div class="pe-action-bar"><label class="pe-sel-all"><input type="checkbox" id="peSelectAll" checked> Select all ('+batch.length+')</label><span class="pe-sel-count" id="peSelCount">'+batch.length+' selected</span>'+(isViewOnly?'':'<button class="pe-send-btn" id="peSendBtn">'+(isLi?btnLabel+" ("+batch.length+")":"Send "+batch.length+" Email"+(batch.length>1?"s":""))+'</button>')+'<span class="pe-send-status" id="peSendStatus"></span></div>';
             h+='<div class="pe-table-wrap"><table class="pe-table"><thead><tr><th style="width:32px"></th><th>Company</th><th>Contact</th><th>Status</th><th>Progress</th><th style="width:32px"></th></tr></thead><tbody>';
             batch.forEach(function(l){
               var s=st(l.id),status=statusOf(l);
