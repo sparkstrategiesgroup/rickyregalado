@@ -4077,30 +4077,26 @@ function esc(s){return String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;","
    ══════════════════════════════════════════════════════════════ */
 async function loadGmail(){
   if (!gAuth.isConnected()) return;
-  var defSubjs={e1:"come share your story on cleaning & cocktails",e2:"fellow bsc - talk shop?",e3:"20 minutes on exchange?"};
-  var curSubjs={e1:(TPL.e1&&TPL.e1.subj||"").toLowerCase().trim(),e2:(TPL.e2&&TPL.e2.subj||"").toLowerCase().trim(),e3:(TPL.e3&&TPL.e3.subj||"").toLowerCase().trim()};
-  function cleanSubj(s){return (s||"").toLowerCase().replace(/^(re|fwd|fw)\s*:\s*/gi,"").trim();}
-  function matchStage(subj){
-    var s=cleanSubj(subj);
-    if(!s)return null;
-    for(var k of ["e1","e2","e3"]){
-      if(curSubjs[k]&&s.indexOf(curSubjs[k])!==-1)return k;
-      if(defSubjs[k]&&s.indexOf(defSubjs[k])!==-1)return k;
-    }
-    return null;
+  var knownSubjs=["come share your story on cleaning & cocktails","fellow bsc - talk shop?","20 minutes on exchange?","should i close the loop?"];
+  var curSubjs=[
+    (TPL.e1&&TPL.e1.subj||"").toLowerCase().trim(),
+    (TPL.e2&&TPL.e2.subj||"").toLowerCase().trim(),
+    (TPL.e3&&TPL.e3.subj||"").toLowerCase().trim()
+  ].filter(Boolean);
+  var allSubjs=new Set(knownSubjs.concat(curSubjs));
+  function isTemplateSubj(subj){
+    var s=(subj||"").toLowerCase().replace(/^(re|fwd|fw)\s*:\s*/gi,"").trim();
+    for(var t of allSubjs){if(s.indexOf(t)!==-1)return true;}
+    return false;
   }
   var byEmail={};
   LEADS.forEach(l=>{if(l.email)byEmail[l.email.toLowerCase()]=l;});
-  var stageMap={};
-  var unmatchedMap={};
+  var sentMap={};
+  var auditLog=[];
   var cutoff=new Date("2026-06-01T00:00:00").getTime();
-  var subjQueries=new Set();
-  ["e1","e2","e3"].forEach(function(k){
-    if(curSubjs[k])subjQueries.add('"'+curSubjs[k]+'"');
-    if(defSubjs[k])subjQueries.add('"'+defSubjs[k]+'"');
-  });
-  var q="after:2026/06/01 from:me subject:({"+Array.from(subjQueries).join(" OR ")+"})";
-  console.log("[Gmail scanner] query: "+q);
+  var subjQ=Array.from(allSubjs).map(s=>'"'+s+'"').join(" OR ");
+  var q="after:2026/06/01 from:me subject:({"+subjQ+"})";
+  console.log("[Gmail audit] query: "+q);
   var url="https://gmail.googleapis.com/gmail/v1/users/me/messages?q="+encodeURIComponent(q)+"&maxResults=200";
   var allMsgIds=[];
   try{
@@ -4111,38 +4107,31 @@ async function loadGmail(){
       allMsgIds=allMsgIds.concat((res.messages||[]).map(m=>m.id));
     }
   }catch(e){errs.push("Gmail: "+e.message);return;}
-  console.log("[Gmail scanner] found "+allMsgIds.length+" sent messages matching template subjects");
+  console.log("[Gmail audit] found "+allMsgIds.length+" sent messages");
   for(var mi=0;mi<allMsgIds.length;mi++){
     let m;
     try{m=await gAuth.api("https://gmail.googleapis.com/gmail/v1/users/me/messages/"+allMsgIds[mi]+"?format=metadata&metadataHeaders=From&metadataHeaders=To&metadataHeaders=Subject&metadataHeaders=Date");}catch(e){continue;}
     const hdrs=m.payload&&m.payload.headers||[];
-    const from=(hdrs.find(h=>h.name==="From")||{}).value||"";
     const to=(hdrs.find(h=>h.name==="To")||{}).value||"";
     const subj=(hdrs.find(h=>h.name==="Subject")||{}).value||"";
     const dateStr=(hdrs.find(h=>h.name==="Date")||{}).value||"";
     const ts=Date.parse(dateStr)||Number(m.internalDate)||0;
     if(ts<cutoff)continue;
+    if(!isTemplateSubj(subj))continue;
     var toEmail=(to.match(/[^@<\s]+@[^>\s]+/)||[""])[0].toLowerCase();
     var lead=byEmail[toEmail];
     if(!lead){var toDom=domainOf(to);lead=byDomain[toDom];}
-    if(!lead){continue;}
+    if(!lead)continue;
+    if(!sentMap[lead.id])sentMap[lead.id]=[];
+    sentMap[lead.id].push({ts:ts,subj:subj});
     var todayStart=new Date();todayStart.setHours(0,0,0,0);
     var yesterdayStart=new Date(todayStart);yesterdayStart.setDate(yesterdayStart.getDate()-1);
     if(ts>=todayStart.getTime())lead.emailedToday=true;
     if(ts>=yesterdayStart.getTime()&&ts<todayStart.getTime())lead.emailedYesterday=true;
     lead.contacted=true;
     if(ts>lead.lastTs)lead.lastTs=ts;
-    var stage=matchStage(subj);
-    console.log("[Gmail scanner] "+lead.company+" | subj: \""+subj+"\" | stage: "+(stage||"unmatched"));
-    if(stage){
-      if(!stageMap[lead.id])stageMap[lead.id]={};
-      if(!stageMap[lead.id][stage]||ts<stageMap[lead.id][stage])stageMap[lead.id][stage]=ts;
-    }else{
-      if(!unmatchedMap[lead.id])unmatchedMap[lead.id]=[];
-      unmatchedMap[lead.id].push(ts);
-    }
   }
-  var rq="after:2026/06/01 to:me subject:({"+Array.from(subjQueries).join(" OR ")+"})";
+  var rq="after:2026/06/01 to:me subject:({"+subjQ+"})";
   try{
     var rres=await gAuth.api("https://gmail.googleapis.com/gmail/v1/users/me/messages?q="+encodeURIComponent(rq)+"&maxResults=100");
     var replies=(rres.messages||[]);
@@ -4166,41 +4155,27 @@ async function loadGmail(){
       if(ts>lead.lastTs){lead.lastTs=ts;lead.lastSnippet=m.snippet||"";}
     }
   }catch(e){}
-  var matchedLeads=Object.keys(stageMap).length;
+  var matchedLeads=0;
   var totalEmails=0;
-  Object.keys(stageMap).forEach(function(id){
-    var stages=stageMap[id];
+  Object.keys(sentMap).forEach(function(id){
+    var emails=sentMap[id].sort(function(a,b){return a.ts-b.ts;});
     var s=st(+id);
-    if(stages.e1){s.e1Ts=stages.e1;totalEmails++;}
-    if(stages.e2){s.e2Ts=stages.e2;totalEmails++;}
-    if(stages.e3){s.e3Ts=stages.e3;totalEmails++;}
-    var cnt=0;
-    if(s.e1Ts)cnt=1;if(s.e2Ts)cnt=Math.max(cnt,2);if(s.e3Ts)cnt=Math.max(cnt,3);
-    s.sentCount=cnt;
-    s.contacted=true;
-    if(stages.e3)s.lastTs=Math.max(s.lastTs||0,stages.e3);
-    else if(stages.e2)s.lastTs=Math.max(s.lastTs||0,stages.e2);
-    else if(stages.e1)s.lastTs=Math.max(s.lastTs||0,stages.e1);
-  });
-  Object.keys(unmatchedMap).forEach(function(id){
-    var times=unmatchedMap[id].sort(function(a,b){return a-b;});
-    var s=st(+id);
-    var slots=[];
-    if(!s.e1Ts&&!stageMap[id])slots.push("e1Ts");
-    if(!s.e2Ts&&!(stageMap[id]&&stageMap[id].e2))slots.push("e2Ts");
-    if(!s.e3Ts&&!(stageMap[id]&&stageMap[id].e3))slots.push("e3Ts");
-    for(var i=0;i<times.length&&i<slots.length;i++){
-      s[slots[i]]=times[i];totalEmails++;
-    }
+    var lead=LEADS.find(l=>l.id===+id);
+    var name=lead?lead.company:"#"+id;
+    if(emails[0]){s.e1Ts=emails[0].ts;totalEmails++;}
+    if(emails[1]){s.e2Ts=emails[1].ts;totalEmails++;}
+    if(emails[2]){s.e3Ts=emails[2].ts;totalEmails++;}
     var cnt=0;
     if(s.e1Ts)cnt=1;if(s.e2Ts)cnt=Math.max(cnt,2);if(s.e3Ts)cnt=Math.max(cnt,3);
     s.sentCount=cnt;s.contacted=true;
-    if(times.length)s.lastTs=Math.max(s.lastTs||0,times[times.length-1]);
-    if(!stageMap[id])matchedLeads++;
+    s.lastTs=Math.max(s.lastTs||0,emails[emails.length-1].ts);
+    auditLog.push(name+" → "+cnt+" email(s): "+emails.map(e=>new Date(e.ts).toLocaleDateString()+" \""+e.subj+"\"").join(", "));
+    matchedLeads++;
   });
-  console.log("[Gmail scanner] done: "+matchedLeads+" leads, "+totalEmails+" emails");
+  console.log("[Gmail audit] done: "+matchedLeads+" leads, "+totalEmails+" emails");
+  auditLog.forEach(function(line){console.log("[Gmail audit] "+line);});
   localStorage.setItem("rx_state",JSON.stringify(STATE));
-  return {leads:matchedLeads,emails:totalEmails};
+  return {leads:matchedLeads,emails:totalEmails,audit:auditLog};
 }
 
 async function createGmailDraft(to, subject, body){
@@ -4889,7 +4864,13 @@ async function loadAll(){
     try{await classify();}catch(e){}
     if(updEl){
       if(errs.length){updEl.textContent="sync error: "+errs.join(", ");}
-      else if(gmailResult){updEl.textContent="synced ✓ "+gmailResult.emails+" emails found across "+gmailResult.leads+" leads · "+new Date().toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"});}
+      else if(gmailResult&&gmailResult.leads>0){
+        var ts=new Date().toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"});
+        var summary="synced ✓ "+gmailResult.emails+" emails across "+gmailResult.leads+" leads · "+ts;
+        if(gmailResult.audit&&gmailResult.audit.length){
+          updEl.innerHTML=summary+' <a href="#" style="color:var(--accent);font-size:11px;margin-left:6px" onclick="event.preventDefault();var d=document.getElementById(\'gmailAudit\');d.style.display=d.style.display===\'none\'?\'block\':\'none\'">show audit</a><div id="gmailAudit" style="display:none;margin-top:6px;font-size:11px;color:var(--muted);max-height:200px;overflow-y:auto;background:#f8f9fc;border-radius:6px;padding:8px;text-align:left">'+gmailResult.audit.map(function(l){return '<div style="padding:2px 0;border-bottom:1px solid #eee">'+l.replace(/</g,'&lt;')+'</div>';}).join('')+'</div>';
+        }else{updEl.textContent=summary;}
+      }
       else{updEl.textContent="synced ✓ 0 emails matched · "+new Date().toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"});}
     }
   } else {
