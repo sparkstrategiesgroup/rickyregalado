@@ -466,6 +466,24 @@ details.editor>summary::-webkit-details-marker{display:none;}
         <div class="hero-pace" id="hPaceNote">staged &amp; ready</div>
       </div>
     </div>
+    <div style="display:flex;gap:12px;margin-top:14px;flex-wrap:wrap">
+      <div style="flex:1;min-width:100px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);border-radius:10px;padding:10px 14px;text-align:center">
+        <div style="font-size:24px;font-weight:800;color:#7ea6ff" id="hE1Count">0</div>
+        <div style="font-size:10px;letter-spacing:1px;text-transform:uppercase;color:#9fb0e6;margin-top:2px">E1 Contacted</div>
+      </div>
+      <div style="flex:1;min-width:100px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);border-radius:10px;padding:10px 14px;text-align:center">
+        <div style="font-size:24px;font-weight:800;color:#b59aff" id="hE2Count">0</div>
+        <div style="font-size:10px;letter-spacing:1px;text-transform:uppercase;color:#9fb0e6;margin-top:2px">E2 Sent</div>
+      </div>
+      <div style="flex:1;min-width:100px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);border-radius:10px;padding:10px 14px;text-align:center">
+        <div style="font-size:24px;font-weight:800;color:#ffd166" id="hE3Count">0</div>
+        <div style="font-size:10px;letter-spacing:1px;text-transform:uppercase;color:#9fb0e6;margin-top:2px">E3 Sent</div>
+      </div>
+      <div style="flex:1;min-width:100px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);border-radius:10px;padding:10px 14px;text-align:center">
+        <div style="font-size:24px;font-weight:800;color:#3ee08f" id="hClosedCount">0</div>
+        <div style="font-size:10px;letter-spacing:1px;text-transform:uppercase;color:#9fb0e6;margin-top:2px">Signed</div>
+      </div>
+    </div>
     <div style="display:none"><span id="hReached"></span><span id="hFill"></span><span id="hPace"></span><span id="hClosed"></span><span id="hProj"></span><span id="hConv"></span></div>
   </div>
   </div>
@@ -4555,6 +4573,10 @@ function render(d){lastD=d;
   const pn=document.getElementById("hPaceNote");if(pn)pn.innerHTML=note+' · <b>'+perWk+'/wk needed to hit goal</b>';
   document.getElementById("hPace").style.left=Math.min(100,expected/GOAL*100)+"%";
   document.getElementById("hProj").textContent=proj;
+  var hE1=document.getElementById("hE1Count");if(hE1)hE1.textContent=d.e1;
+  var hE2=document.getElementById("hE2Count");if(hE2)hE2.textContent=d.e2;
+  var hE3=document.getElementById("hE3Count");if(hE3)hE3.textContent=d.e3;
+  var hCc=document.getElementById("hClosedCount");if(hCc)hCc.textContent=d.closed;
 
   renderPipeline(d);
   renderSchedule();
@@ -4570,15 +4592,19 @@ function render(d){lastD=d;
 let _pipeActive=null;
 function renderPipeline(d){
   const ok=l=>!st(l.id).notfit&&!st(l.id).removed&&!st(l.id).closed&&!l.meeting;
+  var e1Leads=LEADS.filter(l=>ok(l)&&!!st(l.id).e1Ts&&!st(l.id).e2Ts);
+  var e1Gm=e1Leads.filter(l=>st(l.id).e1Src==="gmail"||st(l.id).e1Src==="sent").length;
+  var e1Mn=e1Leads.length-e1Gm;
+  var e1Sub=[];if(e1Gm)e1Sub.push(e1Gm+" Gmail");if(e1Mn)e1Sub.push(e1Mn+" manual");
   const todayTiles=[
-    {key:"new",lbl:"New Leads",sub:"Not yet contacted",bg:"#f0f2f5",color:"var(--muted)",leads:LEADS.filter(l=>ok(l)&&!st(l.id).e1Ts),tplKey:"e1"},
-    {key:"e1",lbl:"Email 1",sub:(function(){var e1L=LEADS.filter(l=>ok(l)&&!!st(l.id).e1Ts&&!st(l.id).e2Ts);var gm=e1L.filter(l=>st(l.id).e1Src==="gmail"||st(l.id).e1Src==="sent").length;var mn=e1L.length-gm;var parts=[];if(gm)parts.push(gm+" Gmail");if(mn)parts.push(mn+" manual");return parts.join(" · ")||"In pipeline";}()),bg:"#e7ecfb",color:"var(--accent)",leads:LEADS.filter(l=>ok(l)&&!!st(l.id).e1Ts&&!st(l.id).e2Ts)},
-    {key:"li-need",lbl:"Needs DM",sub:"LinkedIn DM · after Email 1",bg:"#fff4e6",color:"#e67700",leads:LEADS.filter(l=>ok(l)&&!!st(l.id).e1Ts&&!st(l.id).e2Ts&&!st(l.id).linkedin)}
+    {key:"new",lbl:"New Leads",sub:"",bg:"#f0f2f5",color:"var(--muted)",leads:LEADS.filter(l=>ok(l)&&!st(l.id).e1Ts),tplKey:"e1"},
+    {key:"e1",lbl:"Email 1",sub:e1Sub.join(" · "),bg:"#e7ecfb",color:"var(--accent)",leads:e1Leads},
+    {key:"li-need",lbl:"Needs DM",sub:"",bg:"#fff4e6",color:"#e67700",leads:LEADS.filter(l=>ok(l)&&!!st(l.id).e1Ts&&!st(l.id).e2Ts&&!st(l.id).linkedin)}
   ];
   const now_=new Date();now_.setHours(0,0,0,0);
   const followupTiles=[
-    {key:"e2",lbl:"Email 2",sub:"Podcast / Story Invite · Day 03",bg:"#efe9ff",color:"var(--violet)",leads:LEADS.filter(l=>{if(!ok(l)||!st(l.id).e1Ts||st(l.id).e2Ts||l.replied)return false;var ts=st(l.id).e1Ts;return emailReadyDate(ts,2)<=now_;})},
-    {key:"e3",lbl:"Email 3",sub:"Schedule Demo · Day 07",bg:"#fdf0db",color:"var(--warn)",leads:LEADS.filter(l=>{if(!ok(l)||!st(l.id).e2Ts||st(l.id).e3Ts||l.replied)return false;var ts=st(l.id).e1Ts;if(!ts)return false;return emailReadyDate(ts,6)<=now_;})}
+    {key:"e2",lbl:"Email 2",sub:"",bg:"#efe9ff",color:"var(--violet)",leads:LEADS.filter(l=>{if(!ok(l)||!st(l.id).e1Ts||st(l.id).e2Ts||l.replied)return false;var ts=st(l.id).e1Ts;return emailReadyDate(ts,2)<=now_;})},
+    {key:"e3",lbl:"Email 3",sub:"",bg:"#fdf0db",color:"var(--warn)",leads:LEADS.filter(l=>{if(!ok(l)||!st(l.id).e2Ts||st(l.id).e3Ts||l.replied)return false;var ts=st(l.id).e1Ts;if(!ts)return false;return emailReadyDate(ts,6)<=now_;})}
   ];
   function renderRow(rowId,expandId,tiles){
     const row=document.getElementById(rowId);if(!row)return;
@@ -4591,7 +4617,7 @@ function renderPipeline(d){
       return '<div class="pipe-tile'+(isActive?" active":"")+'" data-key="'+t.key+'" style="background:'+t.bg+'">'+
         '<div class="pt-num" style="color:'+t.color+'">'+total+'</div>'+
         '<div class="pt-lbl" style="color:'+t.color+'">'+t.lbl+'</div>'+
-        '<div class="pt-sub" style="color:'+t.color+'">'+t.sub+'</div></div>';
+        (t.sub?'<div class="pt-sub" style="color:'+t.color+'">'+t.sub+'</div>':'')+'</div>';
     }).join("");
     row.querySelectorAll(".pipe-tile").forEach(el=>{
       el.onclick=function(){
