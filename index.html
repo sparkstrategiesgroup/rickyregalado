@@ -4040,7 +4040,7 @@ const SB_URL='https://norzjirtcdscycsvnxbm.supabase.co';
 const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5vcnpqaXJ0Y2RzY3ljc3ZueGJtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMwMTI5NzMsImV4cCI6MjA4ODU4ODk3M30.ynFOk2VWQIJsBw7cNXfXrnJRkhHOkglCDkzvLcMCxK8';
 var _syncTimer=null,_syncEmail=null,_cloudPulled=false;
 function saveState(){
-  saveState();
+  localStorage.setItem("rx_state",JSON.stringify(STATE));
   if(_syncTimer)clearTimeout(_syncTimer);
   _syncTimer=setTimeout(_pushCloud,2000);
 }
@@ -4150,112 +4150,6 @@ function bizBetween(a,b){let d=new Date(a),n=0;while(d<b){if(d.getDay()%6!==0)n+
 function addBiz(a,n){let d=new Date(a),c=0;while(c<n){d=new Date(d.getTime()+864e5);if(d.getDay()%6!==0)c++;}return d;}
 function esc(s){return String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[c]));}
 
-/* ══════════════════════════════════════════════════════════════
-   GMAIL - Direct Google API (with MCP fallback)
-   ══════════════════════════════════════════════════════════════ */
-async function loadGmail(){
-  if (!gAuth.isConnected()) return;
-  var knownSubjs=["come share your story on cleaning & cocktails","fellow bsc - talk shop?","20 minutes on exchange?","should i close the loop?"];
-  var curSubjs=[
-    (TPL.e1&&TPL.e1.subj||"").toLowerCase().trim(),
-    (TPL.e2&&TPL.e2.subj||"").toLowerCase().trim(),
-    (TPL.e3&&TPL.e3.subj||"").toLowerCase().trim()
-  ].filter(Boolean);
-  var allSubjs=new Set(knownSubjs.concat(curSubjs));
-  function isTemplateSubj(subj){
-    var s=(subj||"").toLowerCase().replace(/^(re|fwd|fw)\s*:\s*/gi,"").trim();
-    for(var t of allSubjs){if(s.indexOf(t)!==-1)return true;}
-    return false;
-  }
-  var byEmail={};
-  LEADS.forEach(l=>{if(l.email)byEmail[l.email.toLowerCase()]=l;});
-  var sentMap={};
-  var auditLog=[];
-  var cutoff=new Date("2026-06-01T00:00:00").getTime();
-  var subjQ=Array.from(allSubjs).map(s=>'"'+s+'"').join(" OR ");
-  var q="after:2026/06/01 from:me subject:({"+subjQ+"})";
-  console.log("[Gmail audit] query: "+q);
-  var url="https://gmail.googleapis.com/gmail/v1/users/me/messages?q="+encodeURIComponent(q)+"&maxResults=200";
-  var allMsgIds=[];
-  try{
-    var res=await gAuth.api(url);
-    allMsgIds=(res.messages||[]).map(m=>m.id);
-    while(res.nextPageToken&&allMsgIds.length<500){
-      res=await gAuth.api(url+"&pageToken="+res.nextPageToken);
-      allMsgIds=allMsgIds.concat((res.messages||[]).map(m=>m.id));
-    }
-  }catch(e){errs.push("Gmail: "+e.message);return;}
-  console.log("[Gmail audit] found "+allMsgIds.length+" sent messages");
-  for(var mi=0;mi<allMsgIds.length;mi++){
-    let m;
-    try{m=await gAuth.api("https://gmail.googleapis.com/gmail/v1/users/me/messages/"+allMsgIds[mi]+"?format=metadata&metadataHeaders=From&metadataHeaders=To&metadataHeaders=Subject&metadataHeaders=Date");}catch(e){continue;}
-    const hdrs=m.payload&&m.payload.headers||[];
-    const to=(hdrs.find(h=>h.name==="To")||{}).value||"";
-    const subj=(hdrs.find(h=>h.name==="Subject")||{}).value||"";
-    const dateStr=(hdrs.find(h=>h.name==="Date")||{}).value||"";
-    const ts=Date.parse(dateStr)||Number(m.internalDate)||0;
-    if(ts<cutoff)continue;
-    if(!isTemplateSubj(subj))continue;
-    var toEmail=(to.match(/[^@<\s]+@[^>\s]+/)||[""])[0].toLowerCase();
-    var lead=byEmail[toEmail];
-    if(!lead){var toDom=domainOf(to);lead=byDomain[toDom];}
-    if(!lead)continue;
-    if(!sentMap[lead.id])sentMap[lead.id]=[];
-    sentMap[lead.id].push({ts:ts,subj:subj});
-    var todayStart=new Date();todayStart.setHours(0,0,0,0);
-    var yesterdayStart=new Date(todayStart);yesterdayStart.setDate(yesterdayStart.getDate()-1);
-    if(ts>=todayStart.getTime())lead.emailedToday=true;
-    if(ts>=yesterdayStart.getTime()&&ts<todayStart.getTime())lead.emailedYesterday=true;
-    lead.contacted=true;
-    if(ts>lead.lastTs)lead.lastTs=ts;
-  }
-  var rq="after:2026/06/01 to:me subject:({"+subjQ+"})";
-  try{
-    var rres=await gAuth.api("https://gmail.googleapis.com/gmail/v1/users/me/messages?q="+encodeURIComponent(rq)+"&maxResults=100");
-    var replies=(rres.messages||[]);
-    for(var ri=0;ri<replies.length;ri++){
-      let m;
-      try{m=await gAuth.api("https://gmail.googleapis.com/gmail/v1/users/me/messages/"+replies[ri].id+"?format=metadata&metadataHeaders=From&metadataHeaders=Date");}catch(e){continue;}
-      const hdrs=m.payload&&m.payload.headers||[];
-      const from=(hdrs.find(h=>h.name==="From")||{}).value||"";
-      const dateStr=(hdrs.find(h=>h.name==="Date")||{}).value||"";
-      const ts=Date.parse(dateStr)||Number(m.internalDate)||0;
-      if(ts<cutoff)continue;
-      var fromEmail=(from.match(/[^@<\s]+@[^>\s]+/)||[""])[0].toLowerCase();
-      var lead=byEmail[fromEmail];
-      if(!lead){var fromDom=domainOf(from);lead=byDomain[fromDom];}
-      if(!lead)continue;
-      lead.replied=true;
-      var todayStart=new Date();todayStart.setHours(0,0,0,0);
-      var yesterdayStart=new Date(todayStart);yesterdayStart.setDate(yesterdayStart.getDate()-1);
-      if(ts>=todayStart.getTime())lead.repliedToday=true;
-      if(ts>=yesterdayStart.getTime()&&ts<todayStart.getTime())lead.repliedYesterday=true;
-      if(ts>lead.lastTs){lead.lastTs=ts;lead.lastSnippet=m.snippet||"";}
-    }
-  }catch(e){}
-  var matchedLeads=0;
-  var totalEmails=0;
-  Object.keys(sentMap).forEach(function(id){
-    var emails=sentMap[id].sort(function(a,b){return a.ts-b.ts;});
-    var s=st(+id);
-    var lead=LEADS.find(l=>l.id===+id);
-    var name=lead?lead.company:"#"+id;
-    if(emails[0]){s.e1Ts=emails[0].ts;if(!s.e1Src)s.e1Src="gmail";totalEmails++;}
-    if(emails[1]){s.e2Ts=emails[1].ts;totalEmails++;}
-    if(emails[2]){s.e3Ts=emails[2].ts;totalEmails++;}
-    var cnt=0;
-    if(s.e1Ts)cnt=1;if(s.e2Ts)cnt=Math.max(cnt,2);if(s.e3Ts)cnt=Math.max(cnt,3);
-    s.sentCount=cnt;s.contacted=true;
-    s.lastTs=Math.max(s.lastTs||0,emails[emails.length-1].ts);
-    auditLog.push(name+" → "+cnt+" email(s): "+emails.map(e=>new Date(e.ts).toLocaleDateString()+" \""+e.subj+"\"").join(", "));
-    matchedLeads++;
-  });
-  console.log("[Gmail audit] done: "+matchedLeads+" leads, "+totalEmails+" emails");
-  auditLog.forEach(function(line){console.log("[Gmail audit] "+line);});
-  saveState();
-  return {leads:matchedLeads,emails:totalEmails,audit:auditLog};
-}
-
 async function createGmailDraft(to, subject, body){
   if(!gAuth.isConnected()) throw new Error("Not connected");
   const raw = ["To: "+to,"Subject: "+subject,"Content-Type: text/plain; charset=UTF-8","",""].join("\r\n")+body;
@@ -4280,39 +4174,6 @@ async function sendGmailEmail(to, subject, body){
   return res;
 }
 
-function heur(s){s=(s||"").toLowerCase();
-  if(/out of office|ooo|on vacation|away from|parental leave|holiday|currently out/.test(s))return"ooo";
-  if(/not interested|no thanks|unsubscribe|remove me|please stop|not a fit|do not contact|already have/.test(s))return"negative";
-  if(/interested|sounds good|let'?s|happy to|schedule|book a|set up|calendar|works for me|tell me more|demo|available/.test(s))return"positive";
-  return"neutral";}
-async function classify(){
-  const inb=LEADS.filter(l=>l.replied&&l.lastSnippet);if(!inb.length)return;
-  inb.forEach(l=>l.sentiment=heur(l.lastSnippet));
-}
-
-/* ══════════════════════════════════════════════════════════════
-   CALENDAR - Direct Google API
-   ══════════════════════════════════════════════════════════════ */
-async function loadCal(){
-  if (!gAuth.isConnected()) return;
-  const now=Date.now();
-  const timeMin=new Date(now-30*864e5).toISOString();
-  const timeMax=new Date(now+90*864e5).toISOString();
-  const seen={};
-  for(const cid of CAL_IDS){
-    const url="https://www.googleapis.com/calendar/v3/calendars/"+encodeURIComponent(cid)+"/events?timeMin="+encodeURIComponent(timeMin)+"&timeMax="+encodeURIComponent(timeMax)+"&maxResults=100&orderBy=startTime&singleEvents=true";
-    let res;
-    try { res = await gAuth.api(url); } catch(e) { errs.push("Calendar"); continue; }
-    for(const ev of (res.items||[])){
-      let m=null;
-      for(const a of (ev.attendees||[])){const d=domainOf(a.email);if(byDomain[d]){m=byDomain[d];break;}}
-      if(!m){const sum=(ev.summary||"").toLowerCase();for(const l of LEADS){const b=l.company.toLowerCase().split(/[ ,]/)[0];if(b.length>4&&sum.includes(b)){m=l;break;}}}
-      const ts=Date.parse(ev.start&&(ev.start.dateTime||ev.start.date))||0;
-      if(m){m.meeting=true;if(ts>m.lastTs)m.lastTs=ts;}
-      if((m||cid===DEMO_CAL)&&ts){const key=ev.id||(ts+(ev.summary||""));if(!seen[key]){seen[key]=1;APPTS.push({start:ts,company:m?m.company:(ev.summary||"Demo"),url:ev.hangoutLink||ev.htmlLink||""});}}
-    }
-  }
-}
 function statusOf(l){const s=st(l.id);
   if(s.closed)return"closed";if(s.opp)return"opp";if(l.meeting)return"meeting";
   if(l.replied&&l.sentiment==="positive")return"positive";if(l.replied&&l.sentiment==="negative")return"negative";
@@ -4667,12 +4528,11 @@ function renderPipeline(d){
           }
           if(isE2E3&&scheduledLeads.length>0){
             h+='<div style="margin-top:14px;font-size:12px;font-weight:700;color:var(--muted);padding:4px 0">Scheduled ('+scheduledLeads.length+')</div>';
-            h+='<div class="pe-table-wrap"><table class="pe-table"><thead><tr><th>Company</th><th>Contact</th><th>E1 Source</th><th>Send Date</th></tr></thead><tbody>';
+            h+='<div class="pe-table-wrap"><table class="pe-table"><thead><tr><th>Company</th><th>Contact</th><th>Send Date</th></tr></thead><tbody>';
             scheduledLeads.forEach(function(l){
               var s=st(l.id),df={month:"short",day:"numeric"};
               var rdyDate=tile.key==="e2"?emailReadyDate(s.e1Ts||0,2):emailReadyDate(s.e1Ts||0,6);
-              var src=s.e1Src||"manual";var srcLbl=src==="gmail"?"Gmail":src==="sent"?"Sent":"Manual";
-              h+='<tr><td><div class="co">'+esc(l.company)+'</div></td><td>'+esc(l.contact)+'</td><td><span style="font-size:10px;font-weight:600;padding:2px 8px;border-radius:6px;background:'+(src==="manual"?"#fff4e6":"#e7ecfb")+';color:'+(src==="manual"?"#e67700":"var(--brand)")+'">'+srcLbl+'</span></td><td style="font-size:12px;color:var(--muted)">'+rdyDate.toLocaleDateString(undefined,df)+'</td></tr>';
+              h+='<tr><td><div class="co">'+esc(l.company)+'</div></td><td>'+esc(l.contact)+'</td><td style="font-size:12px;color:var(--muted)">'+rdyDate.toLocaleDateString(undefined,df)+'</td></tr>';
             });
             h+='</tbody></table></div>';
           }
@@ -4710,7 +4570,7 @@ function renderPipeline(d){
                 var ts=new Date(dateStr+"T12:00:00").getTime();
                 if(isNaN(ts)){alert("Invalid date.");return;}
                 if(stage==="li"){s.linkedin=true;s.liTs=ts;}
-                else{s[tsKey]=ts;if(stage==="e1")s.e1Src="manual";var cnt=0;if(s.e1Ts)cnt++;if(s.e2Ts)cnt++;if(s.e3Ts)cnt++;s.sentCount=cnt;l.sentCount=cnt;s.contacted=true;l.contacted=true;s.lastTs=ts;l.lastTs=ts;}
+                else{s[tsKey]=ts;var cnt=0;if(s.e1Ts)cnt++;if(s.e2Ts)cnt++;if(s.e3Ts)cnt++;s.sentCount=cnt;l.sentCount=cnt;s.contacted=true;l.contacted=true;s.lastTs=ts;l.lastTs=ts;}
               }
               saveState();
               var activeKey=_pipeActive;
@@ -4760,7 +4620,7 @@ function renderPipeline(d){
                 try{
                   var subj=tok(tmpl.subj,l),body=tok(tmpl.body,l);
                   var r=await sendGmailEmail(l.email,subj,body);
-                  if(r&&(r.id||r.labelIds)){ok++;l.lastTs=Date.now();st(l.id).lastTs=l.lastTs;if(tplKey==="e1"){st(l.id).e1Ts=l.lastTs;st(l.id).e1Src="sent";}else if(tplKey==="e2")st(l.id).e2Ts=l.lastTs;else if(tplKey==="e3")st(l.id).e3Ts=l.lastTs;var cnt=0;if(st(l.id).e1Ts)cnt=1;if(st(l.id).e2Ts)cnt=Math.max(cnt,2);if(st(l.id).e3Ts)cnt=Math.max(cnt,3);l.sentCount=cnt;l.contacted=true;l.emailedToday=true;st(l.id).sentCount=cnt;st(l.id).contacted=true;skipped.add(l.id);}
+                  if(r&&(r.id||r.labelIds)){ok++;l.lastTs=Date.now();st(l.id).lastTs=l.lastTs;if(tplKey==="e1"){st(l.id).e1Ts=l.lastTs;}else if(tplKey==="e2")st(l.id).e2Ts=l.lastTs;else if(tplKey==="e3")st(l.id).e3Ts=l.lastTs;var cnt=0;if(st(l.id).e1Ts)cnt=1;if(st(l.id).e2Ts)cnt=Math.max(cnt,2);if(st(l.id).e3Ts)cnt=Math.max(cnt,3);l.sentCount=cnt;l.contacted=true;l.emailedToday=true;st(l.id).sentCount=cnt;st(l.id).contacted=true;skipped.add(l.id);}
                 }catch(e){if(statusEl)statusEl.textContent="Error: "+l.company+" - "+e.message;}
               }
               saveState();
@@ -4858,7 +4718,7 @@ function renderTable(){
         var ts=new Date(dateStr+"T12:00:00").getTime();
         if(isNaN(ts)){alert("Invalid date.");return;}
         if(stage==="li"){s.linkedin=true;s.liTs=ts;}
-        else{s[tsKey]=ts;if(stage==="e1")s.e1Src="manual";var cnt=0;if(s.e1Ts)cnt++;if(s.e2Ts)cnt++;if(s.e3Ts)cnt++;s.sentCount=cnt;l.sentCount=cnt;s.contacted=true;l.contacted=true;s.lastTs=ts;l.lastTs=ts;}
+        else{s[tsKey]=ts;var cnt=0;if(s.e1Ts)cnt++;if(s.e2Ts)cnt++;if(s.e3Ts)cnt++;s.sentCount=cnt;l.sentCount=cnt;s.contacted=true;l.contacted=true;s.lastTs=ts;l.lastTs=ts;}
       }
       saveState();
       compute();
@@ -4900,7 +4760,7 @@ document.querySelectorAll(".bulk-stage-btn").forEach(function(btn){
       var s=st(id),l=LEADS.find(function(x){return x.id===id;});
       if(!l)return;
       if(stage==="li"){s.linkedin=true;s.liTs=ts;}
-      else{var tsKey=stage+"Ts";s[tsKey]=ts;if(stage==="e1")s.e1Src="manual";var cnt=0;if(s.e1Ts)cnt=1;if(s.e2Ts)cnt=Math.max(cnt,2);if(s.e3Ts)cnt=Math.max(cnt,3);s.sentCount=cnt;l.sentCount=cnt;s.contacted=true;l.contacted=true;s.lastTs=Math.max(s.lastTs||0,ts);l.lastTs=Math.max(l.lastTs||0,ts);}
+      else{var tsKey=stage+"Ts";s[tsKey]=ts;var cnt=0;if(s.e1Ts)cnt=1;if(s.e2Ts)cnt=Math.max(cnt,2);if(s.e3Ts)cnt=Math.max(cnt,3);s.sentCount=cnt;l.sentCount=cnt;s.contacted=true;l.contacted=true;s.lastTs=Math.max(s.lastTs||0,ts);l.lastTs=Math.max(l.lastTs||0,ts);}
     });
     saveState();
     compute();
@@ -5005,40 +4865,30 @@ function buildEditor(){
 }
 
 
-function reset(){errs=[];APPTS=[];LEADS.forEach(l=>{l.contacted=false;l.sentCount=0;l.replied=false;l.sentiment="none";l.meeting=false;l.lastTs=0;l.lastSnippet="";l.emailedToday=false;l.repliedToday=false;});LEADS.forEach(function(l){var s=st(l.id);var cnt=0;if(s.e1Ts)cnt=1;if(s.e2Ts)cnt=Math.max(cnt,2);if(s.e3Ts)cnt=Math.max(cnt,3);if(cnt>0){l.contacted=true;l.sentCount=cnt;}if(s.lastTs&&l.lastTs<s.lastTs)l.lastTs=s.lastTs;});}
+function reset(){
+  errs=[];APPTS=[];
+  LEADS.forEach(l=>{l.contacted=false;l.sentCount=0;l.meeting=false;l.lastTs=0;l.emailedToday=false;});
+  var todayStart=new Date();todayStart.setHours(0,0,0,0);var todayMs=todayStart.getTime();
+  LEADS.forEach(function(l){
+    var s=st(l.id);var cnt=0;
+    if(s.e1Ts)cnt=1;if(s.e2Ts)cnt=Math.max(cnt,2);if(s.e3Ts)cnt=Math.max(cnt,3);
+    if(cnt>0){l.contacted=true;l.sentCount=cnt;}
+    if(s.lastTs&&l.lastTs<s.lastTs)l.lastTs=s.lastTs;
+    if((s.e1Ts&&s.e1Ts>=todayMs)||(s.e2Ts&&s.e2Ts>=todayMs)||(s.e3Ts&&s.e3Ts>=todayMs))l.emailedToday=true;
+  });
+}
 async function loadAll(){
   reset();
-  var updEl=document.getElementById("updated");
-  if(gAuth.isConnected()){
-    if(updEl)updEl.innerHTML='syncing Gmail <span class="spin"></span>';
-    var gmailResult=null;
-    try{gmailResult=await loadGmail();}catch(e){errs.push("Gmail: "+e.message);}
-    try{await classify();}catch(e){}
-    if(updEl){
-      if(errs.length){updEl.textContent="sync error: "+errs.join(", ");}
-      else if(gmailResult&&gmailResult.leads>0){
-        var ts=new Date().toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"});
-        var summary="synced ✓ "+gmailResult.emails+" emails across "+gmailResult.leads+" leads · "+ts;
-        if(gmailResult.audit&&gmailResult.audit.length){
-          updEl.innerHTML=summary+' <a href="#" style="color:var(--accent);font-size:11px;margin-left:6px" onclick="event.preventDefault();var d=document.getElementById(\'gmailAudit\');d.style.display=d.style.display===\'none\'?\'block\':\'none\'">show audit</a><div id="gmailAudit" style="display:none;margin-top:6px;font-size:11px;color:var(--muted);max-height:200px;overflow-y:auto;background:#f8f9fc;border-radius:6px;padding:8px;text-align:left">'+gmailResult.audit.map(function(l){return '<div style="padding:2px 0;border-bottom:1px solid #eee">'+l.replace(/</g,'&lt;')+'</div>';}).join('')+'</div>';
-        }else{updEl.textContent=summary;}
-      }
-      else{updEl.textContent="synced ✓ 0 emails matched · "+new Date().toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"});}
-    }
-  } else {
-    if(updEl)updEl.textContent="Gmail not connected";
-  }
   LEADS.forEach(function(l){
-    var s=st(l.id);
-    var cnt=0;
-    if(s.e1Ts)cnt=1;
-    if(s.e2Ts)cnt=Math.max(cnt,2);
-    if(s.e3Ts)cnt=Math.max(cnt,3);
+    var s=st(l.id);var cnt=0;
+    if(s.e1Ts)cnt=1;if(s.e2Ts)cnt=Math.max(cnt,2);if(s.e3Ts)cnt=Math.max(cnt,3);
     if(cnt>l.sentCount){l.sentCount=cnt;l.contacted=cnt>0;}
     if(s.lastTs&&(!l.lastTs||l.lastTs<s.lastTs)){l.lastTs=s.lastTs;}
   });
   compute();
   _pushCloud();
+  var updEl=document.getElementById("updated");
+  if(updEl)updEl.textContent="updated "+new Date().toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"});
 }
 /* ── REMOVAL MODAL ── */
 (function(){
@@ -5096,7 +4946,6 @@ async function loadAll(){
 })();
 setIcons();buildEditor();reset();compute();
 gAuth.init();
-setInterval(()=>{if(gAuth.isConnected())loadAll();},90000);
 
 /* ── LEADS COLLAPSE/EXPAND ── */
 (function(){
@@ -5198,7 +5047,6 @@ var _activityTab=localStorage.getItem("rx_activity_tab")||"pipeline";
 function renderActivityFeed(){
   const feed=document.getElementById("activityFeed");if(!feed)return;
   const emailedToday=LEADS.filter(l=>l.emailedToday);
-  const repliedToday=LEADS.filter(l=>l.repliedToday);
   const todayKey=new Date().toLocaleDateString();
   const LI_KEY="rx_li_today_"+todayKey;
   let liSentToday={};try{liSentToday=JSON.parse(localStorage.getItem(LI_KEY)||"{}");}catch(e){}
@@ -5206,7 +5054,6 @@ function renderActivityFeed(){
 
   const mailIcon='<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 6L2 7"/></svg>';
   const liIcon='<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>';
-  const replyIcon='<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="9 17 4 12 9 7"/><path d="M20 18v-2a4 4 0 0 0-4-4H4"/></svg>';
   const checkIcon='<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>';
 
   let h='<div class="activity-hd"><span class="live-dot"></span> Today\'s activity in the outreach pipeline</div>';
@@ -5220,19 +5067,17 @@ function renderActivityFeed(){
     h+='<div class="activity-counters">';
     h+='<div class="act-counter'+(emailedToday.length>0?" done":"")+'"><span class="act-icon email-ic">'+mailIcon+'</span><span class="act-num">'+emailedToday.length+'</span> emails sent</div>';
     h+='<div class="act-counter'+(liCount>0?" done":"")+'"><span class="act-icon li-ic">'+liIcon+'</span><span class="act-num">'+liCount+'</span> LinkedIn sent</div>';
-    h+='<div class="act-counter'+(repliedToday.length>0?" done":"")+'"><span class="act-icon reply-ic">'+replyIcon+'</span><span class="act-num">'+repliedToday.length+'</span> replies</div>';
     h+='</div>';
     const items=[];
     emailedToday.forEach(l=>items.push({type:"email",co:l.company,contact:l.fn,ts:l.lastTs}));
-    repliedToday.forEach(l=>items.push({type:"reply",co:l.company,contact:l.fn,ts:l.lastTs}));
     LEADS.forEach(l=>{if(liSentToday[l.id])items.push({type:"li",co:l.company,contact:l.fn,ts:Date.now()});});
     items.sort((a,b)=>(b.ts||0)-(a.ts||0));
     if(items.length){
       h+='<ul class="activity-list">';
       items.forEach(it=>{
-        const cls=it.type==="email"?"al-email":it.type==="li"?"al-li":"al-reply";
-        const ic=it.type==="email"?checkIcon:it.type==="li"?checkIcon:replyIcon;
-        const label=it.type==="email"?"Emailed":it.type==="li"?"LinkedIn sent":"Replied";
+        const cls=it.type==="email"?"al-email":"al-li";
+        const ic=checkIcon;
+        const label=it.type==="email"?"Emailed":"LinkedIn sent";
         const time=it.ts?new Date(it.ts).toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"}):"";
         h+='<li><span class="al-icon '+cls+'">'+ic+'</span><span class="al-co">'+esc(it.co)+'</span> <span>'+label+'</span><span class="al-time">'+time+'</span></li>';
       });
@@ -5262,20 +5107,20 @@ function renderActivityFeed(){
       h+='<div class="activity-empty">No LinkedIn activity today. Send emails first, then come back to mark DMs.</div>';
     }
   } else if(_activityTab==="previous"){
-    const yEmailed=LEADS.filter(l=>l.emailedYesterday);
-    const yReplied=LEADS.filter(l=>l.repliedYesterday);
+    var ydStart=new Date();ydStart.setDate(ydStart.getDate()-1);ydStart.setHours(0,0,0,0);
+    var ydEnd=new Date();ydEnd.setHours(0,0,0,0);
+    var ydMs=ydStart.getTime(),ydEndMs=ydEnd.getTime();
+    const yEmailed=LEADS.filter(l=>{var s=st(l.id);return(s.e1Ts&&s.e1Ts>=ydMs&&s.e1Ts<ydEndMs)||(s.e2Ts&&s.e2Ts>=ydMs&&s.e2Ts<ydEndMs)||(s.e3Ts&&s.e3Ts>=ydMs&&s.e3Ts<ydEndMs);});
     const yestKey=new Date(new Date().setDate(new Date().getDate()-1)).toLocaleDateString();
     const Y_LI_KEY="rx_li_today_"+yestKey;
     let yLiSent={};try{yLiSent=JSON.parse(localStorage.getItem(Y_LI_KEY)||"{}");}catch(e){}
     const yLiIds=Object.keys(yLiSent).filter(k=>yLiSent[k]);
     const yLiLeads=yLiIds.map(id=>LEADS.find(l=>l.id===+id)).filter(Boolean);
-    const yd=new Date();yd.setDate(yd.getDate()-1);
-    const yLabel=yd.toLocaleDateString(undefined,{weekday:"short",month:"short",day:"numeric"});
+    const yLabel=ydStart.toLocaleDateString(undefined,{weekday:"short",month:"short",day:"numeric"});
     h+='<div style="font-size:11px;color:var(--muted);margin-bottom:8px">'+yLabel+'</div>';
     h+='<div class="activity-counters">';
     h+='<div class="act-counter'+(yEmailed.length>0?" done":"")+'"><span class="act-icon email-ic">'+mailIcon+'</span><span class="act-num">'+yEmailed.length+'</span> emails</div>';
     h+='<div class="act-counter'+(yLiLeads.length>0?" done":"")+'"><span class="act-icon li-ic">'+liIcon+'</span><span class="act-num">'+yLiLeads.length+'</span> LinkedIn</div>';
-    h+='<div class="act-counter'+(yReplied.length>0?" done":"")+'"><span class="act-icon reply-ic">'+replyIcon+'</span><span class="act-num">'+yReplied.length+'</span> replies</div>';
     h+='</div>';
     const yE1=yEmailed.filter(l=>(l.sentCount||0)===1);
     const yE2=yEmailed.filter(l=>(l.sentCount||0)===2);
@@ -5293,7 +5138,7 @@ function renderActivityFeed(){
       yLiLeads.forEach(l=>{h+='<li><span class="al-icon al-li">'+checkIcon+'</span><span class="al-co">'+esc(l.company)+'</span> <span style="color:var(--muted)">'+esc(l.contact||l.fn||"")+'</span></li>';});
       h+='</ul>';
     }
-    if(!yEmailed.length&&!yReplied.length&&!yLiLeads.length){
+    if(!yEmailed.length&&!yLiLeads.length){
       h+='<div class="activity-empty">No activity recorded for yesterday.</div>';
     }
   }
