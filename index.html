@@ -4450,8 +4450,10 @@ let _pipeActive=null;
 function renderPipeline(d){
   const ok=l=>!st(l.id).notfit&&!st(l.id).removed&&!st(l.id).closed&&!l.meeting;
   const now_=new Date();now_.setHours(0,0,0,0);
+  var e1Leads=LEADS.filter(l=>ok(l)&&!!st(l.id).e1Ts&&!st(l.id).e2Ts);
   const todayTiles=[
     {key:"new",lbl:"New Leads",sub:"",bg:"#f0f2f5",color:"var(--muted)",leads:LEADS.filter(l=>ok(l)&&!st(l.id).e1Ts),tplKey:"e1"},
+    {key:"e1",lbl:"Email 1",sub:e1Leads.length+" in rotation",bg:"#e7ecfb",color:"var(--accent)",leads:e1Leads,tplKey:"e1"},
     {key:"li-need",lbl:"Needs DM",sub:"",bg:"#fff4e6",color:"#e67700",leads:LEADS.filter(l=>ok(l)&&!!st(l.id).e1Ts&&!st(l.id).e2Ts&&!st(l.id).linkedin)}
   ];
   var e2All=LEADS.filter(l=>ok(l)&&!!st(l.id).e1Ts&&!st(l.id).e2Ts&&!l.replied);
