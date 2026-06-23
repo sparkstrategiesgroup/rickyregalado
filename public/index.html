@@ -4669,10 +4669,10 @@ function renderPipeline(d){
               if(statusEl)statusEl.textContent=leads.length+" marked as DM sent ✓";
               setTimeout(function(){compute();renderBatch();},800);
             } else if(isQueue){
-              leads.forEach(function(l){st(l.id).queued=true;st(l.id).queuedTs=Date.now();skipped.add(l.id);});
+              leads.forEach(function(l){var s=st(l.id);delete s.e1Ts;delete s.e2Ts;delete s.e3Ts;delete s.sentCount;delete s.contacted;delete s.lastTs;s.queued=true;s.queuedTs=Date.now();l.sentCount=0;l.contacted=false;l.lastTs=0;skipped.add(l.id);});
               saveState();
               if(statusEl)statusEl.textContent=leads.length+" added to E1 rotation ✓";
-              setTimeout(function(){compute();_pipeActive=null;var e1Tile=document.querySelector('#pipeTodayRow .pipe-tile[data-key="e1"]');if(e1Tile)e1Tile.click();},800);
+              setTimeout(function(){_pipeActive=null;compute();var e1Tile=document.querySelector('#pipeTodayRow .pipe-tile[data-key="e1"]');if(e1Tile)e1Tile.click();},800);
             } else {
               if(!gAuth.isConnected()){alert("Sign in with Google first.");return;}
               var tpl=typeof TPL!=="undefined"?TPL:{};
