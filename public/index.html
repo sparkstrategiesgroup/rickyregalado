@@ -4450,9 +4450,9 @@ let _pipeActive=null;
 function renderPipeline(d){
   const ok=l=>!st(l.id).notfit&&!st(l.id).removed&&!st(l.id).closed&&!l.meeting;
   const now_=new Date();now_.setHours(0,0,0,0);
-  var e1Leads=LEADS.filter(l=>ok(l)&&!!st(l.id).e1Ts&&!st(l.id).e2Ts);
+  var e1Leads=LEADS.filter(l=>ok(l)&&!!st(l.id).queued&&!st(l.id).e1Ts);
   const todayTiles=[
-    {key:"new",lbl:"New Leads",sub:"",bg:"#f0f2f5",color:"var(--muted)",leads:LEADS.filter(l=>ok(l)&&!st(l.id).e1Ts),tplKey:"e1"},
+    {key:"new",lbl:"New Leads",sub:"",bg:"#f0f2f5",color:"var(--muted)",leads:LEADS.filter(l=>ok(l)&&!st(l.id).e1Ts&&!st(l.id).queued),isQueue:true},
     {key:"e1",lbl:"Email 1",sub:e1Leads.length+" in rotation",bg:"#e7ecfb",color:"var(--accent)",leads:e1Leads,tplKey:"e1"},
     {key:"li-need",lbl:"Needs DM",sub:"",bg:"#fff4e6",color:"#e67700",leads:LEADS.filter(l=>ok(l)&&!!st(l.id).e1Ts&&!st(l.id).e2Ts&&!st(l.id).linkedin)}
   ];
@@ -4490,9 +4490,10 @@ function renderPipeline(d){
         var tplKey=tile.tplKey||tile.key;
         var isLi=tile.key.indexOf("li-")===0;
         var isE2E3=tile.key==="e2"||tile.key==="e3";
+        var isQueue=!!tile.isQueue;
         var allLeads=isLi?tile.leads:tile.leads.filter(function(l){return l.email;});
         var skipped=new Set();
-        var btnLabel=isLi?"Mark as DM Sent":"Send Email";
+        var btnLabel=isLi?"Mark as DM Sent":(isQueue?"Add to E1 Rotation":"Send Email");
         function isReady(l){if(!isE2E3)return true;var s=st(l.id),ts=s.e1Ts;if(!ts)return false;if(tile.key==="e2")return emailReadyDate(ts,2)<=now_;return emailReadyDate(ts,6)<=now_;}
         function getBatch(){return allLeads.filter(function(l){return !skipped.has(l.id)&&isReady(l);}).slice(0,BATCH);}
         function renderBatch(){
@@ -4502,7 +4503,7 @@ function renderPipeline(d){
           var remaining=readyLeads.length;
           var h='<div class="pipe-expand-hd"><span class="pe-title">'+tile.lbl+(isE2E3?' — '+remaining+' ready, '+scheduledLeads.length+' scheduled':'')+'</span><span class="pe-cnt">'+allLeads.length+' total</span></div>';
           if(batch.length){
-            h+='<div class="pe-action-bar"><label class="pe-sel-all"><input type="checkbox" id="peSelectAll" checked> Select all ('+batch.length+')</label><span class="pe-sel-count" id="peSelCount">'+batch.length+' selected</span><button class="pe-send-btn" id="peSendBtn">'+(isLi?btnLabel+" ("+batch.length+")":"Send "+batch.length+" Email"+(batch.length>1?"s":""))+'</button><span class="pe-send-status" id="peSendStatus"></span></div>';
+            h+='<div class="pe-action-bar"><label class="pe-sel-all"><input type="checkbox" id="peSelectAll" checked> Select all ('+batch.length+')</label><span class="pe-sel-count" id="peSelCount">'+batch.length+' selected</span><button class="pe-send-btn" id="peSendBtn">'+(isLi?btnLabel+" ("+batch.length+")":isQueue?"Add "+batch.length+" to Rotation":"Send "+batch.length+" Email"+(batch.length>1?"s":""))+'</button><span class="pe-send-status" id="peSendStatus"></span></div>';
             h+='<div class="pe-table-wrap"><table class="pe-table"><thead><tr><th style="width:32px"></th><th>Company</th><th>Contact</th><th>Status</th>'+(isE2E3?'<th>Ready</th>':'')+'<th>Progress</th><th style="width:32px"></th></tr></thead><tbody>';
             batch.forEach(function(l){
               var s=st(l.id),status=statusOf(l);
@@ -4550,7 +4551,7 @@ function renderPipeline(d){
             var chks=expand.querySelectorAll(".pe-chk");
             var n=expand.querySelectorAll(".pe-chk:checked").length;
             if(countEl)countEl.textContent=n+" selected";
-            if(sendBtn){sendBtn.disabled=n===0;sendBtn.textContent=isLi?(n>0?btnLabel+" ("+n+")":btnLabel):(n>0?"Send "+n+" Email"+(n>1?"s":""):"Send Emails");}
+            if(sendBtn){sendBtn.disabled=n===0;sendBtn.textContent=isLi?(n>0?btnLabel+" ("+n+")":btnLabel):isQueue?(n>0?"Add "+n+" to Rotation":"Add to Rotation"):(n>0?"Send "+n+" Email"+(n>1?"s":""):"Send Emails");}
             if(selAll)selAll.checked=n===chks.length&&chks.length>0;
           }
           if(selAll)selAll.onchange=function(){expand.querySelectorAll(".pe-chk").forEach(function(c){c.checked=selAll.checked;});updateCount();};
@@ -4565,14 +4566,14 @@ function renderPipeline(d){
               if(isDone){
                 if(!confirm("Clear "+this.textContent.replace(/Sent.*/,"").trim()+" for "+l.company+"?"))return;
                 if(stage==="li"){s.linkedin=false;delete s.liTs;}
-                else{delete s[tsKey];var maxSent=0;if(s.e1Ts)maxSent=1;if(s.e2Ts)maxSent=2;if(s.e3Ts)maxSent=3;s.sentCount=maxSent;l.sentCount=maxSent;if(maxSent===0){s.contacted=false;l.contacted=false;}}
+                else{delete s[tsKey];if(stage==="e1")delete s.queued;var maxSent=0;if(s.e1Ts)maxSent=1;if(s.e2Ts)maxSent=2;if(s.e3Ts)maxSent=3;s.sentCount=maxSent;l.sentCount=maxSent;if(maxSent===0){s.contacted=false;l.contacted=false;}}
               } else {
                 var dateStr=prompt("Enter send date for "+l.company+" "+stage.toUpperCase()+" (YYYY-MM-DD):",new Date(Date.now()-new Date().getTimezoneOffset()*60000).toISOString().slice(0,10));
                 if(!dateStr)return;
                 var ts=new Date(dateStr+"T12:00:00").getTime();
                 if(isNaN(ts)){alert("Invalid date.");return;}
                 if(stage==="li"){s.linkedin=true;s.liTs=ts;}
-                else{s[tsKey]=ts;var cnt=0;if(s.e1Ts)cnt++;if(s.e2Ts)cnt++;if(s.e3Ts)cnt++;s.sentCount=cnt;l.sentCount=cnt;s.contacted=true;l.contacted=true;s.lastTs=ts;l.lastTs=ts;}
+                else{s[tsKey]=ts;if(stage==="e1")s.queued=true;var cnt=0;if(s.e1Ts)cnt++;if(s.e2Ts)cnt++;if(s.e3Ts)cnt++;s.sentCount=cnt;l.sentCount=cnt;s.contacted=true;l.contacted=true;s.lastTs=ts;l.lastTs=ts;}
               }
               saveState();
               var activeKey=_pipeActive;
@@ -4604,12 +4605,17 @@ function renderPipeline(d){
             var ids=[];expand.querySelectorAll(".pe-chk:checked").forEach(function(c){ids.push(+c.dataset.id);});
             if(!ids.length)return;
             var leads=ids.map(function(id){return LEADS.find(function(l){return l.id===id;});}).filter(Boolean);
-            if(!isLi&&!isBusinessDay(new Date())){alert("Emails can't be sent on weekends or holidays. Next business day: "+nextBizDay(new Date()).toLocaleDateString(undefined,{weekday:"long",month:"long",day:"numeric"})+".");return;}
+            if(!isLi&&!isQueue&&!isBusinessDay(new Date())){alert("Emails can't be sent on weekends or holidays. Next business day: "+nextBizDay(new Date()).toLocaleDateString(undefined,{weekday:"long",month:"long",day:"numeric"})+".");return;}
             if(isLi){
               leads.forEach(function(l){st(l.id).linkedin=true;st(l.id).liTs=Date.now();skipped.add(l.id);});
               saveState();
               if(statusEl)statusEl.textContent=leads.length+" marked as DM sent ✓";
               setTimeout(function(){compute();renderBatch();},800);
+            } else if(isQueue){
+              leads.forEach(function(l){st(l.id).queued=true;skipped.add(l.id);});
+              saveState();
+              if(statusEl)statusEl.textContent=leads.length+" added to E1 rotation ✓";
+              setTimeout(function(){compute();_pipeActive=null;var e1Tile=document.querySelector('#pipeTodayRow .pipe-tile[data-key="e1"]');if(e1Tile)e1Tile.click();},800);
             } else {
               if(!gAuth.isConnected()){alert("Sign in with Google first.");return;}
               var tpl=typeof TPL!=="undefined"?TPL:{};
@@ -4713,14 +4719,14 @@ function renderTable(){
       if(isDone){
         if(!confirm("Clear "+stage.toUpperCase()+" for "+l.company+"?"))return;
         if(stage==="li"){s.linkedin=false;delete s.liTs;}
-        else{delete s[tsKey];var maxSent=0;if(s.e1Ts)maxSent=1;if(s.e2Ts)maxSent=2;if(s.e3Ts)maxSent=3;s.sentCount=maxSent;l.sentCount=maxSent;if(maxSent===0){s.contacted=false;l.contacted=false;}}
+        else{delete s[tsKey];if(stage==="e1")delete s.queued;var maxSent=0;if(s.e1Ts)maxSent=1;if(s.e2Ts)maxSent=2;if(s.e3Ts)maxSent=3;s.sentCount=maxSent;l.sentCount=maxSent;if(maxSent===0){s.contacted=false;l.contacted=false;}}
       } else {
         var dateStr=prompt("Enter send date for "+l.company+" "+stage.toUpperCase()+" (YYYY-MM-DD):",new Date(Date.now()-new Date().getTimezoneOffset()*60000).toISOString().slice(0,10));
         if(!dateStr)return;
         var ts=new Date(dateStr+"T12:00:00").getTime();
         if(isNaN(ts)){alert("Invalid date.");return;}
         if(stage==="li"){s.linkedin=true;s.liTs=ts;}
-        else{s[tsKey]=ts;var cnt=0;if(s.e1Ts)cnt++;if(s.e2Ts)cnt++;if(s.e3Ts)cnt++;s.sentCount=cnt;l.sentCount=cnt;s.contacted=true;l.contacted=true;s.lastTs=ts;l.lastTs=ts;}
+        else{s[tsKey]=ts;if(stage==="e1")s.queued=true;var cnt=0;if(s.e1Ts)cnt++;if(s.e2Ts)cnt++;if(s.e3Ts)cnt++;s.sentCount=cnt;l.sentCount=cnt;s.contacted=true;l.contacted=true;s.lastTs=ts;l.lastTs=ts;}
       }
       saveState();
       compute();
@@ -4762,7 +4768,7 @@ document.querySelectorAll(".bulk-stage-btn").forEach(function(btn){
       var s=st(id),l=LEADS.find(function(x){return x.id===id;});
       if(!l)return;
       if(stage==="li"){s.linkedin=true;s.liTs=ts;}
-      else{var tsKey=stage+"Ts";s[tsKey]=ts;var cnt=0;if(s.e1Ts)cnt=1;if(s.e2Ts)cnt=Math.max(cnt,2);if(s.e3Ts)cnt=Math.max(cnt,3);s.sentCount=cnt;l.sentCount=cnt;s.contacted=true;l.contacted=true;s.lastTs=Math.max(s.lastTs||0,ts);l.lastTs=Math.max(l.lastTs||0,ts);}
+      else{var tsKey=stage+"Ts";s[tsKey]=ts;if(stage==="e1")s.queued=true;var cnt=0;if(s.e1Ts)cnt=1;if(s.e2Ts)cnt=Math.max(cnt,2);if(s.e3Ts)cnt=Math.max(cnt,3);s.sentCount=cnt;l.sentCount=cnt;s.contacted=true;l.contacted=true;s.lastTs=Math.max(s.lastTs||0,ts);l.lastTs=Math.max(l.lastTs||0,ts);}
     });
     saveState();
     compute();
@@ -4775,7 +4781,7 @@ document.getElementById("bulkClear").onclick=function(){
   ids.forEach(function(id){
     var s=st(id),l=LEADS.find(function(x){return x.id===id;});
     if(!l)return;
-    delete s.e1Ts;delete s.e2Ts;delete s.e3Ts;delete s.liTs;delete s.e1Src;
+    delete s.e1Ts;delete s.e2Ts;delete s.e3Ts;delete s.liTs;delete s.e1Src;delete s.queued;
     s.linkedin=false;s.sentCount=0;s.contacted=false;delete s.lastTs;
     l.sentCount=0;l.contacted=false;l.lastTs=0;
   });
