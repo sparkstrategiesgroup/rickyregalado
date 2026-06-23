@@ -4114,6 +4114,7 @@ async function pullCloudState(){
           if(remTs>locTs){STATE[k]=rem;merged=true;}
         }
       });
+      Object.keys(STATE).forEach(function(k){var s=STATE[k];if(s&&s.e1Ts&&!s.queued){delete s.e1Ts;delete s.e2Ts;delete s.e3Ts;delete s.sentCount;delete s.contacted;delete s.lastTs;merged=true;}});
       if(merged){
         saveState();
         LEADS.forEach(function(l){
@@ -4179,6 +4180,14 @@ function emailReadyDate(e1Ts,calendarDaysAfter){
     });
     saveState();
     localStorage.setItem(VER_KEY,"3");
+  }
+  if(ver<4){
+    Object.keys(STATE).forEach(function(k){
+      var s=STATE[k];
+      if(s.e1Ts&&!s.queued){delete s.e1Ts;delete s.e2Ts;delete s.e3Ts;delete s.sentCount;delete s.contacted;delete s.lastTs;}
+    });
+    saveState();
+    localStorage.setItem(VER_KEY,"4");
   }
 })();
 
