@@ -4567,7 +4567,7 @@ function renderPipeline(d){
                 if(stage==="li"){s.linkedin=false;delete s.liTs;}
                 else{delete s[tsKey];var maxSent=0;if(s.e1Ts)maxSent=1;if(s.e2Ts)maxSent=2;if(s.e3Ts)maxSent=3;s.sentCount=maxSent;l.sentCount=maxSent;if(maxSent===0){s.contacted=false;l.contacted=false;}}
               } else {
-                var dateStr=prompt("Enter send date for "+l.company+" "+stage.toUpperCase()+" (YYYY-MM-DD):",new Date().toISOString().slice(0,10));
+                var dateStr=prompt("Enter send date for "+l.company+" "+stage.toUpperCase()+" (YYYY-MM-DD):",new Date(Date.now()-new Date().getTimezoneOffset()*60000).toISOString().slice(0,10));
                 if(!dateStr)return;
                 var ts=new Date(dateStr+"T12:00:00").getTime();
                 if(isNaN(ts)){alert("Invalid date.");return;}
@@ -4715,7 +4715,7 @@ function renderTable(){
         if(stage==="li"){s.linkedin=false;delete s.liTs;}
         else{delete s[tsKey];var maxSent=0;if(s.e1Ts)maxSent=1;if(s.e2Ts)maxSent=2;if(s.e3Ts)maxSent=3;s.sentCount=maxSent;l.sentCount=maxSent;if(maxSent===0){s.contacted=false;l.contacted=false;}}
       } else {
-        var dateStr=prompt("Enter send date for "+l.company+" "+stage.toUpperCase()+" (YYYY-MM-DD):",new Date().toISOString().slice(0,10));
+        var dateStr=prompt("Enter send date for "+l.company+" "+stage.toUpperCase()+" (YYYY-MM-DD):",new Date(Date.now()-new Date().getTimezoneOffset()*60000).toISOString().slice(0,10));
         if(!dateStr)return;
         var ts=new Date(dateStr+"T12:00:00").getTime();
         if(isNaN(ts)){alert("Invalid date.");return;}
@@ -4754,7 +4754,7 @@ document.querySelectorAll(".bulk-stage-btn").forEach(function(btn){
     var stage=this.dataset.bstage;
     var ids=[];document.querySelectorAll(".lead-chk:checked").forEach(function(c){ids.push(+c.dataset.id);});
     if(!ids.length)return;
-    var dateStr=prompt("Enter send date for "+ids.length+" lead(s) — "+stage.toUpperCase()+" (YYYY-MM-DD):",new Date().toISOString().slice(0,10));
+    var dateStr=prompt("Enter send date for "+ids.length+" lead(s) — "+stage.toUpperCase()+" (YYYY-MM-DD):",new Date(Date.now()-new Date().getTimezoneOffset()*60000).toISOString().slice(0,10));
     if(!dateStr)return;
     var ts=new Date(dateStr+"T12:00:00").getTime();
     if(isNaN(ts)){alert("Invalid date.");return;}
