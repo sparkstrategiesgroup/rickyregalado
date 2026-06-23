@@ -203,10 +203,39 @@ td .co{font-weight:650;} td .em{color:var(--muted);font-size:11px;}
 .acts button.opp:hover:not(.on){color:var(--warn);border-color:var(--warn);}
 .acts button.won:hover:not(.on){color:var(--win);border-color:var(--win);}
 .acts button.no:hover:not(.on){color:var(--hot);border-color:var(--hot);}
+.btn-edit{width:26px;height:26px;border-radius:7px;border:1px solid transparent;background:transparent;color:var(--muted);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .12s;flex-shrink:0;padding:0;}
+.btn-edit:hover{background:#e7ecfb;color:var(--accent);border-color:#c5d0f0;}
+.btn-edit svg{pointer-events:none;}
 .btn-remove{width:26px;height:26px;border-radius:7px;border:1px solid transparent;background:transparent;color:var(--muted);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .12s;flex-shrink:0;padding:0;}
 .btn-remove:hover{background:#fdecec;color:var(--hot);border-color:#f5b5ad;}
 .btn-remove.is-removed{background:#fdecec;color:var(--hot);border-color:#f5b5ad;}
 .btn-remove svg{pointer-events:none;}
+#tablePagination{display:flex;align-items:center;justify-content:center;gap:12px;padding:12px 0;font-size:12px;color:var(--muted);}
+#tablePagination button{padding:6px 14px;border-radius:8px;border:1px solid var(--line);background:#fff;color:var(--ink2);font-size:12px;font-weight:600;cursor:pointer;}
+#tablePagination button:disabled{opacity:.4;cursor:default;}
+#tablePagination button:hover:not(:disabled){background:#f5f7fc;}
+.pe-pagination{display:flex;align-items:center;justify-content:center;gap:10px;padding:8px 0;font-size:11px;color:var(--muted);}
+.pe-pagination button{padding:5px 12px;border-radius:7px;border:1px solid var(--line);background:#fff;color:var(--ink2);font-size:11px;font-weight:600;cursor:pointer;}
+.pe-pagination button:disabled{opacity:.4;cursor:default;}
+.pe-pagination button:hover:not(:disabled){background:#f5f7fc;}
+.msg-section{margin-bottom:10px;}
+.msg-section-hd{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);padding:8px 18px 4px;}
+.msg-co-section{border-top:1px solid var(--line);}
+.msg-co-section:first-child{border-top:none;}
+.msg-co-hd{display:flex;align-items:center;gap:8px;padding:8px 18px;cursor:pointer;}
+.msg-co-hd:hover{background:#f8f9fc;}
+.msg-co-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.msg-co-label{font-size:12px;font-weight:700;color:var(--ink);}
+.msg-co-count{font-size:10.5px;font-weight:600;color:var(--muted);background:#f1f4fb;border-radius:6px;padding:1px 7px;margin-left:auto;}
+.msg-co-chevron{transition:transform .2s;flex-shrink:0;}
+.msg-co-chevron.collapsed{transform:rotate(-90deg);}
+.msg-co-list{padding:0 18px 6px;}
+.msg-co-list.collapsed{display:none;}
+.msg-co-item{display:flex;align-items:center;gap:8px;padding:3px 0;font-size:11.5px;border-bottom:1px solid #f0f2f7;}
+.msg-co-item:last-child{border-bottom:none;}
+.msg-co-company{font-weight:600;color:var(--ink);}
+.msg-co-contact{color:var(--muted);}
+.msg-co-empty{font-size:11px;color:var(--muted);padding:4px 0;font-style:italic;}
 .notes-input{width:100%;min-width:140px;border:1px solid transparent;border-radius:7px;padding:4px 7px;font-size:11.5px;font-family:inherit;background:transparent;color:var(--ink2);transition:all .15s;}
 .notes-input:hover{border-color:var(--line);background:#f8fafd;}
 .notes-input:focus{border-color:var(--accent);background:#fff;outline:none;box-shadow:0 0 0 3px rgba(47,107,255,.1);}
@@ -437,6 +466,7 @@ details.editor>summary::-webkit-details-marker{display:none;}
     </div>
     <div class="table-scroll">
     <table class="leads"><thead><tr><th style="width:28px"><input type="checkbox" id="selectAll" title="Select all"></th><th style="width:28px"></th><th data-k="company">Company</th><th data-k="contact">Contact</th><th data-k="statusLabel">Status</th><th>Progress</th><th>Notes</th><th data-k="lastTs">Last</th></tr></thead><tbody id="rows"></tbody></table>
+    <div id="tablePagination"></div>
     </div>
     </div>
   </div>
@@ -504,9 +534,12 @@ details.editor>summary::-webkit-details-marker{display:none;}
   <div class="today-panel" id="todayMsg" style="margin-top:14px;">
     <div class="today-panel-hd"><span class="today-panel-ttl"><span class="ico" id="icMsg" style="background:#efe9ff;color:var(--violet)"></span> Today's Message</span><button class="today-panel-toggle" id="msgToggle"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg> Edit templates</button></div>
     <div class="today-panel-body" id="msgBody">
+    <div class="msg-section"><div class="msg-section-hd">Template Editor</div>
     <div class="msg-tabs" id="msgTabs"></div>
     <div class="msg-preview" id="msgPreview"></div>
     <div class="msg-actions"><button class="primary" id="msgSaveBtn">Save</button><button id="msgOpenEditor" onclick="document.getElementById('editorCard').open=true;document.getElementById('editorCard').scrollIntoView({behavior:'smooth'})">Open full editor</button></div>
+    </div>
+    <div class="msg-section"><div class="msg-section-hd">Selected Companies</div><div id="msgCompanyLists"></div></div>
     </div>
   </div>
   <div class="activity-feed" id="activityFeed" style="margin-top:14px;"></div>
@@ -4034,6 +4067,8 @@ const gAuth = {
    ══════════════════════════════════════════════════════════════ */
 let STATE={}; try{STATE=JSON.parse(localStorage.getItem("rx_state")||"{}");}catch(e){STATE={};}
 function st(id){return STATE[id]||(STATE[id]={});}
+function lf(l,field){var e=st(l.id).edits;return(e&&e[field]!==undefined)?e[field]:l[field];}
+function lfn(l){var name=lf(l,'contact');return(name||"").replace(/"/g,"").trim().split(/\s+/)[0]||"there";}
 
 /* ── SUPABASE CLOUD SYNC ── */
 const SB_URL='https://norzjirtcdscycsvnxbm.supabase.co';
@@ -4467,7 +4502,7 @@ function renderPipeline(d){
   function renderRow(rowId,expandId,tiles){
     const row=document.getElementById(rowId);if(!row)return;
     const expand=document.getElementById(expandId);
-    var BATCH=10;
+    var BATCH=10,_pipePage=0;
     row.innerHTML=tiles.map(t=>{
       const isActive=_pipeActive===t.key;
       const total=t.leads.length;
@@ -4482,7 +4517,7 @@ function renderPipeline(d){
         const key=this.dataset.key;
         const tile=tiles.find(t=>t.key===key);
         if(_pipeActive===key){_pipeActive=null;expand.classList.add("collapsed");expand.innerHTML="";row.querySelectorAll(".pipe-tile").forEach(t=>t.classList.remove("active"));renderPipeline(lastD);return;}
-        _pipeActive=key;
+        _pipeActive=key;_pipePage=0;
         row.querySelectorAll(".pipe-tile").forEach(t=>t.classList.remove("active"));
         this.classList.add("active");
         document.querySelectorAll(".pipe-expand").forEach(e=>{if(e.id!==expandId){e.classList.add("collapsed");e.innerHTML="";}});
@@ -4499,16 +4534,20 @@ function renderPipeline(d){
         function renderBatch(){
           var readyLeads=allLeads.filter(function(l){return !skipped.has(l.id)&&isReady(l);});
           var scheduledLeads=isE2E3?allLeads.filter(function(l){return !skipped.has(l.id)&&!isReady(l);}):[];
-          var batch=readyLeads.slice(0,BATCH);
+          var totalPipePages=Math.ceil(readyLeads.length/BATCH)||1;
+          if(_pipePage>=totalPipePages)_pipePage=Math.max(0,totalPipePages-1);
+          var batch=readyLeads.slice(_pipePage*BATCH,(_pipePage+1)*BATCH);
           var remaining=readyLeads.length;
           var h='<div class="pipe-expand-hd"><span class="pe-title">'+tile.lbl+(isE2E3?' — '+remaining+' ready, '+scheduledLeads.length+' scheduled':'')+'</span><span class="pe-cnt">'+allLeads.length+' total</span></div>';
+          if(totalPipePages>1){h+='<div class="pe-pagination"><button class="pe-prev"'+(_pipePage===0?' disabled':'')+'>← Prev '+BATCH+'</button><span>Page '+(_pipePage+1)+' of '+totalPipePages+' ('+readyLeads.length+' leads)</span><button class="pe-next"'+(_pipePage>=totalPipePages-1?' disabled':'')+'>Next '+BATCH+' →</button></div>';}
           if(batch.length){
             h+='<div class="pe-action-bar"><label class="pe-sel-all"><input type="checkbox" id="peSelectAll" checked> Select all ('+batch.length+')</label><span class="pe-sel-count" id="peSelCount">'+batch.length+' selected</span><button class="pe-send-btn" id="peSendBtn">'+(isLi?btnLabel+" ("+batch.length+")":isQueue?"Add "+batch.length+" to Rotation":"Send "+batch.length+" Email"+(batch.length>1?"s":""))+'</button><span class="pe-send-status" id="peSendStatus"></span></div>';
             h+='<div class="pe-table-wrap"><table class="pe-table"><thead><tr><th style="width:32px"></th><th>Company</th><th>Contact</th><th>Status</th>'+(isE2E3?'<th>Ready</th>':'')+'<th>Progress</th><th style="width:32px"></th></tr></thead><tbody>';
             batch.forEach(function(l){
               var s=st(l.id),status=statusOf(l);
-              var liUrl=l.linkedin_url||('https://www.linkedin.com/search/results/people/?keywords='+encodeURIComponent(l.contact+" "+l.company));
-              var liFill=l.linkedin_url?"#0a66c2":"currentColor";
+              var _co=lf(l,'company'),_ct=lf(l,'contact'),_em=lf(l,'email'),_ws=lf(l,'website'),_lu=lf(l,'linkedin_url');
+              var liUrl=_lu||('https://www.linkedin.com/search/results/people/?keywords='+encodeURIComponent(_ct+" "+_co));
+              var liFill=_lu?"#0a66c2":"currentColor";
               var e1Done=!!s.e1Ts,e2Done=!!s.e2Ts,e3Done=!!s.e3Ts,liDone=!!s.linkedin;
               var df={month:"short",day:"numeric"};
               var e1Tip=e1Done?'Sent '+new Date(s.e1Ts).toLocaleDateString(undefined,df):'Not sent';
@@ -4517,12 +4556,12 @@ function renderPipeline(d){
               var liTip=liDone?'Sent'+(s.liTs?' '+new Date(s.liTs).toLocaleDateString(undefined,df):''):'Not sent';
               h+='<tr data-lid="'+l.id+'">';
               h+='<td><input type="checkbox" class="pe-chk" data-id="'+l.id+'" checked></td>';
-              h+='<td class="pe-co-cell"><div class="co">'+esc(l.company)+'</div><div class="em">'+(l.website||"")+'</div></td>';
-              h+='<td class="pe-contact-cell">'+esc(l.contact)+' <a href="'+liUrl+'" target="_blank" rel="noopener" class="li-link" data-lid="'+l.id+'" title="Copy DM &amp; open LinkedIn"><svg width="13" height="13" viewBox="0 0 24 24" fill="'+liFill+'"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg></a><div class="em">'+esc(l.email||"")+'</div></td>';
+              h+='<td class="pe-co-cell"><div class="co">'+esc(_co)+'</div><div class="em">'+(_ws||"")+'</div></td>';
+              h+='<td class="pe-contact-cell">'+esc(_ct)+' <a href="'+liUrl+'" target="_blank" rel="noopener" class="li-link" data-lid="'+l.id+'" title="Copy DM &amp; open LinkedIn"><svg width="13" height="13" viewBox="0 0 24 24" fill="'+liFill+'"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg></a><div class="em">'+esc(_em||"")+'</div></td>';
               h+='<td class="pe-status"><span class="badge" style="color:'+SC[status]+'">'+SL[status]+'</span></td>';
               if(isE2E3){var rdy=isReady(l);var rdyDate=tile.key==="e2"?emailReadyDate(s.e1Ts||0,2):emailReadyDate(s.e1Ts||0,6);h+='<td><span style="font-size:10px;font-weight:600;padding:2px 8px;border-radius:6px;background:'+(rdy?'#e6f9ee':'#fef3e2')+';color:'+(rdy?'#0a8a3e':'#c07800')+'">'+(rdy?'Ready':rdyDate.toLocaleDateString(undefined,df))+'</span></td>';}
               h+='<td><div class="progress-pills"><span class="pp '+(e1Done?'done':'pending')+'" data-stage="e1" data-lid="'+l.id+'">E1<span class="pp-tip">'+e1Tip+'</span></span><span class="pp '+(e2Done?'done':'pending')+'" data-stage="e2" data-lid="'+l.id+'">E2<span class="pp-tip">'+e2Tip+'</span></span><span class="pp '+(e3Done?'done':'pending')+'" data-stage="e3" data-lid="'+l.id+'">E3<span class="pp-tip">'+e3Tip+'</span></span><span class="pp '+(liDone?'done':'pending')+'" data-stage="li" data-lid="'+l.id+'">LI<span class="pp-tip">'+liTip+'</span></span></div></td>';
-              h+='<td><button class="pe-skip-btn" data-id="'+l.id+'" title="Skip this lead">✕</button></td>';
+              h+='<td style="white-space:nowrap"><button class="btn-edit" data-eid="'+l.id+'" title="Edit lead" style="display:inline-flex;vertical-align:middle;margin-right:2px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button><button class="pe-skip-btn" data-id="'+l.id+'" title="Skip this lead">✕</button></td>';
               h+='</tr>';
             });
             h+='</tbody></table></div>';
@@ -4535,7 +4574,7 @@ function renderPipeline(d){
             scheduledLeads.forEach(function(l){
               var s=st(l.id),df={month:"short",day:"numeric"};
               var rdyDate=tile.key==="e2"?emailReadyDate(s.e1Ts||0,2):emailReadyDate(s.e1Ts||0,6);
-              h+='<tr><td><div class="co">'+esc(l.company)+'</div></td><td>'+esc(l.contact)+'</td><td style="font-size:12px;color:var(--muted)">'+rdyDate.toLocaleDateString(undefined,df)+'</td></tr>';
+              h+='<tr><td><div class="co">'+esc(lf(l,'company'))+'</div></td><td>'+esc(lf(l,'contact'))+'</td><td style="font-size:12px;color:var(--muted)">'+rdyDate.toLocaleDateString(undefined,df)+'</td></tr>';
             });
             h+='</tbody></table></div>';
           }
@@ -4543,6 +4582,9 @@ function renderPipeline(d){
           wireUpBatch(batch);
         }
         function wireUpBatch(batch){
+          var prevPipe=expand.querySelector(".pe-prev"),nextPipe=expand.querySelector(".pe-next");
+          if(prevPipe)prevPipe.onclick=function(){_pipePage--;renderBatch();};
+          if(nextPipe)nextPipe.onclick=function(){_pipePage++;renderBatch();};
           var selAll=expand.querySelector("#peSelectAll");
           var countEl=expand.querySelector("#peSelCount");
           var sendBtn=expand.querySelector("#peSendBtn");
@@ -4557,6 +4599,7 @@ function renderPipeline(d){
           if(selAll)selAll.onchange=function(){expand.querySelectorAll(".pe-chk").forEach(function(c){c.checked=selAll.checked;});updateCount();};
           expand.querySelectorAll(".pe-chk").forEach(function(c){c.onchange=updateCount;});
           expand.querySelectorAll(".pe-skip-btn").forEach(function(b){b.onclick=function(){window._openRemoveModal(+this.dataset.id);};});
+          expand.querySelectorAll(".btn-edit").forEach(function(b){b.onclick=function(){window._openEditModal(+this.dataset.eid);};});
           expand.querySelectorAll(".pp[data-stage]").forEach(function(pill){
             pill.onclick=function(){
               var lid=+this.dataset.lid,stage=this.dataset.stage,s=st(lid),l=LEADS.find(function(x){return x.id===lid;});
@@ -4564,13 +4607,13 @@ function renderPipeline(d){
               var tsKey=stage==="li"?"liTs":stage+"Ts";
               var isDone=stage==="li"?!!s.linkedin:!!s[tsKey];
               if(isDone){
-                if(!confirm("Clear "+this.textContent.replace(/Sent.*/,"").trim()+" for "+l.company+"?"))return;
+                if(!confirm("Clear "+this.textContent.replace(/Sent.*/,"").trim()+" for "+lf(l,'company')+"?"))return;
                 if(stage==="li"){s.linkedin=false;delete s.liTs;}
                 else{delete s[tsKey];if(stage==="e1")delete s.queued;var maxSent=0;if(s.e1Ts)maxSent=1;if(s.e2Ts)maxSent=2;if(s.e3Ts)maxSent=3;s.sentCount=maxSent;l.sentCount=maxSent;if(maxSent===0){s.contacted=false;l.contacted=false;}}
               } else {
                 if(stage==="li"){s.linkedin=true;s.liTs=Date.now();}
                 else{
-                var dateStr=prompt("Enter send date for "+l.company+" "+stage.toUpperCase()+" (YYYY-MM-DD):",new Date(Date.now()-new Date().getTimezoneOffset()*60000).toISOString().slice(0,10));
+                var dateStr=prompt("Enter send date for "+lf(l,'company')+" "+stage.toUpperCase()+" (YYYY-MM-DD):",new Date(Date.now()-new Date().getTimezoneOffset()*60000).toISOString().slice(0,10));
                 if(!dateStr)return;
                 var ts=new Date(dateStr+"T12:00:00").getTime();
                 if(isNaN(ts)){alert("Invalid date.");return;}
@@ -4628,9 +4671,9 @@ function renderPipeline(d){
                 var l=leads[i];if(statusEl)statusEl.textContent="Sending "+(i+1)+"/"+leads.length+"...";
                 try{
                   var subj=tok(tmpl.subj,l),body=tok(tmpl.body,l);
-                  var r=await sendGmailEmail(l.email,subj,body);
+                  var r=await sendGmailEmail(lf(l,'email'),subj,body);
                   if(r&&(r.id||r.labelIds)){ok++;l.lastTs=Date.now();st(l.id).lastTs=l.lastTs;if(tplKey==="e1"){st(l.id).e1Ts=l.lastTs;}else if(tplKey==="e2")st(l.id).e2Ts=l.lastTs;else if(tplKey==="e3")st(l.id).e3Ts=l.lastTs;var cnt=0;if(st(l.id).e1Ts)cnt=1;if(st(l.id).e2Ts)cnt=Math.max(cnt,2);if(st(l.id).e3Ts)cnt=Math.max(cnt,3);l.sentCount=cnt;l.contacted=true;l.emailedToday=true;st(l.id).sentCount=cnt;st(l.id).contacted=true;skipped.add(l.id);}
-                }catch(e){if(statusEl)statusEl.textContent="Error: "+l.company+" - "+e.message;}
+                }catch(e){if(statusEl)statusEl.textContent="Error: "+lf(l,'company')+" - "+e.message;}
               }
               saveState();
               if(statusEl)statusEl.textContent=ok+" email"+(ok>1?"s":"")+" sent ✓ — opening LinkedIn DMs...";
@@ -4662,6 +4705,7 @@ function renderPipeline(d){
   renderRow("pipeFollowupRow","pipeFollowupExpand",followupTiles);
 }
 let sortK="rank",sortDir=1;
+var _tablePage=0,TABLE_PAGE_SIZE=50;
 const RANK={closed:0,opp:1,meeting:2,positive:3,replied:4,ooo:5,linkedin:6,contacted:7,negative:8,notfit:9,new:10};
 function renderTable(){
   const q=(document.getElementById("search").value||"").toLowerCase(),sf=document.getElementById("statusFilter").value;
@@ -4670,25 +4714,30 @@ function renderTable(){
   document.getElementById("removedCnt").textContent=removedCount;
   const tgl=document.getElementById("tglRemoved");
   tgl.classList.toggle("active",showRm&&removedCount>0);
-  let rows=LEADS.map(l=>{const s=statusOf(l);return{l,s,statusLabel:SL[s],rank:RANK[s],company:l.company,contact:l.contact,loc:(l.city?l.city+", ":"")+l.state,owner:l.owner||"",icpTier:l.icpTier,lastTs:l.lastTs||0,email:l.email,removed:!!st(l.id).removed};});
+  let rows=LEADS.map(l=>{const s=statusOf(l);return{l,s,statusLabel:SL[s],rank:RANK[s],company:lf(l,'company'),contact:lf(l,'contact'),loc:((lf(l,'city')||l.city)?((lf(l,'city')||l.city)+", "):"")+((lf(l,'state')||l.state)||""),owner:l.owner||"",icpTier:l.icpTier,lastTs:l.lastTs||0,email:lf(l,'email'),removed:!!st(l.id).removed};});
   if(!showRm)rows=rows.filter(r=>!r.removed);
   if(q)rows=rows.filter(r=>(r.company+" "+r.contact+" "+r.loc+" "+r.email+" "+(st(r.l.id).notes||r.l.notes||"")).toLowerCase().includes(q));
   if(sf)rows=rows.filter(r=>{const s=st(r.l.id);return sf==="closed"?s.closed:sf==="opp"?s.opp:sf==="meeting"?r.l.meeting:sf==="positive"?r.l.sentiment==="positive":sf==="replied"?r.l.replied:sf==="linkedin"?s.linkedin:sf==="contacted"?(r.l.contacted&&!r.l.replied):sf==="new"?!(r.l.contacted||s.linkedin):true;});
   if(_stageFilter){var _sf=_stageFilter;rows=rows.filter(r=>{var s=st(r.l.id);return _sf==="e1"?!!s.e1Ts:_sf==="e2"?!!s.e2Ts:_sf==="e3"?!!s.e3Ts:_sf==="li"?!!s.linkedin:true;});}
   document.querySelectorAll("#stagePills .pp").forEach(function(p){p.classList.toggle("done",p.dataset.filter===_stageFilter);p.classList.toggle("pending",p.dataset.filter!==_stageFilter);});
   rows.sort((a,b)=>{let x=a[sortK],y=b[sortK];if(typeof x==="string"){x=x.toLowerCase();y=(y||"").toLowerCase();}return(x>y?1:x<y?-1:0)*sortDir;});
-  document.getElementById("leadCount").textContent="· "+rows.length+" shown / "+LEADS.length;
+  var totalPages=Math.ceil(rows.length/TABLE_PAGE_SIZE)||1;
+  if(_tablePage>=totalPages)_tablePage=Math.max(0,totalPages-1);
+  var pageRows=rows.slice(_tablePage*TABLE_PAGE_SIZE,(_tablePage+1)*TABLE_PAGE_SIZE);
+  document.getElementById("leadCount").textContent="· Page "+(_tablePage+1)+" of "+totalPages+" · "+rows.length+" shown / "+LEADS.length;
   const xSvg='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
   const undoSvg='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>';
   const statusOpts=["new","contacted","linkedin","replied","positive","meeting","opp","closed","ooo","negative","notfit"].map(k=>'<option value="'+k+'">'+SL[k]+'</option>').join("");
   var _df={month:"short",day:"numeric"};
-  document.getElementById("rows").innerHTML=rows.map(r=>{const col=SC[r.s],s=st(r.l.id),L=r.l;
+  document.getElementById("rows").innerHTML=pageRows.map(r=>{const col=SC[r.s],s=st(r.l.id),L=r.l;
     var notes=s.notes!=null?s.notes:(L.notes||"");
     if(r.removed&&s.removeReason)notes=notes?(s.removeReason+" · "+notes):s.removeReason;
     var e1D=!!s.e1Ts,e2D=!!s.e2Ts,e3D=!!s.e3Ts,liD=!!s.linkedin;
     var ppH='<td><div class="progress-pills"><span class="pp '+(e1D?'done':'pending')+'" data-stage="e1" data-lid="'+L.id+'">E1<span class="pp-tip">'+(e1D?'Sent '+new Date(s.e1Ts).toLocaleDateString(undefined,_df):'Not sent')+'</span></span><span class="pp '+(e2D?'done':'pending')+'" data-stage="e2" data-lid="'+L.id+'">E2<span class="pp-tip">'+(e2D?'Sent '+new Date(s.e2Ts).toLocaleDateString(undefined,_df):'Not sent')+'</span></span><span class="pp '+(e3D?'done':'pending')+'" data-stage="e3" data-lid="'+L.id+'">E3<span class="pp-tip">'+(e3D?'Sent '+new Date(s.e3Ts).toLocaleDateString(undefined,_df):'Not sent')+'</span></span><span class="pp '+(liD?'done':'pending')+'" data-stage="li" data-lid="'+L.id+'">LI<span class="pp-tip">'+(liD?'Sent'+(s.liTs?' '+new Date(s.liTs).toLocaleDateString(undefined,_df):''):'Not sent')+'</span></span></div></td>';
     var lastDate=s.lastTs||L.lastTs||s.e3Ts||s.e2Ts||s.e1Ts||0;
-    return '<tr class="'+(r.removed?"removed-row":"")+'"><td><input type="checkbox" class="lead-chk" data-id="'+L.id+'"></td><td><button class="btn-remove'+(r.removed?" is-removed":"")+'" data-rid="'+L.id+'" title="'+(r.removed?"Restore":"Remove from list")+'">'+(r.removed?undoSvg:xSvg)+'</button></td><td><div class="co">'+esc(r.company)+'</div><div class="em">'+(L.website||"")+'</div></td><td>'+esc(r.contact)+' <a href="'+(L.linkedin_url||('https://www.linkedin.com/search/results/people/?keywords='+encodeURIComponent(r.contact+" "+r.company)))+'" target="_blank" rel="noopener" class="li-link" data-lid="'+L.id+'" title="Copy DM &amp; open LinkedIn"><svg width="13" height="13" viewBox="0 0 24 24" fill="'+(L.linkedin_url?"#0a66c2":"currentColor")+'"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg></a><div class="em">'+esc(r.email||"")+'</div></td><td><select class="status-dd" data-id="'+L.id+'">'+statusOpts.replace('value="'+r.s+'"','value="'+r.s+'" selected')+'</select></td>'+ppH+'<td><input class="notes-input" data-id="'+L.id+'" value="'+esc(notes)+'" placeholder="Add notes..."></td><td style="font-family:var(--mono);color:var(--muted);white-space:nowrap">'+(lastDate?new Date(lastDate).toLocaleDateString(undefined,_df):"---")+'</td>'+'</tr>';}).join("")||'<tr><td colspan="8" class="empty">No leads match.</td></tr>';
+    var _liUrl=lf(L,'linkedin_url'),_ws=lf(L,'website');
+    return '<tr class="'+(r.removed?"removed-row":"")+'"><td><input type="checkbox" class="lead-chk" data-id="'+L.id+'"></td><td><button class="btn-edit" data-eid="'+L.id+'" title="Edit contact"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button><button class="btn-remove'+(r.removed?" is-removed":"")+'" data-rid="'+L.id+'" title="'+(r.removed?"Restore":"Remove from list")+'">'+(r.removed?undoSvg:xSvg)+'</button></td><td><div class="co">'+esc(r.company)+'</div><div class="em">'+(_ws||"")+'</div></td><td>'+esc(r.contact)+' <a href="'+(_liUrl||('https://www.linkedin.com/search/results/people/?keywords='+encodeURIComponent(r.contact+" "+r.company)))+'" target="_blank" rel="noopener" class="li-link" data-lid="'+L.id+'" title="Copy DM &amp; open LinkedIn"><svg width="13" height="13" viewBox="0 0 24 24" fill="'+(_liUrl?"#0a66c2":"currentColor")+'"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg></a><div class="em">'+esc(r.email||"")+'</div></td><td><select class="status-dd" data-id="'+L.id+'">'+statusOpts.replace('value="'+r.s+'"','value="'+r.s+'" selected')+'</select></td>'+ppH+'<td><input class="notes-input" data-id="'+L.id+'" value="'+esc(notes)+'" placeholder="Add notes..."></td><td style="font-family:var(--mono);color:var(--muted);white-space:nowrap">'+(lastDate?new Date(lastDate).toLocaleDateString(undefined,_df):"---")+'</td>'+'</tr>';}).join("")||'<tr><td colspan="8" class="empty">No leads match.</td></tr>';
+  document.querySelectorAll(".btn-edit").forEach(b=>b.onclick=()=>window._openEditModal(+b.dataset.eid));
   document.querySelectorAll(".btn-remove").forEach(b=>b.onclick=()=>window._openRemoveModal(+b.dataset.rid));
   document.querySelectorAll(".status-dd").forEach(sel=>sel.onchange=function(){setLeadStatus(+this.dataset.id,this.value);});
   document.querySelectorAll(".notes-input").forEach(inp=>{inp.onchange=function(){st(+this.dataset.id).notes=this.value;saveState();};});
@@ -4718,13 +4767,13 @@ function renderTable(){
       var tsKey=stage==="li"?"liTs":stage+"Ts";
       var isDone=stage==="li"?!!s.linkedin:!!s[tsKey];
       if(isDone){
-        if(!confirm("Clear "+stage.toUpperCase()+" for "+l.company+"?"))return;
+        if(!confirm("Clear "+stage.toUpperCase()+" for "+lf(l,'company')+"?"))return;
         if(stage==="li"){s.linkedin=false;delete s.liTs;}
         else{delete s[tsKey];if(stage==="e1")delete s.queued;var maxSent=0;if(s.e1Ts)maxSent=1;if(s.e2Ts)maxSent=2;if(s.e3Ts)maxSent=3;s.sentCount=maxSent;l.sentCount=maxSent;if(maxSent===0){s.contacted=false;l.contacted=false;}}
       } else {
         if(stage==="li"){s.linkedin=true;s.liTs=Date.now();}
         else{
-        var dateStr=prompt("Enter send date for "+l.company+" "+stage.toUpperCase()+" (YYYY-MM-DD):",new Date(Date.now()-new Date().getTimezoneOffset()*60000).toISOString().slice(0,10));
+        var dateStr=prompt("Enter send date for "+lf(l,'company')+" "+stage.toUpperCase()+" (YYYY-MM-DD):",new Date(Date.now()-new Date().getTimezoneOffset()*60000).toISOString().slice(0,10));
         if(!dateStr)return;
         var ts=new Date(dateStr+"T12:00:00").getTime();
         if(isNaN(ts)){alert("Invalid date.");return;}
@@ -4734,12 +4783,22 @@ function renderTable(){
       compute();
     };
   });
+  var pagEl=document.getElementById("tablePagination");
+  if(pagEl){
+    if(totalPages<=1){pagEl.innerHTML="";}
+    else{
+      pagEl.innerHTML='<button id="tpPrev"'+(_tablePage===0?' disabled':'')+'>← Previous</button><span>Page '+(_tablePage+1)+' of '+totalPages+'</span><button id="tpNext"'+(_tablePage>=totalPages-1?' disabled':'')+'>Next →</button>';
+      var pv=document.getElementById("tpPrev"),nx=document.getElementById("tpNext");
+      if(pv)pv.onclick=function(){_tablePage--;renderTable();};
+      if(nx)nx.onclick=function(){_tablePage++;renderTable();};
+    }
+  }
 }
-document.querySelectorAll("th[data-k]").forEach(th=>th.onclick=()=>{const k=th.dataset.k==="statusLabel"?"rank":th.dataset.k;if(sortK===k)sortDir*=-1;else{sortK=k;sortDir=1;}renderTable();});
+document.querySelectorAll("th[data-k]").forEach(th=>th.onclick=()=>{const k=th.dataset.k==="statusLabel"?"rank":th.dataset.k;if(sortK===k)sortDir*=-1;else{sortK=k;sortDir=1;}_tablePage=0;renderTable();});
 var _stageFilter=null;
-document.querySelectorAll("#stagePills .pp").forEach(function(p){p.onclick=function(){_stageFilter=_stageFilter===this.dataset.filter?null:this.dataset.filter;renderTable();};});
-["search","statusFilter"].forEach(id=>{const el=document.getElementById(id);el.addEventListener("input",()=>{renderTable();try{localStorage.setItem("rxv_"+id,el.value);}catch(e){}});try{const v=localStorage.getItem("rxv_"+id);if(v!=null)el.value=v;}catch(e){}});
-document.getElementById("showRemoved").addEventListener("change",renderTable);
+document.querySelectorAll("#stagePills .pp").forEach(function(p){p.onclick=function(){_stageFilter=_stageFilter===this.dataset.filter?null:this.dataset.filter;_tablePage=0;renderTable();};});
+["search","statusFilter"].forEach(id=>{const el=document.getElementById(id);el.addEventListener("input",()=>{_tablePage=0;renderTable();try{localStorage.setItem("rxv_"+id,el.value);}catch(e){}});try{const v=localStorage.getItem("rxv_"+id);if(v!=null)el.value=v;}catch(e){}});
+document.getElementById("showRemoved").addEventListener("change",function(){_tablePage=0;renderTable();});
 function updateBulkBar(){
   var chks=document.querySelectorAll(".lead-chk:checked");
   var bar=document.getElementById("bulkBar");
@@ -4854,7 +4913,7 @@ const TPL_VERSION=4;
 let TPL; try{TPL=JSON.parse(localStorage.getItem("rx_templates"));}catch(e){TPL=null;}
 if(!TPL||!TPL.e1||(+localStorage.getItem("rx_tpl_v")||0)<TPL_VERSION){TPL=JSON.parse(JSON.stringify(DEFAULT_TPL));localStorage.setItem("rx_tpl_v",TPL_VERSION);}
 function saveTpl(){localStorage.setItem("rx_templates",JSON.stringify(TPL));document.getElementById("edExport").value=JSON.stringify(TPL,null,1);}
-function tok(str,l){return (str||"").replace(/\{first_name\}/g,l?l.fn:"{first_name}").replace(/\{company\}/g,l?l.company:"{company}");}
+function tok(str,l){return (str||"").replace(/\{first_name\}/g,l?lfn(l):"{first_name}").replace(/\{company\}/g,l?lf(l,'company'):"{company}");}
 function edPreview(){const id=+document.getElementById("edLead").value;const l=LEADS.find(x=>x.id===id)||LEADS[0];
   document.getElementById("edPrev").innerHTML=TOUCHES.map(t=>{const o=TPL[t.k]||{};
     return '<div class="pe"><div class="h">'+t.lbl+' · '+t.pin+'</div>'+(t.subj?'<div class="s">'+esc(tok(o.subj,l))+'</div>':'')+'<div class="b">'+esc(tok(o.body,l))+'</div></div>';}).join("");}
@@ -4867,7 +4926,7 @@ function buildEditor(){
       '<textarea data-k="'+t.k+'" data-f="body" placeholder="Body">'+esc(o.body||"")+'</textarea></div>';}).join("");
   F.querySelectorAll("input,textarea").forEach(el=>el.addEventListener("input",()=>{const k=el.dataset.k,fld=el.dataset.f;if(!TPL[k])TPL[k]={};TPL[k][fld]=el.value;saveTpl();edPreview();}));
   const sel=document.getElementById("edLead");
-  sel.innerHTML=LEADS.map(l=>'<option value="'+l.id+'">'+esc(l.company)+'</option>').join("");
+  sel.innerHTML=LEADS.map(l=>'<option value="'+l.id+'">'+esc(lf(l,'company'))+'</option>').join("");
   sel.addEventListener("change",edPreview);
   document.getElementById("edReset").onclick=()=>{if(confirm("Reset all email copy to the default template?")){TPL=JSON.parse(JSON.stringify(DEFAULT_TPL));saveTpl();buildEditor();edPreview();}};
   document.getElementById("edCopy").onclick=()=>{const t=document.getElementById("edExport");t.value=JSON.stringify(TPL,null,1);t.select();try{navigator.clipboard.writeText(t.value);}catch(e){}document.execCommand&&document.execCommand("copy");document.getElementById("edCopy").textContent="Copied ✓";setTimeout(()=>document.getElementById("edCopy").textContent="Copy edits",1600);};
@@ -4950,7 +5009,7 @@ async function loadAll(){
     var s=st(id);
     if(s.removed){s.removed=false;delete s.removeReason;delete s.removedAt;saveState();var activeKey=_pipeActive;_pipeActive=null;compute();if(activeKey){var t=document.querySelector('.pipe-tile[data-key="'+activeKey+'"]');if(t)t.click();}return;}
     pendingId=id;
-    document.getElementById('rmCompany').textContent=l.company+' — '+l.contact;
+    document.getElementById('rmCompany').textContent=lf(l,'company')+' — '+lf(l,'contact');
     reason.value='';reason.style.borderColor='';
     other.value='';other.style.display='none';
     mdiv.style.display='flex';
@@ -5025,7 +5084,47 @@ gAuth.init();
       el.addEventListener("focus",function(){if(el.style.color)el.style.color="";});
     });
   }
-  window._renderMsgTabs=renderMsgTabs;
+  function renderMsgCompanies(){
+    var el=document.getElementById("msgCompanyLists");if(!el)return;
+    var ok=function(l){var s=st(l.id);return !s.notfit&&!s.removed&&!s.closed&&!l.meeting;};
+    var sections=[
+      {key:'e1',label:'E1 — Queued for Send',list:LEADS.filter(function(l){var s=st(l.id);return ok(l)&&s.queued&&!s.e1Ts;}),color:'var(--accent)'},
+      {key:'e2',label:'E2 — Awaiting Follow-up',list:LEADS.filter(function(l){var s=st(l.id);return ok(l)&&s.e1Ts&&!s.e2Ts&&!l.replied;}),color:'var(--violet)'},
+      {key:'e3',label:'E3 — Awaiting Final',list:LEADS.filter(function(l){var s=st(l.id);return ok(l)&&s.e2Ts&&!s.e3Ts&&!l.replied;}),color:'var(--warn)'}
+    ];
+    var h='';
+    sections.forEach(function(sec){
+      var collapsed=localStorage.getItem('rx_msg_'+sec.key)==='1';
+      h+='<div class="msg-co-section">';
+      h+='<div class="msg-co-hd" data-section="'+sec.key+'">';
+      h+='<span class="msg-co-dot" style="background:'+sec.color+'"></span>';
+      h+='<span class="msg-co-label">'+sec.label+'</span>';
+      h+='<span class="msg-co-count">'+sec.list.length+'</span>';
+      h+='<svg class="msg-co-chevron'+(collapsed?' collapsed':'')+'" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>';
+      h+='</div>';
+      h+='<div class="msg-co-list'+(collapsed?' collapsed':'')+'">';
+      if(sec.list.length){
+        sec.list.forEach(function(l){
+          h+='<div class="msg-co-item"><span class="msg-co-company">'+esc(lf(l,'company'))+'</span><span class="msg-co-contact">'+esc(lf(l,'contact'))+'</span></div>';
+        });
+      }else{
+        h+='<div class="msg-co-empty">No leads in this stage</div>';
+      }
+      h+='</div></div>';
+    });
+    el.innerHTML=h;
+    el.querySelectorAll('.msg-co-hd').forEach(function(hd){
+      hd.onclick=function(){
+        var key=this.dataset.section;
+        var list=this.nextElementSibling;
+        var chev=this.querySelector('.msg-co-chevron');
+        var isCollapsed=list.classList.toggle('collapsed');
+        if(chev)chev.classList.toggle('collapsed',isCollapsed);
+        localStorage.setItem('rx_msg_'+key,isCollapsed?'1':'0');
+      };
+    });
+  }
+  window._renderMsgTabs=function(){renderMsgTabs();renderMsgCompanies();};
   var saveBtn=document.getElementById("msgSaveBtn");
   if(saveBtn)saveBtn.onclick=function(){
     var prev=document.getElementById("msgPreview");if(!prev)return;
@@ -5081,8 +5180,8 @@ function renderActivityFeed(){
     h+='<div class="act-counter'+(liCount>0?" done":"")+'"><span class="act-icon li-ic">'+liIcon+'</span><span class="act-num">'+liCount+'</span> LinkedIn sent</div>';
     h+='</div>';
     const items=[];
-    emailedToday.forEach(l=>items.push({type:"email",co:l.company,contact:l.fn,ts:l.lastTs}));
-    LEADS.forEach(l=>{if(liSentToday[l.id])items.push({type:"li",co:l.company,contact:l.fn,ts:Date.now()});});
+    emailedToday.forEach(l=>items.push({type:"email",co:lf(l,'company'),contact:lfn(l),ts:l.lastTs}));
+    LEADS.forEach(l=>{if(liSentToday[l.id])items.push({type:"li",co:lf(l,'company'),contact:lfn(l),ts:Date.now()});});
     items.sort((a,b)=>(b.ts||0)-(a.ts||0));
     if(items.length){
       h+='<ul class="activity-list">';
@@ -5105,14 +5204,14 @@ function renderActivityFeed(){
     if(liLeads.length){
       h+='<div style="font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:6px">Mark LinkedIn sent</div>';
       liLeads.slice(0,10).forEach(l=>{
-        h+='<label class="dchk-row" style="padding:3px 0"><input type="checkbox" class="li-mark" data-id="'+l.id+'"> '+esc(l.company)+' ('+esc(l.fn)+')</label>';
+        h+='<label class="dchk-row" style="padding:3px 0"><input type="checkbox" class="li-mark" data-id="'+l.id+'"> '+esc(lf(l,'company'))+' ('+esc(lfn(l))+')</label>';
       });
     }
     const liDone=LEADS.filter(l=>liSentToday[l.id]);
     if(liDone.length){
       h+='<div style="margin-top:10px;font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:6px">Sent today</div>';
       h+='<ul class="activity-list">';
-      liDone.forEach(l=>{h+='<li><span class="al-icon al-li">'+checkIcon+'</span><span class="al-co">'+esc(l.company)+'</span> <span>'+esc(l.fn)+'</span></li>';});
+      liDone.forEach(l=>{h+='<li><span class="al-icon al-li">'+checkIcon+'</span><span class="al-co">'+esc(lf(l,'company'))+'</span> <span>'+esc(lfn(l))+'</span></li>';});
       h+='</ul>';
     }
     if(!liLeads.length&&!liDone.length){
@@ -5141,13 +5240,13 @@ function renderActivityFeed(){
       if(!g.list.length)return;
       h+='<div style="font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin:8px 0 4px">'+g.lbl+' ('+g.list.length+')</div>';
       h+='<ul class="activity-list">';
-      g.list.forEach(l=>{h+='<li><span class="al-icon al-email">'+checkIcon+'</span><span class="al-co">'+esc(l.company)+'</span> <span style="color:var(--muted)">'+esc(l.contact||l.fn||"")+'</span></li>';});
+      g.list.forEach(l=>{h+='<li><span class="al-icon al-email">'+checkIcon+'</span><span class="al-co">'+esc(lf(l,'company'))+'</span> <span style="color:var(--muted)">'+esc(lf(l,'contact')||lfn(l))+'</span></li>';});
       h+='</ul>';
     });
     if(yLiLeads.length){
       h+='<div style="font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin:8px 0 4px">LinkedIn DM ('+yLiLeads.length+')</div>';
       h+='<ul class="activity-list">';
-      yLiLeads.forEach(l=>{h+='<li><span class="al-icon al-li">'+checkIcon+'</span><span class="al-co">'+esc(l.company)+'</span> <span style="color:var(--muted)">'+esc(l.contact||l.fn||"")+'</span></li>';});
+      yLiLeads.forEach(l=>{h+='<li><span class="al-icon al-li">'+checkIcon+'</span><span class="al-co">'+esc(lf(l,'company'))+'</span> <span style="color:var(--muted)">'+esc(lf(l,'contact')||lfn(l))+'</span></li>';});
       h+='</ul>';
     }
     if(!yEmailed.length&&!yLiLeads.length){
@@ -5306,10 +5405,70 @@ renderActivityFeed();
     var s=st(id);
     if(s.removed){s.removed=false;delete s.removeReason;delete s.removedAt;saveState();var activeKey=_pipeActive;_pipeActive=null;compute();if(activeKey){var t=document.querySelector('.pipe-tile[data-key="'+activeKey+'"]');if(t)t.click();}return;}
     pendingId=id;
-    document.getElementById("rmCompany").textContent=l.company+" — "+l.contact;
+    document.getElementById("rmCompany").textContent=lf(l,'company')+" — "+lf(l,'contact');
     reason.value="";reason.style.borderColor="";
     other.value="";other.style.display="none";
     modal.style.display="flex";
+  };
+})();
+/* ── EDIT CONTACT MODAL ── */
+(function(){
+  var ediv=document.createElement('div');
+  ediv.id='editModal';
+  ediv.style.cssText='display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.35);align-items:center;justify-content:center';
+  var fields=[
+    {k:'contact',lbl:'Contact Name'},
+    {k:'email',lbl:'Email'},
+    {k:'role',lbl:'Role'},
+    {k:'company',lbl:'Company'},
+    {k:'website',lbl:'Website'},
+    {k:'city',lbl:'City'},
+    {k:'state',lbl:'State'},
+    {k:'linkedin_url',lbl:'LinkedIn URL'}
+  ];
+  var formHtml=fields.map(function(f){
+    return '<label style="font-size:11px;font-weight:600;color:var(--ink);display:block;margin-bottom:2px">'+f.lbl+'</label><input id="ed_'+f.k+'" data-field="'+f.k+'" style="width:100%;padding:7px 10px;border:1px solid var(--line);border-radius:8px;font-size:13px;margin-bottom:8px;box-sizing:border-box">';
+  }).join('');
+  ediv.innerHTML='<div style="background:#fff;border-radius:14px;padding:28px 24px;width:480px;max-width:90vw;box-shadow:0 8px 32px rgba(0,0,0,.18);max-height:90vh;overflow-y:auto">'
+    +'<div style="font-size:15px;font-weight:700;color:var(--ink);margin-bottom:4px">Edit Contact</div>'
+    +'<div style="font-size:12px;color:var(--muted);margin-bottom:14px" id="edCompany"></div>'
+    +formHtml
+    +'<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px">'
+    +'<button id="edCancel" style="padding:8px 16px;border-radius:8px;border:1px solid var(--line);background:#fff;color:var(--muted);font-size:13px;font-weight:600;cursor:pointer">Cancel</button>'
+    +'<button id="edSave" style="padding:8px 16px;border-radius:8px;border:none;background:var(--accent);color:#fff;font-size:13px;font-weight:600;cursor:pointer">Save</button>'
+    +'</div></div>';
+  document.body.appendChild(ediv);
+  var pendingId=null;
+  document.getElementById('edCancel').onclick=function(){ediv.style.display='none';pendingId=null;};
+  ediv.onclick=function(e){if(e.target===ediv){ediv.style.display='none';pendingId=null;}};
+  document.getElementById('edSave').onclick=function(){
+    if(pendingId==null)return;
+    var l=LEADS.find(function(x){return x.id===pendingId;});
+    if(!l)return;
+    var s=st(pendingId);
+    if(!s.edits)s.edits={};
+    fields.forEach(function(f){
+      var val=document.getElementById('ed_'+f.k).value.trim();
+      if(val===((l[f.k]||"")+"").trim()){delete s.edits[f.k];}
+      else{s.edits[f.k]=val;}
+    });
+    if(Object.keys(s.edits).length===0)delete s.edits;
+    saveState();
+    ediv.style.display='none';
+    pendingId=null;
+    var activeKey=_pipeActive;_pipeActive=null;
+    compute();
+    if(activeKey){var t=document.querySelector('.pipe-tile[data-key="'+activeKey+'"]');if(t)t.click();}
+  };
+  window._openEditModal=function(id){
+    var l=LEADS.find(function(x){return x.id===id;});
+    if(!l)return;
+    pendingId=id;
+    document.getElementById('edCompany').textContent=lf(l,'company')+' — '+lf(l,'contact');
+    fields.forEach(function(f){
+      document.getElementById('ed_'+f.k).value=lf(l,f.k)||'';
+    });
+    ediv.style.display='flex';
   };
 })();
 </script>
