@@ -218,7 +218,9 @@ td .co{font-weight:650;} td .em{color:var(--muted);font-size:11px;}
 .pe-pagination button{padding:5px 12px;border-radius:7px;border:1px solid var(--line);background:#fff;color:var(--ink2);font-size:11px;font-weight:600;cursor:pointer;}
 .pe-pagination button:disabled{opacity:.4;cursor:default;}
 .pe-pagination button:hover:not(:disabled){background:#f5f7fc;}
-.msg-section{margin-bottom:10px;}
+.msg-layout{display:flex;gap:0;}
+.msg-section{flex:1;min-width:0;}
+.msg-section+.msg-section{border-left:1px solid var(--line);}
 .msg-section-hd{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);padding:8px 18px 4px;}
 .msg-co-section{border-top:1px solid var(--line);}
 .msg-co-section:first-child{border-top:none;}
@@ -534,12 +536,14 @@ details.editor>summary::-webkit-details-marker{display:none;}
   <div class="today-panel" id="todayMsg" style="margin-top:14px;">
     <div class="today-panel-hd"><span class="today-panel-ttl"><span class="ico" id="icMsg" style="background:#efe9ff;color:var(--violet)"></span> Today's Message</span><button class="today-panel-toggle" id="msgToggle"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg> Edit templates</button></div>
     <div class="today-panel-body" id="msgBody">
+    <div class="msg-layout">
     <div class="msg-section"><div class="msg-section-hd">Template Editor</div>
     <div class="msg-tabs" id="msgTabs"></div>
     <div class="msg-preview" id="msgPreview"></div>
     <div class="msg-actions"><button class="primary" id="msgSaveBtn">Save</button><button id="msgOpenEditor" onclick="document.getElementById('editorCard').open=true;document.getElementById('editorCard').scrollIntoView({behavior:'smooth'})">Open full editor</button></div>
     </div>
     <div class="msg-section"><div class="msg-section-hd">Selected Companies</div><div id="msgCompanyLists"></div></div>
+    </div>
     </div>
   </div>
   <div class="activity-feed" id="activityFeed" style="margin-top:14px;"></div>
