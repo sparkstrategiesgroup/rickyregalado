@@ -5101,9 +5101,9 @@ gAuth.init();
     var el=document.getElementById("msgCompanyLists");if(!el)return;
     var ok=function(l){var s=st(l.id);return !s.notfit&&!s.removed&&!s.closed&&!l.meeting;};
     var sections=[
-      {key:'e1',label:'Touch 1',list:LEADS.filter(function(l){var s=st(l.id);return ok(l)&&s.queued&&!s.e1Ts;}),color:'var(--accent)'},
-      {key:'e2',label:'Touch 2',list:LEADS.filter(function(l){var s=st(l.id);return ok(l)&&!!s.e1Ts&&!s.e2Ts&&!l.replied;}),color:'var(--violet)'},
-      {key:'e3',label:'Touch 3',list:LEADS.filter(function(l){var s=st(l.id);return ok(l)&&!!s.e2Ts&&!s.e3Ts&&!l.replied;}),color:'var(--warn)'}
+      {key:'e1',label:'Touch 1',list:LEADS.filter(function(l){var s=st(l.id);return ok(l)&&!!s.e1Ts&&!s.e2Ts&&!l.replied;}),color:'var(--accent)'},
+      {key:'e2',label:'Touch 2',list:LEADS.filter(function(l){var s=st(l.id);return ok(l)&&!!s.e2Ts&&!s.e3Ts&&!l.replied;}),color:'var(--violet)'},
+      {key:'e3',label:'Touch 3',list:LEADS.filter(function(l){var s=st(l.id);return ok(l)&&!!s.e3Ts&&!l.replied;}),color:'var(--warn)'}
     ];
     var h='';
     sections.forEach(function(sec){
