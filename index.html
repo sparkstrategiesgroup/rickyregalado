@@ -4937,16 +4937,18 @@ async function loadAll(){
     s.removed=true;
     s.removeReason=val;
     s.removedAt=Date.now();
-    localStorage.setItem('rx_state',JSON.stringify(STATE));
+    saveState();
     mdiv.style.display='none';
     pendingId=null;
+    var activeKey=_pipeActive;_pipeActive=null;
     compute();
+    if(activeKey){var t=document.querySelector('.pipe-tile[data-key="'+activeKey+'"]');if(t)t.click();}
   };
   window._openRemoveModal=function(id){
     var l=LEADS.find(function(x){return x.id===id;});
     if(!l)return;
     var s=st(id);
-    if(s.removed){s.removed=false;delete s.removeReason;delete s.removedAt;localStorage.setItem('rx_state',JSON.stringify(STATE));compute();return;}
+    if(s.removed){s.removed=false;delete s.removeReason;delete s.removedAt;saveState();var activeKey=_pipeActive;_pipeActive=null;compute();if(activeKey){var t=document.querySelector('.pipe-tile[data-key="'+activeKey+'"]');if(t)t.click();}return;}
     pendingId=id;
     document.getElementById('rmCompany').textContent=l.company+' — '+l.contact;
     reason.value='';reason.style.borderColor='';
@@ -5291,16 +5293,18 @@ renderActivityFeed();
     s.removed=true;
     s.removeReason=val;
     s.removedAt=Date.now();
-    localStorage.setItem("rx_state",JSON.stringify(STATE));
+    saveState();
     modal.style.display="none";
     pendingId=null;
+    var activeKey=_pipeActive;_pipeActive=null;
     compute();
+    if(activeKey){var t=document.querySelector('.pipe-tile[data-key="'+activeKey+'"]');if(t)t.click();}
   };
   window._openRemoveModal=function(id){
     var l=LEADS.find(function(x){return x.id===id;});
     if(!l)return;
     var s=st(id);
-    if(s.removed){s.removed=false;delete s.removeReason;delete s.removedAt;localStorage.setItem("rx_state",JSON.stringify(STATE));compute();return;}
+    if(s.removed){s.removed=false;delete s.removeReason;delete s.removedAt;saveState();var activeKey=_pipeActive;_pipeActive=null;compute();if(activeKey){var t=document.querySelector('.pipe-tile[data-key="'+activeKey+'"]');if(t)t.click();}return;}
     pendingId=id;
     document.getElementById("rmCompany").textContent=l.company+" — "+l.contact;
     reason.value="";reason.style.borderColor="";
